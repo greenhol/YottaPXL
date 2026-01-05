@@ -1,3 +1,3 @@
-import { Start } from "./pkg/start";
+import { Start } from './start';
 
 new Start();

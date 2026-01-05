@@ -28,10 +28,12 @@ module.exports = {
     plugins: [
         new webpack.DefinePlugin({
             APP_VERSION: JSON.stringify(packageJson.version),
+            APP_NAME: JSON.stringify(packageJson.description),
         }),
         new HtmlWebpackPlugin({
             template: './src/index.html',
             version: packageJson.version,
+            name: packageJson.description,
             inject: false,
         }),
         new CopyWebpackPlugin({

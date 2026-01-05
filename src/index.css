@@ -4,10 +4,42 @@ html * {
 }
 
 #main {
-    position: absolute;
+    display: block;
+    position: relative;
+    width: fit-content;
+    height: fit-content;
     top: 15px;
     left: 25px;
-    width: 800px;
-    height: 600px;
     border: 1px solid black;
+}
+
+#svgOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: all;
+}
+
+#info {
+    display: block;
+    position: relative;
+    top: 22px;
+    left: 25px;
+    height: 30px;
+}
+
+#pixelCoordsArea {
+    float: left;
+}
+
+#mathCoordsArea {
+    float: right;
+}
+
+#iterationsInput {
+    display: block;
+    position: relative;
+    top: 22px;
+    left: 25px;
+    width: 200px;
 }

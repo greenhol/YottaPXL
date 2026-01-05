@@ -1,4 +1,4 @@
-import { Grid } from '../types/grid';
+import { Grid } from '../grid/grid';
 
 export class Canvas {
 
@@ -10,10 +10,14 @@ export class Canvas {
         this._grid = grid;
     }
 
-    draw(imageData: ImageDataArray) {
+    public draw(imageData: ImageDataArray) {
         const context = this._canvas.getContext('2d');
         if (!context) {
             throw new Error('Could not get 2D context');
+        }
+        if (imageData.length == 0) {
+            console.error('#draw - Error, image data empty');
+            return;
         }
 
         const imageDataObject = new ImageData(imageData, this._grid.width, this._grid.height);

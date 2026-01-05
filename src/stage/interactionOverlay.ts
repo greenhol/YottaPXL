@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { Grid } from '../types/grid';
+import { Grid } from '../grid/grid';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
 const ID_USER_RECT = 'user-rectangle';

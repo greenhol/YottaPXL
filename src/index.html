@@ -1,5 +1,4 @@
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -11,21 +10,18 @@
     </title>
     <link rel="stylesheet" type="text/css" href="index.css?v=<%= htmlWebpackPlugin.options.version %>" />
 </head>
-
 <body>
-    <div id="main">
-        <canvas id="mainCanvas"></canvas>
-        <svg id="svgOverlay"></svg>
+    <div id="main" style="visibility: hidden;">
+        <div id="canvasArea">
+            <canvas id="canvas"></canvas>
+            <svg id="svgOverlay"></svg>
+        </div>
+        <div id="info">
+            <span id="pixelCoordsArea"></span>
+            <span id="mathCoordsArea"></span>
+        </div>
+        <input id="iterationsInput" type="number" placeholder="Iterations (default: 255)" step="any" />
     </div>
-
-    <div id="info">
-        <span id="pixelCoordsArea"></span>
-        <span id="mathCoordsArea"></span>
-    </div>
-
-    <input id="iterationsInput" type="number" id="numericInput" placeholder="Iterations (default: 255)" step="any" />
-
     <script defer="defer" src="bundle.js?v=<%= htmlWebpackPlugin.options.version %>"></script>
 </body>
-
 </html>

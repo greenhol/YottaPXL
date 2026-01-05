@@ -1,7 +1,7 @@
-import { Canvas } from './canvas/canvas';
-import { InteractionOverlay } from './overlays/interactionOverlay';
+import { Grid } from './grid/grid';
 import { MandelbrotSimple } from './plane/mandelbrot-simple';
-import { Grid } from './types/grid';
+import { InteractionOverlay } from './stage/interactionOverlay';
+import { Stage } from './stage/stage';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
@@ -17,7 +17,7 @@ export class Start {
     private _mathCoordsArea = document.getElementById('mathCoordsArea');
     private _pixelCoordsArea = document.getElementById('pixelCoordsArea');
 
-    private _canvas: Canvas;
+    private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
     private _plane: MandelbrotSimple;
 
@@ -28,30 +28,27 @@ export class Start {
     }
 
     private init() {
-        const htmlCanvas = document.getElementById('mainCanvas') as HTMLCanvasElement;
+        const mainDiv = document.getElementById('main') as HTMLDivElement;
+        const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
         const htmlSvg = document.getElementById('svgOverlay') as HTMLElement;
         if (htmlCanvas == null || htmlSvg == null) {
             console.error('Critical: HTML elements not found');
             return;
         }
-        this.setHtmlCanvasSize(htmlCanvas, htmlSvg);
+        this.setHtmlCanvasSize(mainDiv, htmlCanvas, htmlSvg);
         this._interactionOverlay = new InteractionOverlay(htmlSvg, this._grid);
 
-        this._canvas = new Canvas(htmlCanvas, this._grid);
+        this._stage = new Stage(htmlCanvas, this._grid);
         this._plane = new MandelbrotSimple(this._grid);
 
         this.subscribeToCoordinates();
         this.subscribeToSelection();
         this.addIterationsEventListener();
 
-        this.drawCanvas();
+        this._stage.setPlane(this._plane);
     }
 
-    private drawCanvas() {
-        this._canvas.draw(this._plane.asImageDataArray());
-    }
-
-    private setHtmlCanvasSize(canvas: HTMLCanvasElement, svgOverlay: HTMLElement) {
+    private setHtmlCanvasSize(div: HTMLDivElement, canvas: HTMLCanvasElement, svgOverlay: HTMLElement) {
         const width = this._grid.width;
         const height = this._grid.height;
         canvas.width = width;
@@ -63,6 +60,7 @@ export class Start {
         if (this._infoArea != null) {
             this._infoArea.style.width = `${width}px`;
         }
+        div.style.setProperty('visibility', `visible`);
     }
 
     private subscribeToCoordinates() {
@@ -82,7 +80,6 @@ export class Start {
                 if (selection != null) {
                     console.log(selection);
                     this._plane.updateArea(selection);
-                    this.drawCanvas();
                 }
             }
         });
@@ -95,7 +92,6 @@ export class Start {
             if (e.key === 'Enter') {
                 const value = input.valueAsNumber;
                 this._plane.maxIterations = value;
-                this.drawCanvas();
             }
         });
     }

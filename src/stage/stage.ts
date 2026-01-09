@@ -19,6 +19,7 @@ export class Stage {
     public setPlane(plane: Plane) {
         this._subscription?.unsubscribe();
         this._subscription = plane.image$.subscribe(image => {
+            console.log(`#setPlane - plane.image subscription new Image of length ${image.length}`);
             this._canvas.draw(image)
         });
     }

@@ -1,3 +1,5 @@
+import { Resolution } from './resolutions';
+
 export class Grid {
     private _width: number;
     private _height: number;
@@ -8,9 +10,9 @@ export class Grid {
     private _yMax: number;
     private _yRange: number;
 
-    constructor(width: number, height: number) {
-        this._width = width;
-        this._height = height;
+    constructor(resolution: Resolution) {
+        this._width = resolution.width;
+        this._height = resolution.height;
         this.setRange(0, 1);
     }
 

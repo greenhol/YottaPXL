@@ -39,16 +39,25 @@ export class MandelbrotSimple extends Plane {
     }
 
     private calculate() {
-        console.log(`#calculate - with max iterations ${this._maxIterations}`)
-        this._data = new Float64Array(this.grid.size);
+        console.log(`#calculate - with max iterations ${this._maxIterations}`);
+        this.setBusy();
+        
+        // ToDo: remove setTimeouts when web workers are 
+        setTimeout(() => {
+            this._data = new Float64Array(this.grid.size);
 
-        for (let y = 0; y < this.grid.height; y++) {
-            for (let x = 0; x < this.grid.width; x++) {
-                this._data[this.grid.get(x, y)] = this.computeMandelbrot(x, y);
+            for (let y = 0; y < this.grid.height; y++) {
+                for (let x = 0; x < this.grid.width; x++) {
+                    this._data[this.grid.get(x, y)] = this.computeMandelbrot(x, y);
+                }
             }
-        }
 
-        this.updateImage(this.produceImage())
+            this.updateImage(this.produceImage());
+
+            setTimeout(() => {
+                this.setIdle();
+            }, 0);
+        }, 0);
     }
 
     private computeMandelbrot(x: number, y: number): number {

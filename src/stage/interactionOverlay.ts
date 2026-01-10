@@ -11,6 +11,8 @@ export interface DisplayableCoordinates {
     math: string,
 }
 
+const EMPTY_DISPLAYABLE_COORDINATES: DisplayableCoordinates = { pixel: '(left, top)', math: '(x, y)' };
+
 export interface RectangleCoordinates {
     x1: number,
     y1: number,
@@ -30,7 +32,7 @@ interface Rectangles {
 
 export class InteractionOverlay {
 
-    public displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>({ pixel: '', math: '' });
+    public displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>(EMPTY_DISPLAYABLE_COORDINATES);
     public selection$ = new BehaviorSubject<RectangleCoordinates | null>(null);
 
     private _overlay: HTMLElement;
@@ -260,7 +262,7 @@ export class InteractionOverlay {
             });
         }
         else {
-            this.displayableCoordinates$.next({ pixel: ``, math: ``, });
+            this.displayableCoordinates$.next(EMPTY_DISPLAYABLE_COORDINATES);
         }
     }
 

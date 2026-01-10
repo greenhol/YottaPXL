@@ -17,8 +17,16 @@ export class Start {
 
     private _urlHandler = new UrlHandler();
 
+    // Header Area
+    private _headerArea: HTMLDivElement | null = document.getElementById('header') as HTMLDivElement;
     private _resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
-    private _infoArea: HTMLElement | null = document.getElementById('info') as HTMLDivElement;
+    private _exportButton = document.getElementById('exportButton') as HTMLDivElement;
+    // Canvas Area
+    private _mainDiv = document.getElementById('main') as HTMLDivElement;
+    private _htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
+    private _htmlSvg = document.getElementById('svgOverlay') as HTMLElement;
+    // Info Area
+    private _infoArea: HTMLDivElement | null = document.getElementById('info') as HTMLDivElement;
     private _mathCoordsArea = document.getElementById('mathCoordsArea') as HTMLSpanElement;
     private _pixelCoordsArea = document.getElementById('pixelCoordsArea') as HTMLSpanElement;
 
@@ -35,17 +43,14 @@ export class Start {
     }
 
     private init() {
-        const mainDiv = document.getElementById('main') as HTMLDivElement;
-        const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
-        const htmlSvg = document.getElementById('svgOverlay') as HTMLElement;
-        if (htmlCanvas == null || htmlSvg == null) {
+        if (this._htmlCanvas == null || this._htmlSvg == null) {
             console.error('Critical: HTML elements not found');
             return;
         }
-        this.setHtmlCanvasSize(mainDiv, htmlCanvas, htmlSvg);
-        this._interactionOverlay = new InteractionOverlay(htmlSvg, this._grid);
+        this.setHtmlCanvasSize();
+        this._interactionOverlay = new InteractionOverlay(this._htmlSvg, this._grid);
 
-        this._stage = new Stage(htmlCanvas, this._grid);
+        this._stage = new Stage(this._htmlCanvas, this._grid);
         this._plane = new MandelbrotSimple(this._grid);
 
         this.subscribeToCoordinates();
@@ -53,6 +58,7 @@ export class Start {
         this.subscribeToBusyState();
 
         this.addResulutionsDropdownEventListener();
+        this.addExportButtonClickListener();
         this.addIterationsEventListener();
 
         this._stage.setPlane(this._plane);
@@ -75,19 +81,24 @@ export class Start {
         return selectedResolution;
     }
 
-    private setHtmlCanvasSize(div: HTMLDivElement, canvas: HTMLCanvasElement, svgOverlay: HTMLElement) {
+    private setHtmlCanvasSize() {
         const width = this._grid.width;
         const height = this._grid.height;
-        canvas.width = width;
-        canvas.height = height;
-        canvas.setAttribute('width', `${width}px`);
-        canvas.setAttribute('height', `${height}px`);
-        svgOverlay.setAttribute('width', `${width}px`);
-        svgOverlay.setAttribute('height', `${height}px`);
-        if (this._infoArea != null) {
-            this._infoArea.style.width = `${width}px`;
+        this._htmlCanvas.width = width;
+        this._htmlCanvas.height = height;
+        this._htmlCanvas.setAttribute('width', `${width}px`);
+        this._htmlCanvas.setAttribute('height', `${height}px`);
+        this._htmlSvg.setAttribute('width', `${width}px`);
+        this._htmlSvg.setAttribute('height', `${height}px`);
+        this.setAreaWidth(this._headerArea, width);
+        this.setAreaWidth(this._infoArea, width);
+        this._mainDiv.style.setProperty('visibility', `visible`);
+    }
+
+    private setAreaWidth(area: HTMLDivElement | null, width: number) {
+        if (area != null) {
+            area.style.width = `${width + 2}px`;
         }
-        div.style.setProperty('visibility', `visible`);
     }
 
     private subscribeToCoordinates() {
@@ -126,12 +137,29 @@ export class Start {
     }
 
     private addResulutionsDropdownEventListener() {
-        this._resolutionSelect?.addEventListener("change", (event) => {
+        this._resolutionSelect?.addEventListener('change', (event) => {
             const selectedValue = (event.target as HTMLSelectElement).value;
-            const [width, height] = selectedValue.split("x").map(Number);
+            const [width, height] = selectedValue.split('x').map(Number);
             console.log(`Selected resolution: ${width}x${height}`);
             this._urlHandler.updateResolution(width, height);
             window.location.reload();
+        });
+    }
+
+    private addExportButtonClickListener() {
+        this._exportButton?.addEventListener('click', (e: PointerEvent) => {
+            let filename = prompt('Enter a filename', 'image');
+            if (!filename) return;
+            filename += '.png';
+
+            const dataURL = this._htmlCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataURL;
+            link.click();
+            setTimeout(() => {
+                link.remove();
+            }, 100);
         });
     }
 

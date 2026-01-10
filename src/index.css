@@ -50,6 +50,22 @@ input {
     float: left;
 }
 
+#exportButton {
+    display: block;
+    position: relative;
+    width: 150px;
+    height: 22px;
+    line-height: 22px;
+    float: right;
+    background-color: #eef;
+    border: 1px solid black;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 #canvasArea {
     display: block;
     position: relative;

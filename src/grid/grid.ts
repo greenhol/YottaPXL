@@ -26,6 +26,7 @@ export class Grid {
         this._xRange = xMax - xMin;
         this._yMin = yCenter - this._yRange / 2;
         this._yMax = yCenter + this._yRange / 2;
+        console.log(`Grid (${this._width} x ${this._height}) range set to: ${xMin} - ${xMax}`);
     }
 
     public getIndex(pixelX: number, pixelY: number): number {
@@ -48,6 +49,15 @@ export class Grid {
     public get size(): number { return this._width * this._height }
 
     public get ratio(): number { return this._width / this._height }
+
+    public get mathRange(): number { return this._xMax - this._xMin }
+    
+    public get mathCenter(): [number, number] {
+        return [
+            this._xMin + (this._xMax - this._xMin) / 2,
+            this._yMin + (this._yMax - this._yMin) / 2,
+        ];
+    }
 
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;

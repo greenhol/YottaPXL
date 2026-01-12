@@ -1,8 +1,8 @@
 import { Grid } from '../../grid/grid';
-import { resolutionWithBuffer } from '../../grid/resolutions';
+import { createGridWithBuffer } from '../../grid/grid-with-buffer';
 import { RectangleCoordinates } from '../../stage/interactionOverlay';
 import { Plane } from '../plane';
-import { ChargeField, Vector } from './field/charge-field';
+import { ChargeField } from './field/charge-field';
 
 interface PointInPixel {
     iDiff: number;
@@ -21,10 +21,12 @@ export class Lic extends Plane {
     private _buffer = 50;
 
     constructor(grid: Grid) {
-        grid.setRange(-1, 1);
+        const [x1, x2] = [-1, 1]
+        grid.setRange(x1, x2);
         super(grid);
-        this._sourceGrid = new Grid(resolutionWithBuffer(this.grid.resolution, this._buffer));
-        this._field = new ChargeField();
+
+        this._sourceGrid = createGridWithBuffer(grid, this._buffer);
+        this._field = new ChargeField(this._sourceGrid);
         this.create();
     }
 
@@ -141,20 +143,20 @@ export class Lic extends Plane {
         let nextI = i;
         let nextJ = j;
         let restDistance = l;
-        let [x, y] = this.grid.pixelToMath(nextJ, nextI);
-        let v = this._field.getVector(x, y);
-        v.vXn *= direction;
-        v.vYn *= direction;
-        let nextArea = this.getNextArea(0.5, 0.5, v);
+        let [vX, vY] = this._field.getVector(nextJ + this._buffer, nextI + this._buffer);
+        vX *= direction;
+        vY *= direction;
+        let nextArea = this.getNextArea(0.5, 0.5, vX, vY);
         let factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
         let brightness = this._sourceData[this._sourceGrid.getIndex(nextJ + this._buffer, nextI + this._buffer)] * factor;
         restDistance = l - nextArea.distance;
         while (restDistance > 0) {
             nextI += nextArea.iDiff;
             nextJ += nextArea.jDiff;
-            [x, y] = this.grid.pixelToMath(nextJ, nextI);
-            v = this._field.getVector(x, y);
-            nextArea = this.getNextArea(nextArea.x, nextArea.y, v);
+            [vX, vY] = this._field.getVector(nextJ + this._buffer, nextI + this._buffer);
+            vX *= direction;
+            vY *= direction;
+            nextArea = this.getNextArea(nextArea.x, nextArea.y, vX, vY);
             factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
             brightness += (this._sourceData[this._sourceGrid.getIndex(nextJ + this._buffer, nextI + this._buffer)] * factor);
             restDistance -= nextArea.distance;
@@ -162,24 +164,24 @@ export class Lic extends Plane {
         return brightness;
     }
 
-    private getNextArea(x: number, y: number, v: Vector): PointInPixel {
+    private getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel {
         let alphas: number[] = []
         let beta: number;
         const offset = 0.01;
         // Top, Bottom, Left, Right
-        alphas.push((1 - y) / v.vYn);
-        alphas.push(-y / v.vYn);
-        alphas.push(-x / v.vXn);
-        alphas.push((1 - x) / v.vXn);
+        alphas.push((1 - y) / vY);
+        alphas.push(-y / vY);
+        alphas.push(-x / vX);
+        alphas.push((1 - x) / vX);
         alphas.forEach((alpha: number, i: number) => {
             if (alpha <= 0) alphas[i] = Infinity;
         })
         const borderIndex = alphas.indexOf(Math.min(...alphas));
-        const distance = Math.sqrt(Math.pow(alphas[borderIndex] * v.vXn, 2) + Math.pow(alphas[borderIndex] * v.vYn, 2)) / Math.SQRT2;
+        const distance = Math.sqrt(Math.pow(alphas[borderIndex] * vX, 2) + Math.pow(alphas[borderIndex] * vY, 2)) / Math.SQRT2;
 
         switch (borderIndex) {
             case 0: // Top
-                beta = v.vXn * alphas[borderIndex] + x;
+                beta = vX * alphas[borderIndex] + x;
                 return {
                     iDiff: -1,
                     jDiff: 0,
@@ -188,7 +190,7 @@ export class Lic extends Plane {
                     distance: distance
                 }
             case 1: // Bottom
-                beta = v.vXn * alphas[borderIndex] + x;
+                beta = vX * alphas[borderIndex] + x;
                 return {
                     iDiff: 1,
                     jDiff: 0,
@@ -197,7 +199,7 @@ export class Lic extends Plane {
                     distance: distance
                 }
             case 2: // Left
-                beta = v.vYn * alphas[borderIndex] + y;
+                beta = vY * alphas[borderIndex] + y;
                 return {
                     iDiff: 0,
                     jDiff: -1,
@@ -206,7 +208,7 @@ export class Lic extends Plane {
                     distance: distance
                 }
             case 3: // Right
-                beta = v.vYn * alphas[borderIndex] + y;
+                beta = vY * alphas[borderIndex] + y;
                 return {
                     iDiff: 0,
                     jDiff: 1,

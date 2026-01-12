@@ -1,5 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../grid/grid';
+import { RectangleCoordinates } from '../stage/interactionOverlay';
 
 export abstract class Plane {
 
@@ -10,12 +11,16 @@ export abstract class Plane {
 
     private _busy$ = new BehaviorSubject<boolean>(false);
     public busy$: Observable<boolean> = this._busy$;
-    
+
     constructor(grid: Grid) {
         this._grid = grid;
     }
 
     public abstract name: string;
+
+    abstract updateArea(selection: RectangleCoordinates): void;
+
+    abstract setMaxIterations(value: number): void;
 
     public get grid(): Grid {
         return this._grid;

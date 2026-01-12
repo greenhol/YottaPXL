@@ -99,10 +99,32 @@ input {
     float: right;
 }
 
+#planeSelectArea {
+    display: block;
+    position: relative;
+    min-width: 500px;
+    left: 15px;
+    height: 30px;
+}
+
+#planeSelect {
+    display: block;
+    position: relative;
+    width: 300px;
+    height: 24px;
+}
+
+#planeConfigArea {
+    display: block;
+    position: relative;
+    min-width: 500px;
+    top: 8px;
+    left: 15px;
+    height: 30px;
+}
+
 #iterationsInput {
     display: block;
     position: relative;
-    top: 4px;
-    left: 15px;
     width: 300px;
 }

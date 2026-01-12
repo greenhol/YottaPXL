@@ -1,10 +1,7 @@
-import { Grid } from '../grid/grid';
-import { RectangleCoordinates } from '../stage/interactionOverlay';
-import { BLACK, ColorMapper, WHITE } from '../utils/color-mapper';
-import { Plane } from './plane';
-
-// const CYCLE_LENGTH = 255; // Configurable cycle length
-// const BLACK: RGB = { r: 0, g: 0, b: 0 };
+import { Grid } from '../../grid/grid';
+import { RectangleCoordinates } from '../../stage/interactionOverlay';
+import { BLACK, ColorMapper, WHITE } from '../../utils/color-mapper';
+import { Plane } from '../plane';
 
 export class MandelbrotSimple extends Plane {
 
@@ -26,14 +23,14 @@ export class MandelbrotSimple extends Plane {
 
     override name: string = 'Mandelbrot Simple';
 
-    public updateArea(selection: RectangleCoordinates) {
+    override updateArea(selection: RectangleCoordinates) {
         const height = selection.y2 - selection.y1;
         const yCenter = selection.y1 + height / 2;
         this.grid.setRange(selection.x1, selection.x2, yCenter);
         this.calculate();
     }
 
-    public set maxIterations(value: number) {
+    override setMaxIterations(value: number) {
         this._maxIterations = value;
         this.calculate();
     }
@@ -41,18 +38,18 @@ export class MandelbrotSimple extends Plane {
     private calculate() {
         console.log(`#calculate - with max iterations ${this._maxIterations}`);
         this.setBusy();
-        
+
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
             this._data = new Float64Array(this.grid.size);
 
             for (let y = 0; y < this.grid.height; y++) {
                 for (let x = 0; x < this.grid.width; x++) {
-                    this._data[this.grid.get(x, y)] = this.computeMandelbrot(x, y);
+                    this._data[this.grid.getIndex(x, y)] = this.computeMandelbrot(x, y);
                 }
             }
 
-            this.updateImage(this.produceImage());
+            this.updateImage(this.createImage());
 
             setTimeout(() => {
                 this.setIdle();
@@ -74,7 +71,7 @@ export class MandelbrotSimple extends Plane {
         return iteration;
     }
 
-    private produceImage(): ImageDataArray {
+    private createImage(): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let y = 0; y < this.grid.height; y++) {
             for (let x = 0; x < this.grid.width; x++) {

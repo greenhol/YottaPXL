@@ -1,6 +1,9 @@
+import { configVersionCheck } from './config/config-version-check';
 import { Grid } from './grid/grid';
 import { Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
-import { MandelbrotSimple } from './plane/mandelbrot-simple';
+import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
+import { Lic } from './plane/lic/lic';
+import { Plane } from './plane/plane';
 import { InteractionOverlay } from './stage/interactionOverlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
@@ -8,12 +11,17 @@ import { UrlHandler } from './utils/url-handler';
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
+enum PlaneID {
+    MANDELBROT = 'MANDELBROT',
+    LIC = 'LIC',
+}
+
 export class Start {
 
     private _grid: Grid;
     private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
-    private _plane: MandelbrotSimple;
+    private _plane: Plane;
 
     private _urlHandler = new UrlHandler();
 
@@ -29,20 +37,29 @@ export class Start {
     private _infoArea: HTMLDivElement | null = document.getElementById('info') as HTMLDivElement;
     private _mathCoordsArea = document.getElementById('mathCoordsArea') as HTMLSpanElement;
     private _pixelCoordsArea = document.getElementById('pixelCoordsArea') as HTMLSpanElement;
+    // Plane Area
+    private _planeSelectArea = document.getElementById('planeSelectArea') as HTMLDivElement;
+    private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
+    private _planeConfigArea = document.getElementById('planeConfigArea') as HTMLDivElement;
 
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
+        configVersionCheck(APP_VERSION);
+
         const [width, height] = this._urlHandler.getResolution();
-        let initialResolution = this.initializeResolution(width, height);
-        if (!initialResolution) {
+        let resolution = this.initializeResolution(width, height);
+        if (!resolution) {
             console.error('#ctor - initial resolution not found!');
-            initialResolution = RESOLUTIONS[0];
+            resolution = RESOLUTIONS[0];
         }
-        this._grid = new Grid(initialResolution);
-        window.onload = () => { this.init() }
+        this._grid = new Grid(resolution);
+
+        let planeId = this.initializePlane(PlaneID.LIC);
+
+        window.onload = () => { this.init(planeId) }
     }
 
-    private init() {
+    private init(initialPlane: PlaneID) {
         if (this._htmlCanvas == null || this._htmlSvg == null) {
             console.error('Critical: HTML elements not found');
             return;
@@ -51,7 +68,17 @@ export class Start {
         this._interactionOverlay = new InteractionOverlay(this._htmlSvg, this._grid);
 
         this._stage = new Stage(this._htmlCanvas, this._grid);
-        this._plane = new MandelbrotSimple(this._grid);
+
+        switch (initialPlane) {
+            case PlaneID.MANDELBROT: {
+                this._plane = new MandelbrotSimple(this._grid);
+                break;
+            }
+            case PlaneID.LIC: {
+                this._plane = new Lic(this._grid);
+                break;
+            }
+        }
 
         this.subscribeToCoordinates();
         this.subscribeToSelection();
@@ -81,6 +108,23 @@ export class Start {
         return selectedResolution;
     }
 
+    private initializePlane(id: PlaneID): PlaneID {
+        this._planeSelect.innerHTML = '';
+        let selectedPlane: PlaneID = id;
+
+        for (const planeId in PlaneID) {
+            const option = document.createElement('option');
+            option.label = `${planeId}`;
+            option.value = planeId;
+            if (planeId == id) {
+                selectedPlane = planeId;
+                option.selected = true;
+            }
+            this._planeSelect.appendChild(option);
+        };
+        return selectedPlane;
+    }
+
     private setHtmlCanvasSize() {
         const width = this._grid.width;
         const height = this._grid.height;
@@ -92,6 +136,8 @@ export class Start {
         this._htmlSvg.setAttribute('height', `${height}px`);
         this.setAreaWidth(this._headerArea, width);
         this.setAreaWidth(this._infoArea, width);
+        this.setAreaWidth(this._planeSelectArea, width);
+        this.setAreaWidth(this._planeConfigArea, width);
         this._mainDiv.style.setProperty('visibility', `visible`);
     }
 
@@ -169,7 +215,7 @@ export class Start {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 const value = input.valueAsNumber;
-                this._plane.maxIterations = value;
+                this._plane.setMaxIterations(value);
             }
         });
     }

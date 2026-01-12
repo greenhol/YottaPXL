@@ -4,6 +4,14 @@ export interface Resolution {
     description: string;
 }
 
+export function resolutionWithBuffer(resolution: Resolution, buffer: number): Resolution {
+    return {
+        width: resolution.width + 2 * buffer,
+        height: resolution.height + 2 * buffer,
+        description: `${resolution.description} + buffer:${buffer}`,
+    }
+}
+
 export const RESOLUTIONS: Resolution[] = [
     { width: 320, height: 320, description: '1:1 - Small preview' },
     { width: 640, height: 640, description: '1:1 - Medium preview' },

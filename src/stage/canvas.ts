@@ -16,7 +16,7 @@ export class Canvas {
             throw new Error('Could not get 2D context');
         }
         if (imageData.length == 0) {
-            console.error('#draw - Error, image data empty');
+            // console.error('#draw - Error, image data empty');
             return;
         }
 

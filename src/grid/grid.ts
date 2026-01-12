@@ -1,6 +1,7 @@
 import { Resolution } from './resolutions';
 
 export class Grid {
+    private _resolution: Resolution;
     private _width: number;
     private _height: number;
     private _xMin: number;
@@ -11,9 +12,11 @@ export class Grid {
     private _yRange: number;
 
     constructor(resolution: Resolution) {
+        this._resolution = resolution;
         this._width = resolution.width;
         this._height = resolution.height;
         this.setRange(0, 1);
+        console.log(`Grid (${this._width} x ${this._height}) created for resolution: ${resolution.description}`);
     }
 
     public setRange(xMin: number, xMax: number, yCenter: number = 0) {
@@ -23,10 +26,6 @@ export class Grid {
         this._xRange = xMax - xMin;
         this._yMin = yCenter - this._yRange / 2;
         this._yMax = yCenter + this._yRange / 2;
-    }
-
-    public get(pixelX: number, pixelY: number): number {
-        return pixelY * this.width + pixelX;
     }
 
     public getIndex(pixelX: number, pixelY: number): number {
@@ -39,6 +38,8 @@ export class Grid {
             this._yMax - (pixelY / this.height) * (this._yRange),
         ];
     }
+
+    public get resolution(): Resolution { return this._resolution }
 
     public get width(): number { return this._width }
 

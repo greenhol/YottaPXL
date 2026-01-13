@@ -11,7 +11,7 @@ export class MandelbrotSimple extends Plane {
     private _maxIterations: number = 255;
 
     constructor(grid: Grid) {
-        grid.setRange(-3, 1.8);
+        grid.updateRange({ xMin: -3, xMax: 1.8, yCenter: 0 });
         super(grid);
 
         this._colorMapper = new ColorMapper([
@@ -26,7 +26,7 @@ export class MandelbrotSimple extends Plane {
     override updateArea(selection: RectangleCoordinates) {
         const height = selection.y2 - selection.y1;
         const yCenter = selection.y1 + height / 2;
-        this.grid.setRange(selection.x1, selection.x2, yCenter);
+        this.grid.updateRange({ xMin: selection.x1, xMax: selection.x2, yCenter: yCenter });
         this.calculate();
     }
 

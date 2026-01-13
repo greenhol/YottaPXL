@@ -18,8 +18,8 @@ enum PlaneID {
 
 export class Start {
 
-    private _grid: Grid;
-    private _stage: Stage;
+    private readonly _grid: Grid;
+    private  _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
     private _plane: Plane;
 

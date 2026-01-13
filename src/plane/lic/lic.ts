@@ -1,5 +1,5 @@
-import { Grid } from '../../grid/grid';
-import { createGridWithBuffer } from '../../grid/grid-with-buffer';
+import { Grid, GridRange } from '../../grid/grid';
+import { GridWithBuffer } from '../../grid/grid-with-buffer';
 import { RectangleCoordinates } from '../../stage/interactionOverlay';
 import { Plane } from '../plane';
 import { ChargeField } from './field/charge-field';
@@ -14,18 +14,18 @@ interface PointInPixel {
 
 export class Lic extends Plane {
 
-    private _sourceGrid: Grid;
+    private _sourceGrid: GridWithBuffer;
     private _field: ChargeField;
     private _sourceData: Float64Array;
     private _licData: Float64Array;
     private _buffer = 50;
 
     constructor(grid: Grid) {
-        const [x1, x2] = [-1, 1]
-        grid.setRange(x1, x2);
+        const range: GridRange = { xMin: -1, xMax: 1, yCenter: 0 };
+        grid.updateRange(range);
         super(grid);
 
-        this._sourceGrid = createGridWithBuffer(grid, this._buffer);
+        this._sourceGrid = new GridWithBuffer(grid.resolution, range, this._buffer);
         this._field = new ChargeField(this._sourceGrid);
         this.create();
     }
@@ -82,7 +82,7 @@ export class Lic extends Plane {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let y = 0; y < this.grid.height; y++) {
             for (let x = 0; x < this.grid.width; x++) {
-                const destinationIndex = this._sourceGrid.getIndex(x + this._buffer, y + this._buffer);
+                const destinationIndex = this._sourceGrid.getIndexForCenterArea(x, y);
                 let value = this._sourceData[destinationIndex];
                 const index = this.grid.getIndex(x, y);
                 const pixelIndex = index * 4;
@@ -140,25 +140,23 @@ export class Lic extends Plane {
     }
 
     private calcLicPixelInDirection(i: number, j: number, l: number, direction: number = 1): number {
-        let nextI = i;
-        let nextJ = j;
         let restDistance = l;
-        let [vX, vY] = this._field.getVector(nextJ + this._buffer, nextI + this._buffer);
+        let [vX, vY] = this._field.getVector(j + this._buffer, i + this._buffer);
         vX *= direction;
         vY *= direction;
         let nextArea = this.getNextArea(0.5, 0.5, vX, vY);
         let factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
-        let brightness = this._sourceData[this._sourceGrid.getIndex(nextJ + this._buffer, nextI + this._buffer)] * factor;
+        let brightness = this._sourceData[this._sourceGrid.getIndexForCenterArea(j, i)] * factor;
         restDistance = l - nextArea.distance;
         while (restDistance > 0) {
-            nextI += nextArea.iDiff;
-            nextJ += nextArea.jDiff;
-            [vX, vY] = this._field.getVector(nextJ + this._buffer, nextI + this._buffer);
+            i += nextArea.iDiff;
+            j += nextArea.jDiff;
+            [vX, vY] = this._field.getVector(j + this._buffer, i + this._buffer);
             vX *= direction;
             vY *= direction;
             nextArea = this.getNextArea(nextArea.x, nextArea.y, vX, vY);
             factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
-            brightness += (this._sourceData[this._sourceGrid.getIndex(nextJ + this._buffer, nextI + this._buffer)] * factor);
+            brightness += (this._sourceData[this._sourceGrid.getIndexForCenterArea(j, i)] * factor);
             restDistance -= nextArea.distance;
         }
         return brightness;

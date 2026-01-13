@@ -1,5 +1,11 @@
 import { Resolution } from './resolutions';
 
+export interface GridRange {
+    xMin: number;
+    xMax: number;
+    yCenter: number;
+}
+
 export class Grid {
     private _resolution: Resolution;
     private _width: number;
@@ -15,18 +21,13 @@ export class Grid {
         this._resolution = resolution;
         this._width = resolution.width;
         this._height = resolution.height;
-        this.setRange(0, 1);
+        this.setRange({ xMin: 0, xMax: 1, yCenter: 0 });
         console.log(`Grid (${this._width} x ${this._height}) created for resolution: ${resolution.description}`);
     }
 
-    public setRange(xMin: number, xMax: number, yCenter: number = 0) {
-        this._yRange = (xMax - xMin) / this.ratio;
-        this._xMin = xMin;
-        this._xMax = xMax;
-        this._xRange = xMax - xMin;
-        this._yMin = yCenter - this._yRange / 2;
-        this._yMax = yCenter + this._yRange / 2;
-        console.log(`Grid (${this._width} x ${this._height}) range set to: ${xMin} - ${xMax}`);
+    public updateRange(range: GridRange) {
+        this.setRange(range);
+        console.log(`Grid (${this._width} x ${this._height}) range set to: ${range.xMin} -> ${range.xMax} and yCenter: ${range.yCenter}`);
     }
 
     public getIndex(pixelX: number, pixelY: number): number {
@@ -50,16 +51,16 @@ export class Grid {
 
     public get ratio(): number { return this._width / this._height }
 
-    public get mathRange(): number { return this._xMax - this._xMin }
-    
-    public get mathCenter(): [number, number] {
-        return [
-            this._xMin + (this._xMax - this._xMin) / 2,
-            this._yMin + (this._yMax - this._yMin) / 2,
-        ];
-    }
-
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;
+    }
+
+    private setRange(range: GridRange) {
+        this._yRange = (range.xMax - range.xMin) / this.ratio;
+        this._xMin = range.xMin;
+        this._xMax = range.xMax;
+        this._xRange = range.xMax - range.xMin;
+        this._yMin = range.yCenter - this._yRange / 2;
+        this._yMax = range.yCenter + this._yRange / 2;
     }
 }

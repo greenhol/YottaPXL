@@ -1,3 +1,4 @@
+import { Subscription } from 'rxjs';
 import { configVersionCheck } from './config/config-version-check';
 import { Grid } from './grid/grid';
 import { Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
@@ -12,14 +13,14 @@ declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
 enum PlaneID {
-    MANDELBROT = 'MANDELBROT',
     LIC = 'LIC',
+    MANDELBROT = 'MANDELBROT',
 }
 
 export class Start {
 
     private readonly _grid: Grid;
-    private  _stage: Stage;
+    private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
     private _plane: Plane;
 
@@ -42,6 +43,10 @@ export class Start {
     private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
     private _planeConfigArea = document.getElementById('planeConfigArea') as HTMLDivElement;
 
+    // subscriptions
+    private _busySubscription: Subscription | null = null;
+    private _selectionSubscription: Subscription | null = null;
+
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
         configVersionCheck(APP_VERSION);
@@ -54,7 +59,7 @@ export class Start {
         }
         this._grid = new Grid(resolution);
 
-        let planeId = this.initializePlane(PlaneID.LIC);
+        let planeId = this.initializePlaneSelect(PlaneID.LIC);
 
         window.onload = () => { this.init(planeId) }
     }
@@ -69,7 +74,17 @@ export class Start {
 
         this._stage = new Stage(this._htmlCanvas, this._grid);
 
-        switch (initialPlane) {
+        this.switchPlane(initialPlane);
+
+        this.subscribeToCoordinates();
+        this.addResulutionsDropdownEventListener();
+        this.addPlaneDropdownEventListener();
+        this.addExportButtonClickListener();
+        this.addIterationsEventListener(); // ToDo: Only applicable to Mandelbrot?!
+    }
+
+    private switchPlane(planeId: PlaneID) {
+        switch (planeId) {
             case PlaneID.MANDELBROT: {
                 this._plane = new MandelbrotSimple(this._grid);
                 break;
@@ -79,15 +94,8 @@ export class Start {
                 break;
             }
         }
-
-        this.subscribeToCoordinates();
-        this.subscribeToSelection();
         this.subscribeToBusyState();
-
-        this.addResulutionsDropdownEventListener();
-        this.addExportButtonClickListener();
-        this.addIterationsEventListener();
-
+        this.subscribeToSelection();
         this._stage.setPlane(this._plane);
     }
 
@@ -108,7 +116,7 @@ export class Start {
         return selectedResolution;
     }
 
-    private initializePlane(id: PlaneID): PlaneID {
+    private initializePlaneSelect(id: PlaneID): PlaneID {
         this._planeSelect.innerHTML = '';
         let selectedPlane: PlaneID = id;
 
@@ -159,7 +167,8 @@ export class Start {
     }
 
     private subscribeToSelection() {
-        this._interactionOverlay.selection$.subscribe({
+        this._selectionSubscription?.unsubscribe();
+        this._selectionSubscription = this._interactionOverlay.selection$.subscribe({
             next: (selection) => {
                 if (selection != null) {
                     console.log(selection);
@@ -170,7 +179,8 @@ export class Start {
     }
 
     private subscribeToBusyState() {
-        this._plane.busy$.subscribe({
+        this._busySubscription?.unsubscribe();
+        this._busySubscription = this._plane.busy$.subscribe({
             next: (busy) => {
                 const busyIndicator = document.getElementById('busyIndicator') as HTMLDivElement;
                 if (busy) {
@@ -189,6 +199,27 @@ export class Start {
             console.log(`Selected resolution: ${width}x${height}`);
             this._urlHandler.updateResolution(width, height);
             window.location.reload();
+        });
+    }
+
+    private addPlaneDropdownEventListener() {
+        this._planeSelect?.addEventListener('change', (event) => {
+            const selectedValue = (event.target as HTMLSelectElement).value;
+            console.log(`Selected plane: ${selectedValue}`);
+            switch (selectedValue) {
+                case PlaneID.LIC: {
+                    this.switchPlane(PlaneID.LIC);
+                    break;
+                }
+                case PlaneID.MANDELBROT: {
+                    this.switchPlane(PlaneID.MANDELBROT);
+                    break;
+                }
+                default: {
+                    console.warn(`Invalid plane ID: ${selectedValue}`);
+                    break;
+                }
+            }
         });
     }
 

@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { Grid } from '../grid/grid';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
@@ -33,7 +33,7 @@ interface Rectangles {
 export class InteractionOverlay {
 
     public displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>(EMPTY_DISPLAYABLE_COORDINATES);
-    public selection$ = new BehaviorSubject<RectangleCoordinates | null>(null);
+    public selection$ = new Subject<RectangleCoordinates | null>();
 
     private _overlay: HTMLElement;
     private _grid: Grid;

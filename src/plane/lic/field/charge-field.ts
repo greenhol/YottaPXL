@@ -46,11 +46,7 @@ export class ChargeField {
 
     private computeVector(x: number, y: number): [number, number] {
         let vX = 0;
-        let vXn = 1;
         let vY = 0;
-        let vYn = 0;
-        let value = 1;
-
         for (let i = 0; i < this.charges.length; i++) {
             const rdX = x - this.charges[i].x;
             const rdY = y - this.charges[i].y;
@@ -60,12 +56,11 @@ export class ChargeField {
         }
 
         // Rotate for Potential
-        // v = { vX: -v.vY, vXn: 1, vY: v.vX, vYn: 0, value: 1 };
+        const temp = vX;
+        vX = -vY;
+        vY = temp;
 
-        value = Math.sqrt(vX * vX + vY * vY);
-        vXn = vX / value;
-        vYn = vY / value;
-
-        return [vXn, vYn];
+        const value = Math.sqrt(vX * vX + vY * vY);
+        return [vX / value, vY / value];
     }
 }

@@ -33,6 +33,7 @@ export class Lic extends Plane {
     override name: string = 'LIC';
 
     override updateArea(selection: RectangleCoordinates) {
+        console.log('LIC #updateArea - not implemented yet');
         // ToDo
     }
 
@@ -54,16 +55,16 @@ export class Lic extends Plane {
 
                 setTimeout(() => {
                     this.setIdle();
-                }, 0);
-            }, 0);
-        }, 0);
+                }, 50);
+            }, 50);
+        }, 50);
     }
 
     private createSourceData() {
         this._sourceData = new Float64Array(this._sourceGrid.size);
         for (let y = 0; y < this._sourceGrid.height; y++) {
             for (let x = 0; x < this._sourceGrid.width; x++) {
-                this._sourceData[this._sourceGrid.getIndex(x, y)] = this.biasedRandom(2) * 255;
+                this._sourceData[this._sourceGrid.getIndex(x, y)] = this.biasedRandom(4) * 255;
             }
         }
     }

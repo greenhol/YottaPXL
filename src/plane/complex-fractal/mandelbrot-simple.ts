@@ -24,6 +24,7 @@ export class MandelbrotSimple extends Plane {
     override name: string = 'Mandelbrot Simple';
 
     override updateArea(selection: RectangleCoordinates) {
+        console.log('MANDETBROT #updateArea');
         const height = selection.y2 - selection.y1;
         const yCenter = selection.y1 + height / 2;
         this.grid.updateRange({ xMin: selection.x1, xMax: selection.x2, yCenter: yCenter });

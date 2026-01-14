@@ -1,7 +1,10 @@
+import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
-import { RectangleCoordinates } from '../../stage/interactionOverlay';
+import { GridRange } from '../../grid/grid-range';
 import { BLACK, ColorMapper, WHITE } from '../../utils/color-mapper';
-import { Plane } from '../plane';
+import { Plane, PlaneConfig } from '../plane';
+
+const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 export class MandelbrotSimple extends Plane {
 
@@ -11,7 +14,6 @@ export class MandelbrotSimple extends Plane {
     private _maxIterations: number = 255;
 
     constructor(grid: Grid) {
-        grid.updateRange({ xMin: -3, xMax: 1.8, yCenter: 0 });
         super(grid);
 
         this._colorMapper = new ColorMapper([
@@ -21,13 +23,20 @@ export class MandelbrotSimple extends Plane {
         this.calculate();
     }
 
+    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
+        { gridRange: INITIAL_GRID_RANGE },
+        'mandelBrotConfig',
+    );
+
     override name: string = 'Mandelbrot Simple';
 
-    override updateArea(selection: RectangleCoordinates) {
+    override updateGridRange(selectedRange: GridRange | null) {
         console.log('MANDETBROT #updateArea');
-        const height = selection.y2 - selection.y1;
-        const yCenter = selection.y1 + height / 2;
-        this.grid.updateRange({ xMin: selection.x1, xMax: selection.x2, yCenter: yCenter });
+        if (selectedRange != null) {
+            this.config.data.gridRange = selectedRange;
+        } else {
+            this.config.reset();
+        }
         this.calculate();
     }
 
@@ -38,6 +47,7 @@ export class MandelbrotSimple extends Plane {
 
     private calculate() {
         console.log(`#calculate - with max iterations ${this._maxIterations}`);
+        this.grid.updateRange(this.config.data.gridRange);
         this.setBusy();
 
         // ToDo: remove setTimeouts when web workers are 

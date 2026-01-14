@@ -1,6 +1,8 @@
 import { Subscription } from 'rxjs';
 import { configVersionCheck } from './config/config-version-check';
+import { ModuleConfig } from './config/module-config';
 import { Grid } from './grid/grid';
+import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
 import { Lic } from './plane/lic/lic';
@@ -13,16 +15,22 @@ declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
 enum PlaneID {
-    LIC = 'LIC',
     MANDELBROT = 'MANDELBROT',
+    LIC = 'LIC',
+}
+
+interface MainConfig {
+    currentPlaneId: number,
 }
 
 export class Start {
 
+    private _config: ModuleConfig<MainConfig>;
+
     private readonly _grid: Grid;
     private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
-    private _plane: Plane;
+    private _plane: Plane | null = null;
 
     private _urlHandler = new UrlHandler();
 
@@ -34,10 +42,11 @@ export class Start {
     private _mainDiv = document.getElementById('main') as HTMLDivElement;
     private _htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
     private _htmlSvg = document.getElementById('svgOverlay') as HTMLElement;
-    // Info Area
-    private _infoArea: HTMLDivElement | null = document.getElementById('info') as HTMLDivElement;
+    // Range Area
+    private _rangeArea: HTMLDivElement | null = document.getElementById('rangeArea') as HTMLDivElement;
     private _mathCoordsArea = document.getElementById('mathCoordsArea') as HTMLSpanElement;
     private _pixelCoordsArea = document.getElementById('pixelCoordsArea') as HTMLSpanElement;
+    private _rangeInput = document.getElementById('rangeInput') as HTMLInputElement;
     // Plane Area
     private _planeSelectArea = document.getElementById('planeSelectArea') as HTMLDivElement;
     private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
@@ -50,6 +59,7 @@ export class Start {
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
         configVersionCheck(APP_VERSION);
+        this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 0 }, 'mainConfig');
 
         const [width, height] = this._urlHandler.getResolution();
         let resolution = this.initializeResolution(width, height);
@@ -59,7 +69,7 @@ export class Start {
         }
         this._grid = new Grid(resolution);
 
-        let planeId = this.initializePlaneSelect(PlaneID.LIC);
+        let planeId = this.initializePlaneSelect();
 
         window.onload = () => { this.init(planeId) }
     }
@@ -77,19 +87,24 @@ export class Start {
         this.switchPlane(initialPlane);
 
         this.subscribeToCoordinates();
+        this.subscribeToRange();
         this.addResulutionsDropdownEventListener();
         this.addPlaneDropdownEventListener();
         this.addExportButtonClickListener();
+        this.addSetRangeButtonClickListener();
         this.addIterationsEventListener(); // ToDo: Only applicable to Mandelbrot?!
     }
 
     private switchPlane(planeId: PlaneID) {
+        this._plane?.onDestroy();
         switch (planeId) {
             case PlaneID.MANDELBROT: {
+                this._config.data.currentPlaneId = 0;
                 this._plane = new MandelbrotSimple(this._grid);
                 break;
             }
             case PlaneID.LIC: {
+                this._config.data.currentPlaneId = 1;
                 this._plane = new Lic(this._grid);
                 break;
             }
@@ -116,21 +131,27 @@ export class Start {
         return selectedResolution;
     }
 
-    private initializePlaneSelect(id: PlaneID): PlaneID {
+    private initializePlaneSelect(): PlaneID {
         this._planeSelect.innerHTML = '';
-        let selectedPlane: PlaneID = id;
+        let selectedPlane: PlaneID = this.getPlaneIdFromConfig();
 
         for (const planeId in PlaneID) {
             const option = document.createElement('option');
             option.label = `${planeId}`;
             option.value = planeId;
-            if (planeId == id) {
-                selectedPlane = planeId;
+            if (planeId == selectedPlane) {
                 option.selected = true;
             }
             this._planeSelect.appendChild(option);
         };
         return selectedPlane;
+    }
+
+    private getPlaneIdFromConfig(): PlaneID {
+        switch (this._config.data.currentPlaneId) {
+            case 1: return PlaneID.LIC;
+            default: return PlaneID.MANDELBROT;
+        }
     }
 
     private setHtmlCanvasSize() {
@@ -143,7 +164,7 @@ export class Start {
         this._htmlSvg.setAttribute('width', `${width}px`);
         this._htmlSvg.setAttribute('height', `${height}px`);
         this.setAreaWidth(this._headerArea, width);
-        this.setAreaWidth(this._infoArea, width);
+        this.setAreaWidth(this._rangeArea, width);
         this.setAreaWidth(this._planeSelectArea, width);
         this.setAreaWidth(this._planeConfigArea, width);
         this._mainDiv.style.setProperty('visibility', `visible`);
@@ -166,13 +187,19 @@ export class Start {
         });
     }
 
+    private subscribeToRange() {
+        this._grid.range$.subscribe({
+            next: (range) => { this._rangeInput.value = gridRangeToString(range) }
+        });
+    }
+
     private subscribeToSelection() {
         this._selectionSubscription?.unsubscribe();
-        this._selectionSubscription = this._interactionOverlay.selection$.subscribe({
+        this._selectionSubscription = this._interactionOverlay.selectedRange$.subscribe({
             next: (selection) => {
                 if (selection != null) {
                     console.log(selection);
-                    this._plane.updateArea(selection);
+                    this._plane?.updateGridRange(selection);
                 }
             }
         });
@@ -180,16 +207,20 @@ export class Start {
 
     private subscribeToBusyState() {
         this._busySubscription?.unsubscribe();
-        this._busySubscription = this._plane.busy$.subscribe({
-            next: (busy) => {
-                const busyIndicator = document.getElementById('busyIndicator') as HTMLDivElement;
-                if (busy) {
-                    busyIndicator.className = 'busyIndicator--busy';
-                } else {
-                    busyIndicator.className = 'busyIndicator--idle';
+        if (this._plane != null) {
+            this._busySubscription = this._plane.busy$.subscribe({
+                next: (busy) => {
+                    const busyIndicator = document.getElementById('busyIndicator') as HTMLDivElement;
+                    if (busy) {
+                        busyIndicator.className = 'busyIndicator--busy';
+                    } else {
+                        busyIndicator.className = 'busyIndicator--idle';
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            console.error('#subscribeToBusyState - unexpected _plane is null');
+        }
     }
 
     private addResulutionsDropdownEventListener() {
@@ -240,13 +271,36 @@ export class Start {
         });
     }
 
+    private addSetRangeButtonClickListener() {
+        const setRangeButton = document.getElementById('setRangeButton') as HTMLDivElement;
+        setRangeButton?.addEventListener('click', (e: PointerEvent) => {
+            const rangeInputText: string = this._rangeInput.value;
+            const newRange = gridRangeFromString(rangeInputText);
+            if (newRange !== null) {
+                this._interactionOverlay.selectRange(newRange);
+            }
+        });
+
+        const resetRangeButton = document.getElementById('resetRangeButton') as HTMLDivElement;
+        resetRangeButton?.addEventListener('click', (e: PointerEvent) => {
+            if (this._plane != null) {
+                this._plane.updateGridRange(null);
+            } else {
+                console.error('#subscribeToBusyState - unexpected _plane is null');
+            }
+        });
+    }
+
     private addIterationsEventListener() {
         const input = document.getElementById('iterationsInput') as HTMLInputElement;
-
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const value = input.valueAsNumber;
-                this._plane.setMaxIterations(value);
+                if (this._plane != null) {
+                    const value = input.valueAsNumber;
+                    this._plane.setMaxIterations(value);
+                } else {
+                    console.error('#subscribeToBusyState - unexpected _plane is null');
+                }
             }
         });
     }

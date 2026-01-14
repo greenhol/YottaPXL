@@ -1,8 +1,11 @@
-import { Grid, GridRange } from '../../grid/grid';
+import { ModuleConfig } from '../../config/module-config';
+import { Grid } from '../../grid/grid';
+import { GridRange } from '../../grid/grid-range';
 import { GridWithBuffer } from '../../grid/grid-with-buffer';
-import { RectangleCoordinates } from '../../stage/interactionOverlay';
-import { Plane } from '../plane';
+import { Plane, PlaneConfig } from '../plane';
 import { ChargeField } from './field/charge-field';
+
+const INITIAL_GRID_RANGE: GridRange = { xMin: -1, xMax: 1, yCenter: 0 };
 
 interface PointInPixel {
     iDiff: number;
@@ -21,28 +24,37 @@ export class Lic extends Plane {
     private _buffer = 50;
 
     constructor(grid: Grid) {
-        const range: GridRange = { xMin: -1, xMax: 1, yCenter: 0 };
-        grid.updateRange(range);
         super(grid);
-
-        this._sourceGrid = new GridWithBuffer(grid.resolution, range, this._buffer);
-        this._field = new ChargeField(this._sourceGrid);
-        this.create();
+        this.calculate();
     }
+
+    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
+        { gridRange: INITIAL_GRID_RANGE },
+        'licConfig',
+    );
 
     override name: string = 'LIC';
 
-    override updateArea(selection: RectangleCoordinates) {
+    override updateGridRange(selectedRange: GridRange) {
         console.log('LIC #updateArea - not implemented yet');
-        // ToDo
+        if (selectedRange != null) {
+            this.config.data.gridRange = selectedRange;
+        } else {
+            this.config.reset();
+        }
+        this.calculate();
     }
 
     override setMaxIterations(value: number) {
         // Does not apply
     }
 
-    private create() {
+    private calculate() {
         this.setBusy();
+        const range = this.config.data.gridRange;
+        this.grid.updateRange(range);
+        this._sourceGrid = new GridWithBuffer(this.grid.resolution, range, this._buffer);
+        this._field = new ChargeField(this._sourceGrid);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {

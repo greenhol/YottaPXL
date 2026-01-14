@@ -1,5 +1,6 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Grid } from '../grid/grid';
+import { GridRange } from '../grid/grid-range';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
 const ID_USER_RECT = 'user-rectangle';
@@ -13,7 +14,7 @@ export interface DisplayableCoordinates {
 
 const EMPTY_DISPLAYABLE_COORDINATES: DisplayableCoordinates = { pixel: '(left, top)', math: '(x, y)' };
 
-export interface RectangleCoordinates {
+interface RectangleCoordinates {
     x1: number,
     y1: number,
     x2: number,
@@ -33,7 +34,7 @@ interface Rectangles {
 export class InteractionOverlay {
 
     public displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>(EMPTY_DISPLAYABLE_COORDINATES);
-    public selection$ = new Subject<RectangleCoordinates | null>();
+    public selectedRange$ = new Subject<GridRange | null>();
 
     private _overlay: HTMLElement;
     private _grid: Grid;
@@ -50,6 +51,10 @@ export class InteractionOverlay {
         this.addSvgCss();
 
         this.addEventListeners();
+    }
+
+    public selectRange(range: GridRange) {
+        this.selectedRange$.next(range);
     }
 
     private addSvgCss() {
@@ -241,7 +246,11 @@ export class InteractionOverlay {
     }
 
     private emitSelection(rect: RectangleCoordinates) {
-        this.selection$.next(rect);
+        this.selectedRange$.next({
+            xMin: rect.x1,
+            xMax: rect.x2,
+            yCenter: rect.y1 + (rect.y2 - rect.y1) / 2,
+        });
     }
 
     private emitDisplayableCoordinates(p1: Point | null = null) {
@@ -298,10 +307,10 @@ export class InteractionOverlay {
 
     private rectangleCoordinatesToString(coords: RectangleCoordinates, round: boolean = false): string {
         if (round) {
-            const x1 = coords.x1.toFixed(12);
-            const y1 = coords.y1.toFixed(12);
-            const x2 = coords.x2.toFixed(12);
-            const y2 = coords.y2.toFixed(12);
+            const x1 = coords.x1.toFixed(8);
+            const y1 = coords.y1.toFixed(8);
+            const x2 = coords.x2.toFixed(8);
+            const y2 = coords.y2.toFixed(8);
             return `(${x1}, ${y1}) => (${x2}, ${y2})`;
         } else {
             return `(${coords.x1}, ${coords.y1}) => (${coords.x2}, ${coords.y2})`;

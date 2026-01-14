@@ -15,13 +15,23 @@ input {
     cursor: pointer;
 }
 
+.button {
+    height: 22px;
+    line-height: 22px;
+    background-color: #eef;
+    border: 1px solid black;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 #header {
     display: block;
     position: relative;
-    min-width: 500px;
-    height: 34px;
-    left: 15px;
-    top: 5px;
+    min-width: 640px;
+    height: 30px;
 }
 
 #busyIndicator {
@@ -54,16 +64,7 @@ input {
     display: block;
     position: relative;
     width: 150px;
-    height: 22px;
-    line-height: 22px;
     float: right;
-    background-color: #eef;
-    border: 1px solid black;
-    text-align: center;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
 }
 
 #canvasArea {
@@ -71,7 +72,6 @@ input {
     position: relative;
     width: fit-content;
     height: fit-content;
-    left: 15px;
     border: 1px solid black;
 }
 
@@ -82,28 +82,54 @@ input {
     pointer-events: all;
 }
 
-#info {
-    display: block;
+#rangeArea {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
     position: relative;
-    min-width: 500px;
+    min-width: 640px;
     top: 4px;
-    left: 15px;
+    height: 80px;
+}
+
+#coordsArea {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    position: relative;
+    height: 24px;
+}
+
+#setRangeArea {
+    display: flex;
+    justify-content: start;
+    align-items: baseline;
+    position: relative;
     height: 30px;
 }
 
-#pixelCoordsArea {
-    float: left;
+#rangeInput {
+    display: block;
+    width: 560px;
+    height: 24px;
 }
 
-#mathCoordsArea {
-    float: right;
+#setRangeButton {
+    display: block;
+    width: 52px;
+    margin-left: 8px;
+}
+
+#resetRangeButton {
+    display: block;
+    width: 52px;
+    margin-left: 8px;
 }
 
 #planeSelectArea {
     display: block;
     position: relative;
-    min-width: 500px;
-    left: 15px;
+    min-width: 640px;
     height: 30px;
 }
 
@@ -117,9 +143,8 @@ input {
 #planeConfigArea {
     display: block;
     position: relative;
-    min-width: 500px;
+    min-width: 640px;
     top: 8px;
-    left: 15px;
     height: 30px;
 }
 
@@ -127,4 +152,5 @@ input {
     display: block;
     position: relative;
     width: 300px;
+    height: 24px;
 }

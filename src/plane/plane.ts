@@ -1,6 +1,11 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../grid/grid';
-import { RectangleCoordinates } from '../stage/interactionOverlay';
+import { GridRange } from '../grid/grid-range';
+import { ModuleConfig } from '../config/module-config';
+
+export interface PlaneConfig {
+    gridRange: GridRange;
+}
 
 export abstract class Plane {
 
@@ -16,11 +21,13 @@ export abstract class Plane {
         this._grid = grid;
     }
 
+    public abstract config: ModuleConfig<PlaneConfig>;
+
     public abstract name: string;
 
-    abstract updateArea(selection: RectangleCoordinates): void;
+    public abstract updateGridRange(range: GridRange | null): void;
 
-    abstract setMaxIterations(value: number): void;
+    public abstract setMaxIterations(value: number): void; // ToDo Mandelbrot only
 
     public get grid(): Grid {
         return this._grid;
@@ -36,5 +43,9 @@ export abstract class Plane {
 
     public setBusy() {
         this._busy$.next(true);
+    }
+
+    public onDestroy(): void {
+        this.config.save();
     }
 }

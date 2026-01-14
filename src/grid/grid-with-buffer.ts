@@ -1,4 +1,5 @@
-import { Grid, GridRange } from './grid';
+import { Grid } from './grid';
+import { GridRange } from './grid-range';
 import { Resolution } from './resolutions';
 
 export class GridWithBuffer extends Grid {

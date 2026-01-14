@@ -2,7 +2,7 @@
 
 ## Synopsis
 
-YottaPXL – A browser-based canvas for rendering computationally generated pixel art, e.g. fractals or and vector fields.
+YottaPXL – A browser-based canvas for rendering computationally generated pixel art, e.g. fractals or vector fields.
 
 ## Installation & Running the App
 

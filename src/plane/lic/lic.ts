@@ -2,6 +2,7 @@ import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithBuffer } from '../../grid/grid-with-buffer';
+import { NoiseGenerator } from '../../shared/NoiseGenerator';
 import { Plane, PlaneConfig } from '../plane';
 import { ChargeField } from './field/charge-field';
 
@@ -58,12 +59,13 @@ export class Lic extends Plane {
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
-            this.createSourceData();
-            this.updateImage(this.createSourceImage());
+            const generator = new NoiseGenerator(this._sourceGrid);
+            this._sourceData = generator.createBernoulliNoise(0.1);
+            this.updateImage(this.createImage(this._sourceData));
 
             setTimeout(() => {
                 this.calculateLIC();
-                this.updateImage(this.createLicImage());
+                this.updateImage(this.createImage(this._licData));
 
                 setTimeout(() => {
                     this.setIdle();
@@ -72,48 +74,17 @@ export class Lic extends Plane {
         }, 50);
     }
 
-    private createSourceData() {
-        this._sourceData = new Float64Array(this._sourceGrid.size);
-        for (let y = 0; y < this._sourceGrid.height; y++) {
-            for (let x = 0; x < this._sourceGrid.width; x++) {
-                this._sourceData[this._sourceGrid.getIndex(x, y)] = this.biasedRandom(4) * 255;
-            }
-        }
-    }
-
-    private biasedRandom(bias: number = 0.5): number {
-        const r = Math.random(); // 0 to 1
-        return r ** (1 / bias); // Shift closer to 1 as bias increases
-    }
-
     private calculateLIC() {
         this._licData = new Float64Array(this.grid.size);
-        this.calcLicByLength(10);
+        this.calcLicByLength(25);
     }
 
-    private createSourceImage(): ImageDataArray {
-        const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        for (let y = 0; y < this.grid.height; y++) {
-            for (let x = 0; x < this.grid.width; x++) {
-                const destinationIndex = this._sourceGrid.getIndexForCenterArea(x, y);
-                let value = this._sourceData[destinationIndex];
-                const index = this.grid.getIndex(x, y);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = value;     // R
-                imageData[pixelIndex + 1] = value; // G
-                imageData[pixelIndex + 2] = value; // B
-                imageData[pixelIndex + 3] = 255; // A (opaque)
-            }
-        }
-        return imageData;
-    }
-
-    private createLicImage(): ImageDataArray {
+    private createImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let y = 0; y < this.grid.height; y++) {
             for (let x = 0; x < this.grid.width; x++) {
                 const index = this.grid.getIndex(x, y);
-                let value = this._licData[index];
+                let value = Math.round(data[index] * 255);
                 const pixelIndex = index * 4;
                 imageData[pixelIndex] = value;     // R
                 imageData[pixelIndex + 1] = value; // G
@@ -147,8 +118,8 @@ export class Lic extends Plane {
         let brightness = this.calcLicPixelInDirection(i, j, l);
         brightness += this.calcLicPixelInDirection(i, j, l, -1);
 
-        brightness = Math.round(brightness / (2 * l));
-        if (brightness > 255) brightness = 255;
+        brightness = brightness / (2 * l);
+        if (brightness > 1) brightness = 1;
         return brightness;
     }
 

@@ -10,12 +10,14 @@ import { Plane } from './plane/plane';
 import { InteractionOverlay } from './stage/interactionOverlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
+import { Noise } from './plane/noise/noise';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
 enum PlaneID {
     MANDELBROT = 'MANDELBROT',
+    NOISE = 'NOISE',
     LIC = 'LIC',
 }
 
@@ -103,15 +105,24 @@ export class Start {
                 this._plane = new MandelbrotSimple(this._grid);
                 break;
             }
-            case PlaneID.LIC: {
+            case PlaneID.NOISE: {
                 this._config.data.currentPlaneId = 1;
+                this._plane = new Noise(this._grid);
+                break;
+            }
+            case PlaneID.LIC: {
+                this._config.data.currentPlaneId = 2;
                 this._plane = new Lic(this._grid);
                 break;
             }
         }
         this.subscribeToBusyState();
         this.subscribeToSelection();
-        this._stage.setPlane(this._plane);
+        if (this._plane != null) {
+            this._stage.setPlane(this._plane);
+        } else {
+            console.error('Plane not initialized');
+        }
     }
 
     private initializeResolution(width: number, height: number): Resolution | null {
@@ -149,7 +160,8 @@ export class Start {
 
     private getPlaneIdFromConfig(): PlaneID {
         switch (this._config.data.currentPlaneId) {
-            case 1: return PlaneID.LIC;
+            case 1: return PlaneID.NOISE;
+            case 2: return PlaneID.LIC;
             default: return PlaneID.MANDELBROT;
         }
     }
@@ -238,12 +250,16 @@ export class Start {
             const selectedValue = (event.target as HTMLSelectElement).value;
             console.log(`Selected plane: ${selectedValue}`);
             switch (selectedValue) {
-                case PlaneID.LIC: {
-                    this.switchPlane(PlaneID.LIC);
-                    break;
-                }
                 case PlaneID.MANDELBROT: {
                     this.switchPlane(PlaneID.MANDELBROT);
+                    break;
+                }
+                case PlaneID.NOISE: {
+                    this.switchPlane(PlaneID.NOISE);
+                    break;
+                }
+                case PlaneID.LIC: {
+                    this.switchPlane(PlaneID.LIC);
                     break;
                 }
                 default: {

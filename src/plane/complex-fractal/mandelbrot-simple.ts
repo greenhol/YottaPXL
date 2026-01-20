@@ -1,6 +1,7 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
+import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, ColorMapper, WHITE } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
 
@@ -8,14 +9,11 @@ const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 export class MandelbrotSimple extends Plane {
 
-    private _data: Float64Array;
     private _colorMapper: ColorMapper;
-
     private _maxIterations: number = 255;
 
     constructor(grid: Grid) {
         super(grid);
-
         this._colorMapper = new ColorMapper([
             { color: BLACK, cycleLength: 255 },
             { color: WHITE, cycleLength: 255 },
@@ -50,17 +48,11 @@ export class MandelbrotSimple extends Plane {
         this.grid.updateRange(this.config.data.gridRange);
         this.setBusy();
 
-        // ToDo: remove setTimeouts when web workers are 
+        // ToDo: remove setTimeouts when web workers are implemented
         setTimeout(() => {
-            this._data = new Float64Array(this.grid.size);
-
-            for (let row = 0; row < this.grid.height; row++) {
-                for (let col = 0; col < this.grid.width; col++) {
-                    this._data[this.grid.getIndex(col, row)] = this.computeMandelbrot(col, row);
-                }
-            }
-
-            this.updateImage(this.createImage());
+            const calculator: MandelbrotCalculator = new MandelbrotCalculator();
+            const data: Float64Array = calculator.calculate(this.grid, this._maxIterations);
+            this.updateImage(this.createImage(data));
 
             setTimeout(() => {
                 this.setIdle();
@@ -68,26 +60,12 @@ export class MandelbrotSimple extends Plane {
         }, 0);
     }
 
-    private computeMandelbrot(col: number, row: number): number {
-        const [reC, imC] = this.grid.pixelToMath(col, row);
-        let reZ = 0;
-        let imZ = 0;
-        let iteration = 0;
-        while (reZ * reZ + imZ * imZ < 4 && iteration < this._maxIterations) {
-            const xTemp = reZ * reZ - imZ * imZ + reC;
-            imZ = 2 * reZ * imZ + imC;
-            reZ = xTemp;
-            iteration++;
-        }
-        return iteration;
-    }
-
-    private createImage(): ImageDataArray {
+    private createImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = this._data[index];
+                let value = data[index];
                 if (value === this._maxIterations) {
                     value = -1;
                 }

@@ -33,6 +33,10 @@ export class GridWithMargin extends Grid {
         return super.getIndex(col + this._margin, row + this._margin);
     }
 
+    public get margin(): number {
+        return this._margin;
+    }
+
     private getMathCenter(range: GridRange): [number, number] {
         return [
             range.xMin + (range.xMax - range.xMin) / 2,

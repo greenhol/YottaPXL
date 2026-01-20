@@ -30,14 +30,14 @@ export class Grid {
         console.log(`Grid (${this._width} x ${this._height}) range set to: ${range.xMin} -> ${range.xMax} and yCenter: ${range.yCenter}`);
     }
 
-    public getIndex(pixelX: number, pixelY: number): number {
-        return pixelY * this._width + pixelX;
+    public getIndex(col: number, row: number): number {
+        return row * this._width + col;
     }
 
-    public pixelToMath(pixelX: number, pixelY: number): [number, number] {
+    public pixelToMath(col: number, row: number): [number, number] {
         return [
-            this._xMin + (pixelX / this.width) * (this._xRange),
-            this._yMax - (pixelY / this.height) * (this._yRange),
+            this._xMin + (col / this.width) * (this._xRange),
+            this._yMax - (row / this.height) * (this._yRange),
         ];
     }
 

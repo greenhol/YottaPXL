@@ -38,6 +38,8 @@ export const RESOLUTIONS: Resolution[] = [
     { width: 5120, height: 2160, description: '43:18 - 5K ultrawide export' },
 ];
 
+export const FALLBACK_RESOLUTION = RESOLUTIONS[15];
+
 export function resolutionAsArray(resolution: Resolution): [number, number] {
     return [resolution.width, resolution.height];
 }

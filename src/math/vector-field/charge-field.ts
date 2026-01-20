@@ -1,5 +1,4 @@
-import { Grid } from '../../../grid/grid';
-import { GridWithBuffer } from '../../../grid/grid-with-buffer';
+import { GridWithMargin } from '../../grid/grid-with-margin';
 
 interface Charge {
     x: number;
@@ -9,16 +8,17 @@ interface Charge {
 
 export class ChargeField {
 
-    private _grid: GridWithBuffer;
+    private _grid: GridWithMargin;
     private _vX: Float64Array;
     private _vY: Float64Array;
 
     private charges: Charge[];
 
-    constructor(grid: GridWithBuffer) {
+    constructor(grid: GridWithMargin) {
         this.charges = [
-            { x: -0.4, y: -0.1, magnitude: 0.01 },
-            { x: 0.4, y: 0.2, magnitude: -0.01 }
+            { x: -0.4, y: -0.1, magnitude: 0.1 },
+            { x: -0.05, y: 0.15, magnitude: -0.2 },
+            { x: 0.4, y: 0.2, magnitude: 0.1 }
         ];
         this._grid = grid;
         this.precomputeVectors();

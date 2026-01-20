@@ -1,16 +1,16 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
-import { GridWithBuffer } from '../../grid/grid-with-buffer';
-import { NoiseGenerator } from '../../shared/NoiseGenerator';
+import { GridWithMargin } from '../../grid/grid-with-margin';
+import { BiasType, NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { ChargeField } from '../../math/vector-field/charge-field';
 import { Plane, PlaneConfig } from '../plane';
-import { ChargeField } from './field/charge-field';
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -1, xMax: 1, yCenter: 0 };
 
 interface PointInPixel {
-    iDiff: number;
-    jDiff: number;
+    rowDiff: number;
+    colDiff: number;
     x: number;
     y: number;
     distance: number;
@@ -18,11 +18,11 @@ interface PointInPixel {
 
 export class Lic extends Plane {
 
-    private _sourceGrid: GridWithBuffer;
+    private _sourceGrid: GridWithMargin;
     private _field: ChargeField;
     private _sourceData: Float64Array;
     private _licData: Float64Array;
-    private _buffer = 50;
+    private _gridMargin = 50;
 
     constructor(grid: Grid) {
         super(grid);
@@ -54,13 +54,13 @@ export class Lic extends Plane {
         this.setBusy();
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
-        this._sourceGrid = new GridWithBuffer(this.grid.resolution, range, this._buffer);
+        this._sourceGrid = new GridWithMargin(this.grid.resolution, range, this._gridMargin);
         this._field = new ChargeField(this._sourceGrid);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
             const generator = new NoiseGenerator(this._sourceGrid);
-            this._sourceData = generator.createBernoulliNoise(0.1);
+            this._sourceData = generator.createBiasedNoise(BiasType.UPPER);
             this.updateImage(this.createImage(this._sourceData));
 
             setTimeout(() => {
@@ -76,14 +76,14 @@ export class Lic extends Plane {
 
     private calculateLIC() {
         this._licData = new Float64Array(this.grid.size);
-        this.calcLicByLength(25);
+        this.calcLicByLength(15);
     }
 
     private createImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        for (let y = 0; y < this.grid.height; y++) {
-            for (let x = 0; x < this.grid.width; x++) {
-                const index = this.grid.getIndex(x, y);
+        for (let row = 0; row < this.grid.height; row++) {
+            for (let col = 0; col < this.grid.width; col++) {
+                const index = this.grid.getIndex(col, row);
                 let value = Math.round(data[index] * 255);
                 const pixelIndex = index * 4;
                 imageData[pixelIndex] = value;     // R
@@ -101,12 +101,12 @@ export class Lic extends Plane {
         let timeStamp = Date.now();
         console.info('calculation started (type: LENGTH, l: ' + (2 * l) + ')');
 
-        for (let i = 0; i < this.grid.height; i++) {
-            for (let j = 0; j < this.grid.width; j++) {
-                this._licData[this.grid.getIndex(j, i)] = this.calcLicPixel(i, j, l);
+        for (let row = 0; row < this.grid.height; row++) {
+            for (let col = 0; col < this.grid.width; col++) {
+                this._licData[this.grid.getIndex(col, row)] = this.calcLicPixel(col, row, l);
             }
             if (rowCnt > 49) {
-                console.info('calculating: ' + Math.round(100 * i / this.grid.height) + '%');
+                console.info('calculating: ' + Math.round(100 * row / this.grid.height) + '%');
                 rowCnt = 0;
             }
             rowCnt++;
@@ -114,33 +114,33 @@ export class Lic extends Plane {
         console.info('calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
     }
 
-    private calcLicPixel(i: number, j: number, l: number): number {
-        let brightness = this.calcLicPixelInDirection(i, j, l);
-        brightness += this.calcLicPixelInDirection(i, j, l, -1);
+    private calcLicPixel(col: number, row: number, l: number): number {
+        let brightness = this.calcLicPixelInDirection(col, row, l);
+        brightness += this.calcLicPixelInDirection(col, row, l, -1);
 
         brightness = brightness / (2 * l);
         if (brightness > 1) brightness = 1;
         return brightness;
     }
 
-    private calcLicPixelInDirection(i: number, j: number, l: number, direction: number = 1): number {
+    private calcLicPixelInDirection(col: number, row: number, l: number, direction: number = 1): number {
         let restDistance = l;
-        let [vX, vY] = this._field.getVector(j + this._buffer, i + this._buffer);
+        let [vX, vY] = this._field.getVector(col + this._gridMargin, row + this._gridMargin);
         vX *= direction;
         vY *= direction;
         let nextArea = this.getNextArea(0.5, 0.5, vX, vY);
         let factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
-        let brightness = this._sourceData[this._sourceGrid.getIndexForCenterArea(j, i)] * factor;
+        let brightness = this._sourceData[this._sourceGrid.getIndexForCenterArea(col, row)] * factor;
         restDistance = l - nextArea.distance;
         while (restDistance > 0) {
-            i += nextArea.iDiff;
-            j += nextArea.jDiff;
-            [vX, vY] = this._field.getVector(j + this._buffer, i + this._buffer);
+            row += nextArea.rowDiff;
+            col += nextArea.colDiff;
+            [vX, vY] = this._field.getVector(col + this._gridMargin, row + this._gridMargin);
             vX *= direction;
             vY *= direction;
             nextArea = this.getNextArea(nextArea.x, nextArea.y, vX, vY);
             factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
-            brightness += (this._sourceData[this._sourceGrid.getIndexForCenterArea(j, i)] * factor);
+            brightness += (this._sourceData[this._sourceGrid.getIndexForCenterArea(col, row)] * factor);
             restDistance -= nextArea.distance;
         }
         return brightness;
@@ -165,8 +165,8 @@ export class Lic extends Plane {
             case 0: // Top
                 beta = vX * alphas[borderIndex] + x;
                 return {
-                    iDiff: -1,
-                    jDiff: 0,
+                    rowDiff: -1,
+                    colDiff: 0,
                     x: beta,
                     y: offset,
                     distance: distance
@@ -174,8 +174,8 @@ export class Lic extends Plane {
             case 1: // Bottom
                 beta = vX * alphas[borderIndex] + x;
                 return {
-                    iDiff: 1,
-                    jDiff: 0,
+                    rowDiff: 1,
+                    colDiff: 0,
                     x: beta,
                     y: 1 - offset,
                     distance: distance
@@ -183,8 +183,8 @@ export class Lic extends Plane {
             case 2: // Left
                 beta = vY * alphas[borderIndex] + y;
                 return {
-                    iDiff: 0,
-                    jDiff: -1,
+                    rowDiff: 0,
+                    colDiff: -1,
                     x: 1 - offset,
                     y: beta,
                     distance: distance
@@ -192,16 +192,16 @@ export class Lic extends Plane {
             case 3: // Right
                 beta = vY * alphas[borderIndex] + y;
                 return {
-                    iDiff: 0,
-                    jDiff: 1,
+                    rowDiff: 0,
+                    colDiff: 1,
                     x: offset,
                     y: beta,
                     distance: distance
                 }
             default:
                 return {
-                    iDiff: 0,
-                    jDiff: 0,
+                    rowDiff: 0,
+                    colDiff: 0,
                     x: 0.5,
                     y: 0.5,
                     distance: distance

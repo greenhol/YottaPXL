@@ -54,9 +54,9 @@ export class MandelbrotSimple extends Plane {
         setTimeout(() => {
             this._data = new Float64Array(this.grid.size);
 
-            for (let y = 0; y < this.grid.height; y++) {
-                for (let x = 0; x < this.grid.width; x++) {
-                    this._data[this.grid.getIndex(x, y)] = this.computeMandelbrot(x, y);
+            for (let row = 0; row < this.grid.height; row++) {
+                for (let col = 0; col < this.grid.width; col++) {
+                    this._data[this.grid.getIndex(col, row)] = this.computeMandelbrot(col, row);
                 }
             }
 
@@ -68,8 +68,8 @@ export class MandelbrotSimple extends Plane {
         }, 0);
     }
 
-    private computeMandelbrot(x: number, y: number): number {
-        const [reC, imC] = this.grid.pixelToMath(x, y);
+    private computeMandelbrot(col: number, row: number): number {
+        const [reC, imC] = this.grid.pixelToMath(col, row);
         let reZ = 0;
         let imZ = 0;
         let iteration = 0;
@@ -84,9 +84,9 @@ export class MandelbrotSimple extends Plane {
 
     private createImage(): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        for (let y = 0; y < this.grid.height; y++) {
-            for (let x = 0; x < this.grid.width; x++) {
-                const index = this.grid.getIndex(x, y);
+        for (let row = 0; row < this.grid.height; row++) {
+            for (let col = 0; col < this.grid.width; col++) {
+                const index = this.grid.getIndex(col, row);
                 let value = this._data[index];
                 if (value === this._maxIterations) {
                     value = -1;

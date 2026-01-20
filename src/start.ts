@@ -3,14 +3,14 @@ import { configVersionCheck } from './config/config-version-check';
 import { ModuleConfig } from './config/module-config';
 import { Grid } from './grid/grid';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
-import { Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
+import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
 import { Lic } from './plane/lic/lic';
+import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
-import { InteractionOverlay } from './stage/interactionOverlay';
+import { InteractionOverlay } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
-import { Noise } from './plane/noise/noise';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
@@ -67,7 +67,7 @@ export class Start {
         let resolution = this.initializeResolution(width, height);
         if (!resolution) {
             console.error('#ctor - initial resolution not found!');
-            resolution = RESOLUTIONS[0];
+            resolution = FALLBACK_RESOLUTION;
         }
         this._grid = new Grid(resolution);
 

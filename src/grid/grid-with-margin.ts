@@ -2,9 +2,9 @@ import { Grid } from './grid';
 import { GridRange } from './grid-range';
 import { Resolution } from './resolutions';
 
-export class GridWithBuffer extends Grid {
+export class GridWithMargin extends Grid {
 
-    private _buffer: number;
+    private _margin: number;
 
     private static resolutionWithBuffer(resolution: Resolution, buffer: number): Resolution {
         return {
@@ -14,10 +14,10 @@ export class GridWithBuffer extends Grid {
         }
     }
 
-    constructor(baseResolution: Resolution, baseRange: GridRange, buffer: number) {
-        super(GridWithBuffer.resolutionWithBuffer(baseResolution, buffer));
+    constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
+        super(GridWithMargin.resolutionWithBuffer(baseResolution, margin));
 
-        this._buffer = buffer;
+        this._margin = margin;
 
         const newGridRangeFactor = this.resolution.width / baseResolution.width;
         const mathBaseWidth = baseRange.xMax - baseRange.xMin;
@@ -29,8 +29,8 @@ export class GridWithBuffer extends Grid {
         });
     }
 
-    public getIndexForCenterArea(pixelX: number, pixelY: number): number {
-        return super.getIndex(pixelX + this._buffer, pixelY + this._buffer);
+    public getIndexForCenterArea(col: number, row: number): number {
+        return super.getIndex(col + this._margin, row + this._margin);
     }
 
     private getMathCenter(range: GridRange): [number, number] {

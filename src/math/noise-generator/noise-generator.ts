@@ -1,4 +1,4 @@
-import { Grid } from '../grid/grid';
+import { Grid } from '../../grid/grid';
 
 export enum BiasType {
     LOWER,
@@ -32,9 +32,9 @@ export class NoiseGenerator {
 
     public createWhiteNoise(): Float64Array {
         const data = new Float64Array(this._grid.size);
-        for (let y = 0; y < this._grid.height; y++) {
-            for (let x = 0; x < this._grid.width; x++) {
-                data[this._grid.getIndex(x, y)] = Math.random();
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                data[this._grid.getIndex(col, row)] = Math.random();
             }
         }
         return data;
@@ -42,9 +42,9 @@ export class NoiseGenerator {
 
     public createBernoulliNoise(p: number = 0.5): Float64Array {
         const data = new Float64Array(this._grid.size);
-        for (let y = 0; y < this._grid.height; y++) {
-            for (let x = 0; x < this._grid.width; x++) {
-                data[this._grid.getIndex(x, y)] = (Math.random() < p) ? 0 : 1;
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                data[this._grid.getIndex(col, row)] = (Math.random() < p) ? 0 : 1;
             }
         }
         return data;
@@ -64,9 +64,9 @@ export class NoiseGenerator {
             case BiasType.BOUNDS_BY_TRIG: biasFunction = this.randomBiasedToBoundsByTrig; break;
         }
 
-        for (let y = 0; y < this._grid.height; y++) {
-            for (let x = 0; x < this._grid.width; x++) {
-                data[this._grid.getIndex(x, y)] = biasFunction();
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                data[this._grid.getIndex(col, row)] = biasFunction();
             }
         }
         return data;
@@ -77,17 +77,17 @@ export class NoiseGenerator {
         const max = mean + range / 2 * standardDeviation;
 
         const data = new Float64Array(this._grid.size);
-        for (let y = 0; y < this._grid.height; y++) {
-            for (let x = 0; x < this._grid.width; x++) {
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
                 let [z0, z1] = this.boxMullerTransform();
                 z0 = z0 * standardDeviation + mean;
                 z0 = Math.max(min, Math.min(max, z0));
                 z1 = z1 * standardDeviation + mean;
                 z1 = Math.max(min, Math.min(max, z1));
 
-                data[this._grid.getIndex(x, y)] = (z0 - min) / range;
-                x++;
-                data[this._grid.getIndex(x, y)] = (z1 - min) / range;
+                data[this._grid.getIndex(col, row)] = (z0 - min) / range;
+                col++;
+                data[this._grid.getIndex(col, row)] = (z1 - min) / range;
             }
         }
         return data;

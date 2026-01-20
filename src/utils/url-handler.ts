@@ -1,4 +1,4 @@
-import { RESOLUTIONS, resolutionAsArray } from '../grid/resolutions';
+import { FALLBACK_RESOLUTION, resolutionAsArray } from '../grid/resolutions';
 
 export class UrlHandler {
 
@@ -6,7 +6,7 @@ export class UrlHandler {
     private readonly _heightParameter: string = 'height';
 
     getResolution(): [number, number] {
-        const fallBackResolution = RESOLUTIONS[17];
+        const fallBackResolution = FALLBACK_RESOLUTION;
         if (!window.location.hash) return resolutionAsArray(fallBackResolution);
         const hash = window.location.hash.substring(1);
         const parameters = new URLSearchParams(hash);

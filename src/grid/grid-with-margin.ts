@@ -6,16 +6,16 @@ export class GridWithMargin extends Grid {
 
     private _margin: number;
 
-    private static resolutionWithBuffer(resolution: Resolution, buffer: number): Resolution {
+    private static resolutionWithMargin(resolution: Resolution, margin: number): Resolution {
         return {
-            width: resolution.width + 2 * buffer,
-            height: resolution.height + 2 * buffer,
-            description: `${resolution.description} + buffer:${buffer}`,
+            width: resolution.width + 2 * margin,
+            height: resolution.height + 2 * margin,
+            description: `${resolution.description} + buffer:${margin}`,
         }
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
-        super(GridWithMargin.resolutionWithBuffer(baseResolution, margin));
+        super(GridWithMargin.resolutionWithMargin(baseResolution, margin));
 
         this._margin = margin;
 

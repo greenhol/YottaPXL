@@ -50,6 +50,91 @@ export class NoiseGenerator {
         return data;
     }
 
+    public createIsolatedBlackNoise(p: number = 0.5): Float64Array {
+        const data = this.createBernoulliNoise(p);
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                if (data[this._grid.getIndex(col, row)] == 0) {
+                    if (col > 0) {
+                        if (data[this._grid.getIndex(col - 1, row)] == 0) {
+                            data[this._grid.getIndex(col, row)] = 1;
+                            continue;
+                        }
+                    }
+                    const adjacentRow = row - 1;
+                    for (let i = -1; i <= 1; i++) {
+                        const adjacentCol = col + i;
+                        if (adjacentRow >= 0 && adjacentCol >= 0 && adjacentCol < this._grid.width) {
+                            if (data[this._grid.getIndex(adjacentCol, adjacentRow)] == 0) {
+                                data[this._grid.getIndex(col, row)] = 1;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+    public createIsolatedBigBlackNoise(p: number = 0.5): Float64Array {
+        const data = this.createBernoulliNoise(p);
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                if (data[this._grid.getIndex(col, row)] == 0) {
+                    if (col > 0) {
+                        if (data[this._grid.getIndex(col - 1, row)] == 0) {
+                            data[this._grid.getIndex(col, row)] = 1;
+                            continue;
+                        }
+                    }
+                    if (col > 1) {
+                        if (data[this._grid.getIndex(col - 2, row)] == 0) {
+                            data[this._grid.getIndex(col, row)] = 1;
+                            continue;
+                        }
+                    }
+                    let adjacentRow = row - 2;
+                    for (let i = -2; i <= 2; i++) {
+                        const adjacentCol = col + i;
+                        if (adjacentRow >= 0 && adjacentCol >= 0 && adjacentCol < this._grid.width) {
+                            if (data[this._grid.getIndex(adjacentCol, adjacentRow)] == 0) {
+                                data[this._grid.getIndex(col, row)] = 1;
+                                continue;
+                            }
+                        }
+                    }
+                    adjacentRow = row - 1;
+                    for (let i = -2; i <= 2; i++) {
+                        const adjacentCol = col + i;
+                        if (adjacentRow >= 0 && adjacentCol >= 0 && adjacentCol < this._grid.width) {
+                            if (data[this._grid.getIndex(adjacentCol, adjacentRow)] == 0) {
+                                data[this._grid.getIndex(col, row)] = 1;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (let row = 0; row < this._grid.height; row++) {
+            for (let col = 0; col < this._grid.width; col++) {
+                if (data[this._grid.getIndex(col, row)] == 0) {
+                    if (row > 0 && col > 0) {
+                        data[this._grid.getIndex(col -1, row - 1)] = 0
+                    }
+                    if (col > 0) {
+                        data[this._grid.getIndex(col - 1, row)] = 0
+                    }
+                    if (row > 0) {
+                        data[this._grid.getIndex(col, row - 1)] = 0
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
     public createBiasedNoise(type: BiasType): Float64Array {
         const data = new Float64Array(this._grid.size);
         let biasFunction: () => number;

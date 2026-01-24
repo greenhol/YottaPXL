@@ -1,4 +1,5 @@
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { VectorField } from './vector-field';
 
 interface Charge {
     x: number;
@@ -6,45 +7,21 @@ interface Charge {
     magnitude: number;
 }
 
-export class ChargeField {
-
-    private _grid: GridWithMargin;
-    private _vX: Float64Array;
-    private _vY: Float64Array;
+export class ChargeField extends VectorField {
 
     private charges: Charge[];
 
     constructor(grid: GridWithMargin) {
+        super(grid);
         this.charges = [
-            { x: -0.4, y: -0.1, magnitude: 0.1 },
-            { x: -0.05, y: 0.15, magnitude: -0.2 },
-            { x: 0.4, y: 0.2, magnitude: 0.1 }
+            { x: 3, y: -1, magnitude: 5 },
+            { x: 5.5, y: -0.5, magnitude: -10 },
+            { x: 7, y: 2, magnitude: 3 }
         ];
-        this._grid = grid;
         this.precomputeVectors();
     }
 
-    public getVector(j: number, i: number): [number, number] {
-        return [
-            this._vX[this._grid.getIndex(j, i)],
-            this._vY[this._grid.getIndex(j, i)],
-        ];
-    }
-
-    private precomputeVectors() {
-        this._vX = new Float64Array(this._grid.size);
-        this._vY = new Float64Array(this._grid.size);
-        for (let i = 0; i < this._grid.height; i++) {
-            for (let j = 0; j < this._grid.width; j++) {
-                const [x, y] = this._grid.pixelToMath(j, i);
-                const [vX, vY] = this.computeVector(x, y);
-                this._vX[this._grid.getIndex(j, i)] = vX;
-                this._vY[this._grid.getIndex(j, i)] = vY;
-            }
-        }
-    }
-
-    private computeVector(x: number, y: number): [number, number] {
+    override computeVector(x: number, y: number): [number, number, number] {
         let vX = 0;
         let vY = 0;
         for (let i = 0; i < this.charges.length; i++) {
@@ -60,7 +37,12 @@ export class ChargeField {
         vX = -vY;
         vY = temp;
 
+        const magnitude = Math.sqrt(vX * vX + vY * vY);
         const value = Math.sqrt(vX * vX + vY * vY);
-        return [vX / value, vY / value];
+        return [
+            vX / value,
+            vY / value,
+            magnitude,
+        ];
     }
 }

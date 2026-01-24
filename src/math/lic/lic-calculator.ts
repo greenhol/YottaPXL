@@ -1,12 +1,5 @@
 import { Grid } from '../../grid/grid';
-import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ChargeField } from '../vector-field/charge-field';
-
-export interface SourceData {
-    grid: GridWithMargin,
-    field: ChargeField,
-    data: Float64Array,
-}
+import { SourceData } from '../vector-field/vector-field';
 
 interface PointInPixel {
     rowDiff: number;
@@ -26,21 +19,25 @@ export class LicCalculator {
         this._target = targetGrid;
     }
 
-    public calculate(length: number): Float64Array {
+    public calculate(maxLength: number, minLength: number = 0, strength: number = -1): Float64Array {
         const targetData = new Float64Array(this._target.size);
-        this.calcLicByLength(targetData, length);
+        this.calcLicByLength(targetData, maxLength, minLength, strength);
         return targetData;
     }
 
-    private calcLicByLength(targetData: Float64Array, l: number) {
-        l = l / Math.SQRT2;
+    private calcLicByLength(targetData: Float64Array, maxLength: number, minLength: number, strength: number) {
         let rowCnt = 0;
         let timeStamp = Date.now();
-        console.info('calculation started (type: LENGTH, l: ' + (2 * l) + ')');
 
         for (let row = 0; row < this._target.height; row++) {
             for (let col = 0; col < this._target.width; col++) {
-                targetData[this._target.getIndex(col, row)] = this.calcLicPixel(this._source, col, row, l);
+                let length = maxLength;
+                if (strength > 0) {
+                    const magnitude = this._source.field.getMagnitude(col + this._source.grid.margin, row + this._source.grid.margin);
+                    length = Math.min(maxLength, magnitude * strength);
+                    length = Math.max(minLength, length);
+                }
+                targetData[this._target.getIndex(col, row)] = this.calcLicPixel(this._source, col, row, length);
             }
             if (rowCnt > 49) {
                 console.info('calculating: ' + Math.round(100 * row / this._target.height) + '%');
@@ -51,24 +48,24 @@ export class LicCalculator {
         console.info('calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
     }
 
-    private calcLicPixel(sourceData: SourceData, col: number, row: number, l: number): number {
-        let brightness = this.calcLicPixelInDirection(sourceData, col, row, l);
-        brightness += this.calcLicPixelInDirection(sourceData, col, row, l, -1);
+    private calcLicPixel(sourceData: SourceData, col: number, row: number, length: number): number {
+        let brightness = this.calcLicPixelInDirection(sourceData, col, row, length);
+        brightness += this.calcLicPixelInDirection(sourceData, col, row, length, -1);
 
-        brightness = brightness / (2 * l);
+        brightness = brightness / (2 * length);
         if (brightness > 1) brightness = 1;
         return brightness;
     }
 
-    private calcLicPixelInDirection(sourceData: SourceData, col: number, row: number, l: number, direction: number = 1): number {
-        let restDistance = l;
+    private calcLicPixelInDirection(sourceData: SourceData, col: number, row: number, length: number, direction: number = 1): number {
+        let restDistance = length;
         let [vX, vY] = sourceData.field.getVector(col + this._source.grid.margin, row + this._source.grid.margin);
         vX *= direction;
         vY *= direction;
         let nextArea = this.getNextArea(0.5, 0.5, vX, vY);
         let factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
         let brightness = sourceData.data[sourceData.grid.getIndexForCenterArea(col, row)] * factor;
-        restDistance = l - nextArea.distance;
+        restDistance = length - nextArea.distance;
         while (restDistance > 0) {
             row += nextArea.rowDiff;
             col += nextArea.colDiff;

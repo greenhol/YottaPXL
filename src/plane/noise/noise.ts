@@ -37,17 +37,20 @@ export class Noise extends Plane {
 
     override onDestroy(): void {
         super.onDestroy();
-        this._noiseIndexSubscription.unsubscribe();
+        this._noiseIndexSubscription?.unsubscribe();
     }
 
     private create() {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
+        // this._data = this.createNoise(2);
+        // this.updateImage(this.createImage());
+
         this._noiseIndexSubscription = timer(0, 2000).subscribe(() => {
             this._data = this.createNoise(this._noiseIndex);
             this._noiseIndex++;
-            if (this._noiseIndex > 10) this._noiseIndex = 0;
+            if (this._noiseIndex > 12) this._noiseIndex = 0;
             this.updateImage(this.createImage());
         });
     }
@@ -76,38 +79,46 @@ export class Noise extends Plane {
                 return this._generator.createBernoulliNoise();
             }
             case 2: {
+                console.log('#createNoise - Isolated Black Noise');
+                return this._generator.createIsolatedBlackNoise();
+            }
+            case 3: {
+                console.log('#createNoise - Isolated Big Black Noise');
+                return this._generator.createIsolatedBigBlackNoise();
+            }
+            case 4: {
                 console.log('#createNoise - Gaussian Noise');
                 return this._generator.createGaussianNoise();
             }
-            case 3: {
+            case 5: {
                 console.log('#createNoise - Biased Noise LOWER');
                 return this._generator.createBiasedNoise(BiasType.LOWER);
             }
-            case 4: {
+            case 6: {
                 console.log('#createNoise - Biased Noise UPPER');
                 return this._generator.createBiasedNoise(BiasType.UPPER);
             }
-            case 5: {
+            case 7: {
                 console.log('#createNoise - Biased Noise CENTER');
                 return this._generator.createBiasedNoise(BiasType.CENTER);
             }
-            case 6: {
+            case 8: {
                 console.log('#createNoise - Biased Noise BOUNDS');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS);
             }
-            case 7: {
+            case 9: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_CUBIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_CUBIC);
             }
-            case 8: {
+            case 10: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_QUINTIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_QUINTIC);
             }
-            case 9: {
+            case 11: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_SEPTIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_SEPTIC);
             }
-            case 10: {
+            case 12: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_TRIG');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_TRIG);
             }

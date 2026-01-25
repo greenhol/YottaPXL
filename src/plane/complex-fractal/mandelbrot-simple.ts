@@ -29,7 +29,6 @@ export class MandelbrotSimple extends Plane {
     override name: string = 'Mandelbrot Simple';
 
     override updateGridRange(selectedRange: GridRange | null) {
-        console.log('MANDETBROT #updateArea');
         if (selectedRange != null) {
             this.config.data.gridRange = selectedRange;
         } else {

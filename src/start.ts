@@ -8,7 +8,7 @@ import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
 import { Lic } from './plane/lic/lic';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
-import { InteractionOverlay } from './stage/interaction-overlay';
+import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
 
@@ -95,6 +95,7 @@ export class Start {
         this.addExportButtonClickListener();
         this.addSetRangeButtonClickListener();
         this.addIterationsEventListener(); // ToDo: Only applicable to Mandelbrot?!
+        this.handlePhysicalKeyboardEvents();
     }
 
     private switchPlane(planeId: PlaneID) {
@@ -208,12 +209,7 @@ export class Start {
     private subscribeToSelection() {
         this._selectionSubscription?.unsubscribe();
         this._selectionSubscription = this._interactionOverlay.selectedRange$.subscribe({
-            next: (selection) => {
-                if (selection != null) {
-                    console.log(selection);
-                    this._plane?.updateGridRange(selection);
-                }
-            }
+            next: (selection) => { this._plane?.updateGridRange(selection) }
         });
     }
 
@@ -319,5 +315,28 @@ export class Start {
                 }
             }
         });
+    }
+
+    private handlePhysicalKeyboardEvents() {
+        document.addEventListener(
+            "keydown",
+            (event) => {
+                const activeElement = document.activeElement;
+                if (activeElement === null || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'SELECT')) {
+                    this.handleKeyPress(event.key);
+                }
+            },
+            false,
+        );
+    }
+
+    private handleKeyPress(event: string) {
+        switch (event) {
+            case 'ArrowUp': { this._interactionOverlay.shiftRange(ShiftDirection.UP) } break;
+            case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN) } break;
+            case 'ArrowLeft': { this._interactionOverlay.shiftRange(ShiftDirection.LEFT) } break;
+            case 'ArrowRight': { this._interactionOverlay.shiftRange(ShiftDirection.RIGHT) } break;
+            case 'Escape': { this._plane?.updateGridRange(null) } break;
+        }
     }
 }

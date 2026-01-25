@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Resolution } from './resolutions';
 import { GridRange } from './grid-range';
 
@@ -15,7 +15,8 @@ export class Grid {
     private _yMax: number;
     private _yRange: number;
 
-    public range$ = new BehaviorSubject<GridRange>(DEFAULT_GRID_RANGE);
+    private _range$ = new BehaviorSubject<GridRange>(DEFAULT_GRID_RANGE);
+    public range$: Observable<GridRange> = this._range$;
 
     constructor(resolution: Resolution) {
         this._resolution = resolution;
@@ -51,12 +52,14 @@ export class Grid {
 
     public get ratio(): number { return this._width / this._height }
 
+    public get range(): GridRange { return this._range$.value }
+
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;
     }
 
     private setRange(range: GridRange) {
-        this.range$.next(range);
+        this._range$.next(range);
         this._yRange = (range.xMax - range.xMin) / this.ratio;
         this._xMin = range.xMin;
         this._xMax = range.xMax;

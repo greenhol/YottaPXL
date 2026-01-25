@@ -26,8 +26,7 @@ export class Lic extends Plane {
 
     override name: string = 'LIC';
 
-    override updateGridRange(selectedRange: GridRange) {
-        console.log('LIC #updateArea - not implemented yet');
+    override updateGridRange(selectedRange: GridRange | null) {
         if (selectedRange != null) {
             this.config.data.gridRange = selectedRange;
         } else {
@@ -45,7 +44,7 @@ export class Lic extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, LIC_MAX_LENGTH);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);
         // const sourceField = new ChargeField(sourceGrid);
         const sourceField = new ChargeField(sourceGrid);
 

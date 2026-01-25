@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, filter, Observable, Subject } from 'rxjs';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
 
@@ -10,6 +10,13 @@ const MIN_RECTANGLE_WIDTH = 60;
 export interface DisplayableCoordinates {
     pixel: string,
     math: string,
+}
+
+export enum ShiftDirection {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
 }
 
 const EMPTY_DISPLAYABLE_COORDINATES: DisplayableCoordinates = { pixel: '(left, top)', math: '(x, y)' };
@@ -33,8 +40,11 @@ interface Rectangles {
 
 export class InteractionOverlay {
 
-    public displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>(EMPTY_DISPLAYABLE_COORDINATES);
-    public selectedRange$ = new Subject<GridRange | null>();
+    private _displayableCoordinates$ = new BehaviorSubject<DisplayableCoordinates>(EMPTY_DISPLAYABLE_COORDINATES);
+    public displayableCoordinates$: Observable<DisplayableCoordinates> = this._displayableCoordinates$;
+
+    private _selectedRange$ = new Subject<GridRange | null>();
+    public selectedRange$: Observable<GridRange> = this._selectedRange$.pipe(filter(range => range != null));
 
     private _overlay: HTMLElement;
     private _grid: Grid;
@@ -54,7 +64,47 @@ export class InteractionOverlay {
     }
 
     public selectRange(range: GridRange) {
-        this.selectedRange$.next(range);
+        this._selectedRange$.next(range);
+    }
+
+    public shiftRange(direction: ShiftDirection) {
+        const currentRange = this._grid.range;
+        switch (direction) {
+            case ShiftDirection.UP: {
+                this._selectedRange$.next({
+                    xMin: currentRange.xMin,
+                    xMax: currentRange.xMax,
+                    yCenter: this._grid.pixelToMath(0, -0.5 * this._grid.height)[1],
+                });
+                break;
+            }
+            case ShiftDirection.DOWN: {
+                this._selectedRange$.next({
+                    xMin: currentRange.xMin,
+                    xMax: currentRange.xMax,
+                    yCenter: this._grid.pixelToMath(0, 1.5 * this._grid.height)[1],
+                });
+                break;
+            }
+            case ShiftDirection.LEFT: {
+                const horizontalRange = currentRange.xMax - currentRange.xMin;
+                this._selectedRange$.next({
+                    xMin: currentRange.xMin - horizontalRange,
+                    xMax: currentRange.xMax - horizontalRange,
+                    yCenter: currentRange.yCenter,
+                });
+                break;
+            }
+            case ShiftDirection.RIGHT: {
+                const horizontalRange = currentRange.xMax - currentRange.xMin;
+                this._selectedRange$.next({
+                    xMin: currentRange.xMin + horizontalRange,
+                    xMax: currentRange.xMax + horizontalRange,
+                    yCenter: currentRange.yCenter,
+                });
+                break;
+            }
+        }
     }
 
     private addSvgCss() {
@@ -246,7 +296,7 @@ export class InteractionOverlay {
     }
 
     private emitSelection(rect: RectangleCoordinates) {
-        this.selectedRange$.next({
+        this._selectedRange$.next({
             xMin: rect.x1,
             xMax: rect.x2,
             yCenter: rect.y1 + (rect.y2 - rect.y1) / 2,
@@ -255,23 +305,23 @@ export class InteractionOverlay {
 
     private emitDisplayableCoordinates(p1: Point | null = null) {
         if (this._validRect != null) {
-            this.displayableCoordinates$.next({
+            this._displayableCoordinates$.next({
                 pixel: this.rectangleCoordinatesToString(this.getPixelCoordinatesFromRectangle(this._validRect.norm)),
                 math: this.rectangleCoordinatesToString(this.getMathCoordinatesFromRectangle(this._validRect.norm), true),
             });
         } else if (this._invalidRect != null) {
-            this.displayableCoordinates$.next({
+            this._displayableCoordinates$.next({
                 pixel: this.rectangleCoordinatesToString(this.getPixelCoordinatesFromRectangle(this._invalidRect)),
                 math: this.rectangleCoordinatesToString(this.getMathCoordinatesFromRectangle(this._invalidRect), true),
             });
         } else if (p1 != null) {
-            this.displayableCoordinates$.next({
+            this._displayableCoordinates$.next({
                 pixel: `(${p1.x}, ${p1.y})`,
                 math: this.getMathCoordinatesFromPoint(p1),
             });
         }
         else {
-            this.displayableCoordinates$.next(EMPTY_DISPLAYABLE_COORDINATES);
+            this._displayableCoordinates$.next(EMPTY_DISPLAYABLE_COORDINATES);
         }
     }
 

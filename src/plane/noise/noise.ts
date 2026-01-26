@@ -31,10 +31,6 @@ export class Noise extends Plane {
         // ToDo
     }
 
-    override setMaxIterations(value: number) {
-        // Does not apply
-    }
-
     override onDestroy(): void {
         super.onDestroy();
         this._noiseIndexSubscription?.unsubscribe();

@@ -27,8 +27,6 @@ export abstract class Plane {
 
     public abstract updateGridRange(range: GridRange | null): void;
 
-    public abstract setMaxIterations(value: number): void; // ToDo Mandelbrot only
-
     public get grid(): Grid {
         return this._grid;
     }

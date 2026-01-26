@@ -52,7 +52,6 @@ export class Start {
     // Plane Area
     private _planeSelectArea = document.getElementById('planeSelectArea') as HTMLDivElement;
     private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
-    private _planeConfigArea = document.getElementById('planeConfigArea') as HTMLDivElement;
 
     // subscriptions
     private _busySubscription: Subscription | null = null;
@@ -94,7 +93,6 @@ export class Start {
         this.addPlaneDropdownEventListener();
         this.addExportButtonClickListener();
         this.addSetRangeButtonClickListener();
-        this.addIterationsEventListener(); // ToDo: Only applicable to Mandelbrot?!
         this.handlePhysicalKeyboardEvents();
     }
 
@@ -179,7 +177,6 @@ export class Start {
         this.setAreaWidth(this._headerArea, width);
         this.setAreaWidth(this._rangeArea, width);
         this.setAreaWidth(this._planeSelectArea, width);
-        this.setAreaWidth(this._planeConfigArea, width);
         this._mainDiv.style.setProperty('visibility', `visible`);
     }
 
@@ -299,20 +296,6 @@ export class Start {
                 this._plane.updateGridRange(null);
             } else {
                 console.error('#subscribeToBusyState - unexpected _plane is null');
-            }
-        });
-    }
-
-    private addIterationsEventListener() {
-        const input = document.getElementById('iterationsInput') as HTMLInputElement;
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                if (this._plane != null) {
-                    const value = input.valueAsNumber;
-                    this._plane.setMaxIterations(value);
-                } else {
-                    console.error('#subscribeToBusyState - unexpected _plane is null');
-                }
             }
         });
     }

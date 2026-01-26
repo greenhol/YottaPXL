@@ -35,10 +35,6 @@ export class Lic extends Plane {
         this.calculate();
     }
 
-    override setMaxIterations(value: number) {
-        // Does not apply
-    }
-
     private calculate() {
         this.setBusy();
         const range = this.config.data.gridRange;

@@ -5,12 +5,16 @@ import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calc
 import { BLACK, ColorMapper, WHITE } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
 
+interface MandelbrotSimpleConfig extends PlaneConfig {
+    gridRange: GridRange,
+    maxIterations: number,
+}
+
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 export class MandelbrotSimple extends Plane {
 
     private _colorMapper: ColorMapper;
-    private _maxIterations: number = 255;
 
     constructor(grid: Grid) {
         super(grid);
@@ -21,8 +25,11 @@ export class MandelbrotSimple extends Plane {
         this.calculate();
     }
 
-    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
-        { gridRange: INITIAL_GRID_RANGE },
+    override config: ModuleConfig<MandelbrotSimpleConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            maxIterations: 255,
+        },
         'mandelBrotConfig',
     );
 
@@ -37,20 +44,15 @@ export class MandelbrotSimple extends Plane {
         this.calculate();
     }
 
-    override setMaxIterations(value: number) {
-        this._maxIterations = value;
-        this.calculate();
-    }
-
     private calculate() {
-        console.log(`#calculate - with max iterations ${this._maxIterations}`);
+        console.log(`#calculate - with max iterations ${this.config.data.maxIterations}`);
         this.grid.updateRange(this.config.data.gridRange);
         this.setBusy();
 
         // ToDo: remove setTimeouts when web workers are implemented
         setTimeout(() => {
             const calculator: MandelbrotCalculator = new MandelbrotCalculator();
-            const data: Float64Array = calculator.calculate(this.grid, this._maxIterations);
+            const data: Float64Array = calculator.calculate(this.grid, this.config.data.maxIterations);
             this.updateImage(this.createImage(data));
 
             setTimeout(() => {
@@ -65,7 +67,7 @@ export class MandelbrotSimple extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                if (value === this._maxIterations) {
+                if (value === this.config.data.maxIterations) {
                     value = -1;
                 }
                 const color = this._colorMapper.map(value);

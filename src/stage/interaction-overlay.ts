@@ -54,11 +54,13 @@ export class InteractionOverlay {
     private _invalidRect: SVGGElement | null = null;
     private _validRect: Rectangles | null = null;
     private _frozen: boolean = false;
+    private _overlayRect: DOMRect;
 
     constructor(overlay: HTMLElement, grid: Grid) {
         this._overlay = overlay;
         this._grid = grid;
         this.addSvgCss();
+        this._overlayRect = overlay.getBoundingClientRect();
 
         this.addEventListeners();
     }
@@ -120,6 +122,60 @@ export class InteractionOverlay {
         this._overlay.addEventListener('mouseup', (e) => { if (!this._frozen) this.onMouseUp(e) });
         this._overlay.addEventListener('mouseleave', () => { if (!this._frozen) this.onMouseLeave() });
         this._overlay.addEventListener('wheel', (e) => { if (!this._frozen) this.onMouseWheel(e) });
+        this._overlay.addEventListener('touchstart', (e) => { if (!this._frozen) this.onTouchStart(e) });
+        this._overlay.addEventListener('touchmove', (e) => { if (!this._frozen) this.onTouchMove(e) });
+        this._overlay.addEventListener('touchend', (e) => { if (!this._frozen) this.onTouchEnd(e) });
+    }
+
+    private onTouchStart(e: TouchEvent) {
+        if (this.processIncomingTouchEvents(e)) { e.preventDefault() }
+    }
+
+    private onTouchMove(e: TouchEvent) {
+        if (this.processIncomingTouchEvents(e)) { e.preventDefault() }
+    }
+
+    private onTouchEnd(e: TouchEvent) {
+        if (e.touches.length == 1 && this._validRect != null) {
+            const selection = this.getMathCoordinatesFromRectangle(this._validRect.norm);
+            this.emitSelection(selection);
+            e.preventDefault();
+        } else if (this._p1 != null && this._p2 == null) {
+            return;
+        }
+        this.resetInteraction();
+    }
+
+    private processIncomingTouchEvents(e: TouchEvent): boolean {
+        if (e.touches.length == 1) { return false }
+        else if (e.touches.length == 2) { if (!this.evaluateTouchRect(e)) this.resetInteraction() }
+        else if (e.touches.length > 2) { this.resetInteraction() }
+        return true;
+    }
+
+    private evaluateTouchRect(e: TouchEvent): boolean {
+        const p1: Point = { x: e.touches[0].pageX, y: e.touches[0].pageY };
+        const p2: Point = { x: e.touches[1].pageX, y: e.touches[1].pageY };
+
+        if (this.pointIsOutside(p1) || this.pointIsOutside(p2)) {
+            return false;
+        } else {
+            p1.x -= this._overlayRect.left;
+            p1.y -= this._overlayRect.top;
+            p2.x -= this._overlayRect.left;
+            p2.y -= this._overlayRect.top;
+            this._p1 = p1;
+            this._p2 = p2;
+            this.evaluateRect(this._p1, this._p2);
+            return true;
+        }
+    }
+
+    private pointIsOutside(p: Point): boolean {
+        return p.x < this._overlayRect.left ||
+            p.x > this._overlayRect.right ||
+            p.y < this._overlayRect.top ||
+            p.y > this._overlayRect.bottom
     }
 
     private onMouseDown(e: MouseEvent) {
@@ -143,11 +199,14 @@ export class InteractionOverlay {
             this.emitFromPosition(e.offsetX, e.offsetY, 1);
             return;
         }
-        this.resetAllSelections();
-        this.emitDisplayableCoordinates();
+        this.resetInteraction();
     }
 
     private onMouseLeave() {
+        this.resetInteraction();
+    }
+
+    private resetInteraction() {
         this.resetAllSelections();
         this.emitDisplayableCoordinates();
     }

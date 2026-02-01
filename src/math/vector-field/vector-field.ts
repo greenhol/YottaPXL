@@ -19,6 +19,10 @@ export abstract class VectorField {
 
     public abstract computeVector(x: number, y: number): [number, number, number];
 
+    public get grid(): GridWithMargin {
+        return this._grid;
+    }
+
     public getVector(col: number, row: number): [number, number] {
         return [
             this._vX[this._grid.getIndex(col, row)],

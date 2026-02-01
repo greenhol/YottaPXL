@@ -265,7 +265,8 @@ export class Start {
 
     private addExportButtonClickListener() {
         this._exportButton?.addEventListener('click', (e: PointerEvent) => {
-            let filename = prompt('Enter a filename', 'image');
+            const rangeString = gridRangeToString(this._grid.range);
+            let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}`);
             if (!filename) return;
             filename += '.png';
 

@@ -2,6 +2,12 @@ import { Grid } from '../../grid/grid';
 
 export class MandelbrotCalculator {
 
+    private _escapeValue: number;
+
+    constructor(escapeValue: number = 2) {
+        this._escapeValue = Math.pow(escapeValue, 2);
+    }
+
     public calculate(grid: Grid, maxIterations: number): Float64Array {
         const targetData = new Float64Array(grid.size);
         for (let row = 0; row < grid.height; row++) {
@@ -17,7 +23,7 @@ export class MandelbrotCalculator {
         let reZ = 0;
         let imZ = 0;
         let iteration = 0;
-        while (reZ * reZ + imZ * imZ < 4 && iteration < maxIterations) {
+        while (reZ * reZ + imZ * imZ < this._escapeValue && iteration < maxIterations) {
             const xTemp = reZ * reZ - imZ * imZ + reC;
             imZ = 2 * reZ * imZ + imC;
             reZ = xTemp;

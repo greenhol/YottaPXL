@@ -32,12 +32,14 @@ export class LicCalculator {
         for (let row = 0; row < this._target.height; row++) {
             for (let col = 0; col < this._target.width; col++) {
                 let length = maxLength;
+                const magnitude = this._source.field.getMagnitude(col + this._source.grid.margin, row + this._source.grid.margin);
                 if (strength > 0) {
-                    const magnitude = this._source.field.getMagnitude(col + this._source.grid.margin, row + this._source.grid.margin);
                     length = Math.min(maxLength, magnitude * strength);
                     length = Math.max(minLength, length);
                 }
-                targetData[this._target.getIndex(col, row)] = this.calcLicPixel(this._source, col, row, length);
+                targetData[this._target.getIndex(col, row)] = (magnitude == 0) ?
+                    Number.MIN_SAFE_INTEGER :
+                    this.calcLicPixel(this._source, col, row, length);
             }
             if (rowCnt > 49) {
                 console.info('calculating: ' + Math.round(100 * row / this._target.height) + '%');
@@ -60,8 +62,10 @@ export class LicCalculator {
     private calcLicPixelInDirection(sourceData: SourceData, col: number, row: number, length: number, direction: number = 1): number {
         let restDistance = length;
         let [vX, vY] = sourceData.field.getVector(col + this._source.grid.margin, row + this._source.grid.margin);
+        if (vX == 0 && vY == 0) return Number.MIN_SAFE_INTEGER;
         vX *= direction;
         vY *= direction;
+        let [vX0, vY0] = [vX, vY];
         let nextArea = this.getNextArea(0.5, 0.5, vX, vY);
         let factor = (nextArea.distance < restDistance) ? nextArea.distance : restDistance;
         let brightness = sourceData.data[sourceData.grid.getIndexForCenterArea(col, row)] * factor;
@@ -70,6 +74,11 @@ export class LicCalculator {
             row += nextArea.rowDiff;
             col += nextArea.colDiff;
             [vX, vY] = sourceData.field.getVector(col + this._source.grid.margin, row + this._source.grid.margin);
+            if (Number.isNaN(vX) || Number.isNaN(vY) || (vX == 0 && vY == 0)) {
+                [vX, vY] = [vX0, vY0];
+            } else {
+                [vX0, vY0] = [vX, vY];
+            }
             vX *= direction;
             vY *= direction;
             nextArea = this.getNextArea(nextArea.x, nextArea.y, vX, vY);

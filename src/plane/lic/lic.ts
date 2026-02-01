@@ -6,11 +6,20 @@ import { LicCalculator } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { ChargeField } from '../../math/vector-field/charge-field';
 import { FluidFlowField } from '../../math/vector-field/fluid-flow-field';
+import { MandelbrotField } from '../../math/vector-field/mandelbrot-field';
 import { SourceData } from '../../math/vector-field/vector-field';
 import { Plane, PlaneConfig } from '../plane';
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
-const LIC_MAX_LENGTH: number = 20;
+interface Color {
+    r: number,
+    g: number,
+    b: number,
+}
+
+const COLOR_NA: Color = { r: 238, g: 238, b: 255 };
+// const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
+const LIC_MAX_LENGTH: number = 10;
 
 export class Lic extends Plane {
 
@@ -42,7 +51,7 @@ export class Lic extends Plane {
 
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);
         // const sourceField = new ChargeField(sourceGrid);
-        const sourceField = new ChargeField(sourceGrid);
+        const sourceField = new MandelbrotField(sourceGrid);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
@@ -56,7 +65,7 @@ export class Lic extends Plane {
 
             setTimeout(() => {
                 const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                const licData = calculator.calculate(LIC_MAX_LENGTH, 5, 5);
+                const licData = calculator.calculate(LIC_MAX_LENGTH);
                 this.updateImage(this.createImage(licData));
 
                 setTimeout(() => {
@@ -88,14 +97,21 @@ export class Lic extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = Math.round(data[index] * 255);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = value;     // R
-                imageData[pixelIndex + 1] = value; // G
-                imageData[pixelIndex + 2] = value; // B
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+                let value = data[index];
+                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : this.gray(Math.round(value * 255)));
             }
         }
         return imageData;
+    }
+
+    private gray(value: number): Color {
+        return { r: value, g: value, b: value}
+    }
+    private drawPixel(imageData: Uint8ClampedArray, index: number, color: Color) {
+        const pixelIndex = index * 4;
+        imageData[pixelIndex] = color.r;     // R
+        imageData[pixelIndex + 1] = color.g; // G
+        imageData[pixelIndex + 2] = color.b; // B
+        imageData[pixelIndex + 3] = 255;     // A (opaque)
     }
 }

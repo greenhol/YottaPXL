@@ -1,3 +1,5 @@
+const GRID_RANGE_SEPARATOR: string = '_';
+
 export interface GridRange {
     xMin: number;
     xMax: number;
@@ -5,11 +7,11 @@ export interface GridRange {
 }
 
 export function gridRangeToString(range: GridRange): string {
-    return `${range.xMin}/${range.xMax}/${range.yCenter}`;
+    return `${range.xMin}_${range.xMax}${GRID_RANGE_SEPARATOR}${range.yCenter}`;
 }
 
 export function gridRangeFromString(range: string): GridRange | null {
-    const parts: string[] = range.split('/');
+    const parts: string[] = range.split(GRID_RANGE_SEPARATOR);
     if (parts.length != 3) {
         console.warn(`#gridRangeFromString - invalid input (parts.length != 3) instead ${parts.length}`, range);
         return null;

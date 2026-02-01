@@ -37,8 +37,15 @@ export class Grid {
 
     public pixelToMath(col: number, row: number): [number, number] {
         return [
-            this._xMin + (col / this.width) * (this._xRange),
-            this._yMax - (row / this.height) * (this._yRange),
+            this._xMin + col / this.width * this._xRange,
+            this._yMax - row / this.height * this._yRange,
+        ];
+    }
+
+    public mathToPixel(x: number, y: number): [number, number] {
+        return [
+            Math.round((x - this._xMin) * this.width / this._xRange),
+            Math.round((this._yMax - y) * this.height / this._yRange),
         ];
     }
 

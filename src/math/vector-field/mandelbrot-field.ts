@@ -12,11 +12,14 @@ interface Charge {
 export class MandelbrotField extends VectorField {
 
     private _mandelbrotData: Float64Array;
-    private _maxIterations: number = 2000;
+    private _maxIterations: number;
 
-    constructor(grid: GridWithMargin) {
+    constructor(grid: GridWithMargin, maxIterations: number, escapeValue: number) {
         super(grid);
-        this.init();
+        this._maxIterations = maxIterations;
+
+        const mandelbrotCalculator = new MandelbrotCalculator(escapeValue);
+        this._mandelbrotData = mandelbrotCalculator.calculateDistances(this.grid, this._maxIterations);
         this.precomputeVectors();
     }
 
@@ -28,7 +31,7 @@ export class MandelbrotField extends VectorField {
         const iterations = this._mandelbrotData[this.grid.getIndex(col, row)];
         if (iterations == this._maxIterations) return [0, 0, 0];
 
-        [vX, vY] = this.imageGradient(col, row, SOBEL_KERNEL_6);
+        [vX, vY] = this.pixelGradient(col, row, SOBEL_KERNEL_6);
 
         // Rotate
         // const temp = vX;
@@ -43,7 +46,7 @@ export class MandelbrotField extends VectorField {
         ];
     }
 
-    private imageGradient(col: number, row: number, kernel: ImageGradientKernel): [number, number] {
+    private pixelGradient(col: number, row: number, kernel: ImageGradientKernel): [number, number] {
         let pixelX = 0;
         let pixelY = 0;
 
@@ -78,10 +81,5 @@ export class MandelbrotField extends VectorField {
         }
 
         return [pixelX, pixelY];
-    }
-
-    private init() {
-        const mandelbrotCalculator = new MandelbrotCalculator(100);
-        this._mandelbrotData = mandelbrotCalculator.calculate(this.grid, this._maxIterations);
     }
 }

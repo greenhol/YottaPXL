@@ -2,29 +2,42 @@ import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { ChargeField } from '../../math/vector-field/charge-field';
+import { MandelbrotField } from '../../math/vector-field/mandelbrot-field';
 import { SourceData } from '../../math/vector-field/vector-field';
-import { Color, createGray, RED } from '../../utils/color';
+import { BLACK, Color, createGray, WHITE } from '../../utils/color';
+import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
+interface MandelbrotVectorConfig extends PlaneConfig {
+    gridRange: GridRange,
+    maxIterations: number,
+    useNoiseAsSource: boolean,
+}
+
+const COLOR_NA: Color = { r: 238, g: 238, b: 255 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 const LIC_MAX_LENGTH: number = 10;
 
-export class Lic extends Plane {
+export class MandelbrotVector extends Plane {
 
     constructor(grid: Grid) {
         super(grid);
         this.calculate();
     }
 
-    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
-        { gridRange: INITIAL_GRID_RANGE },
-        'licConfig',
+    override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            maxIterations: 255,
+            useNoiseAsSource: true,
+        },
+        'mandelbrotVectorConfig',
     );
 
-    override name: string = 'LIC';
+    override name: string = 'Mandelbrot Vector';
 
     override updateGridRange(selectedRange: GridRange | null) {
         if (selectedRange != null) {
@@ -40,9 +53,11 @@ export class Lic extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
+        const maxIterations = 1000;
+        const escapeValue = 1000;
+
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);
-        // const sourceField = new ChargeField(sourceGrid);
-        const sourceField = new ChargeField(sourceGrid);
+        const sourceField = new MandelbrotField(sourceGrid, maxIterations, escapeValue);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
@@ -50,14 +65,16 @@ export class Lic extends Plane {
             const sourceData: SourceData = {
                 grid: sourceGrid,
                 field: sourceField,
-                data: generator.createIsolatedBigBlackNoise(0.1),
+                data: this.config.data.useNoiseAsSource ?
+                    generator.createBernoulliNoise(0.3) :
+                    this.createMandelbrotData(sourceGrid, maxIterations, escapeValue),
             }
-            this.updateImage(this.createSourceImage(sourceData));
+            this.updateImage(this.drawSourceImage(sourceData));
 
             setTimeout(() => {
                 const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
                 const licData = calculator.calculate(LIC_MAX_LENGTH);
-                this.updateImage(this.createImage(licData));
+                this.updateImage(this.drawImage(licData));
 
                 setTimeout(() => {
                     this.setIdle();
@@ -66,7 +83,27 @@ export class Lic extends Plane {
         }, 50);
     }
 
-    private createSourceImage(source: SourceData): ImageDataArray {
+    private createMandelbrotData(gridWithMargin: GridWithMargin, maxIterations: number, escapeValue: number): Float64Array {
+        const calc = new MandelbrotCalculator(escapeValue);
+        const colorMapper = new ColorMapper([
+            { color: BLACK, cycleLength: 255 },
+            { color: WHITE, cycleLength: 255 },
+        ]);
+        const mbData = calc.calculateIterations(gridWithMargin, maxIterations);
+        const data = new Float64Array(gridWithMargin.size);
+        for (let row = 0; row < gridWithMargin.height; row++) {
+            for (let col = 0; col < gridWithMargin.width; col++) {
+                let value = mbData[gridWithMargin.getIndex(col, row)];
+                if (value === maxIterations) {
+                    value = -1;
+                }
+                data[gridWithMargin.getIndex(col, row)] = colorMapper.map(value).r / 255;
+            }
+        }
+        return data;
+    }
+
+    private drawSourceImage(source: SourceData): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -83,13 +120,13 @@ export class Lic extends Plane {
         return imageData;
     }
 
-    private createImage(data: Float64Array): ImageDataArray {
+    private drawImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? RED : createGray(value));
+                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : createGray(value));
             }
         }
         return imageData;

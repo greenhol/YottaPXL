@@ -5,6 +5,7 @@ import { Grid } from './grid/grid';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
+import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Lic } from './plane/lic/lic';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
@@ -16,9 +17,10 @@ declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
 enum PlaneID {
-    MANDELBROT = 'MANDELBROT',
     NOISE = 'NOISE',
     LIC = 'LIC',
+    MANDELBROT = 'MANDELBROT',
+    MANDELBROT_VECTOR = 'MANDELBROT_VECTOR',
 }
 
 interface MainConfig {
@@ -99,19 +101,24 @@ export class Start {
     private switchPlane(planeId: PlaneID) {
         this._plane?.onDestroy();
         switch (planeId) {
-            case PlaneID.MANDELBROT: {
-                this._config.data.currentPlaneId = 0;
-                this._plane = new MandelbrotSimple(this._grid);
-                break;
-            }
             case PlaneID.NOISE: {
-                this._config.data.currentPlaneId = 1;
+                this._config.data.currentPlaneId = 0;
                 this._plane = new Noise(this._grid);
                 break;
             }
             case PlaneID.LIC: {
-                this._config.data.currentPlaneId = 2;
+                this._config.data.currentPlaneId = 1;
                 this._plane = new Lic(this._grid);
+                break;
+            }
+            case PlaneID.MANDELBROT: {
+                this._config.data.currentPlaneId = 2;
+                this._plane = new MandelbrotSimple(this._grid);
+                break;
+            }
+            case PlaneID.MANDELBROT_VECTOR: {
+                this._config.data.currentPlaneId = 3;
+                this._plane = new MandelbrotVector(this._grid);
                 break;
             }
         }
@@ -159,9 +166,10 @@ export class Start {
 
     private getPlaneIdFromConfig(): PlaneID {
         switch (this._config.data.currentPlaneId) {
-            case 1: return PlaneID.NOISE;
-            case 2: return PlaneID.LIC;
-            default: return PlaneID.MANDELBROT;
+            case 1: return PlaneID.LIC;
+            case 2: return PlaneID.MANDELBROT;
+            case 3: return PlaneID.MANDELBROT_VECTOR;
+            default: return PlaneID.NOISE;
         }
     }
 
@@ -243,16 +251,11 @@ export class Start {
             const selectedValue = (event.target as HTMLSelectElement).value;
             console.log(`Selected plane: ${selectedValue}`);
             switch (selectedValue) {
-                case PlaneID.MANDELBROT: {
-                    this.switchPlane(PlaneID.MANDELBROT);
-                    break;
-                }
-                case PlaneID.NOISE: {
-                    this.switchPlane(PlaneID.NOISE);
-                    break;
-                }
-                case PlaneID.LIC: {
-                    this.switchPlane(PlaneID.LIC);
+                case PlaneID.NOISE:
+                case PlaneID.LIC:
+                case PlaneID.MANDELBROT:
+                case PlaneID.MANDELBROT_VECTOR: {
+                    this.switchPlane(selectedValue);
                     break;
                 }
                 default: {

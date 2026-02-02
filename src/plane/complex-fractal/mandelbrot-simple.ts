@@ -2,7 +2,8 @@ import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { BLACK, ColorMapper, WHITE } from '../../utils/color-mapper';
+import { BLACK, WHITE } from '../../utils/color';
+import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
 
 interface MandelbrotSimpleConfig extends PlaneConfig {
@@ -52,7 +53,7 @@ export class MandelbrotSimple extends Plane {
         // ToDo: remove setTimeouts when web workers are implemented
         setTimeout(() => {
             const calculator: MandelbrotCalculator = new MandelbrotCalculator();
-            const data: Float64Array = calculator.calculate(this.grid, this.config.data.maxIterations);
+            const data: Float64Array = calculator.calculateIterations(this.grid, this.config.data.maxIterations);
             this.updateImage(this.createImage(data));
 
             setTimeout(() => {

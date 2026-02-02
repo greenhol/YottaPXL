@@ -34,6 +34,7 @@ export const RESOLUTIONS: Resolution[] = [
     { width: 688, height: 288, description: '43:18 - Small preview' },
     { width: 1000, height: 420, description: '43:18 - Medium preview' },
     { width: 2560, height: 1080, description: '43:18 - Ultrawide desktop' },
+    { width: 3440, height: 1440, description: '43:18 - UWQHD desktop' },
     { width: 3840, height: 1620, description: '43:18 - High-res ultrawide' },
     { width: 5120, height: 2160, description: '43:18 - 5K ultrawide export' },
 ];

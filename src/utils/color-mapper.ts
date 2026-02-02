@@ -1,23 +1,16 @@
-export interface RGB {
-    r: number;
-    g: number;
-    b: number;
-}
+import { BLACK, Color } from './color';
 
 export interface ColorSegment {
-    color: RGB;
+    color: Color;
     cycleLength: number;
 }
-
-export const BLACK: RGB = { r: 0, g: 0, b: 0 };
-export const WHITE: RGB = { r: 255, g: 255, b: 255 };
 
 export class ColorMapper {
     private _colorSegments: ColorSegment[];
     private _totalCycleLength: number;
-    private _fallBackColor: RGB;
+    private _fallBackColor: Color;
 
-    constructor(segments: ColorSegment[], fallBackColor: RGB = BLACK) {
+    constructor(segments: ColorSegment[], fallBackColor: Color = BLACK) {
         if (segments.length < 2) {
             throw new Error("At least two color segments are required.");
         }
@@ -30,7 +23,7 @@ export class ColorMapper {
         this._fallBackColor = fallBackColor;
     }
 
-    public map(value: number): RGB {
+    public map(value: number): Color {
         if (value < 0) {
             return this._fallBackColor;
         }

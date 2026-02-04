@@ -1,13 +1,7 @@
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ImageGradientKernel, SOBEL_KERNEL_6 } from '../image-gradient-kernel/image-gradient-kernel';
 import { MandelbrotCalculator } from './../complex-fractal/mandelbrot-calculator';
-import { VectorField } from './vector-field';
-
-interface Charge {
-    x: number;
-    y: number;
-    magnitude: number;
-}
+import { ScaleFactor, VectorField } from './vector-field';
 
 export class MandelbrotField extends VectorField {
 

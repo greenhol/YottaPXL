@@ -1,7 +1,7 @@
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ImageGradientKernel, SOBEL_KERNEL_6 } from '../image-gradient-kernel/image-gradient-kernel';
 import { MandelbrotCalculator } from './../complex-fractal/mandelbrot-calculator';
-import { ScaleFactor, VectorField } from './vector-field';
+import { VectorField } from './vector-field';
 
 export class MandelbrotField extends VectorField {
 
@@ -14,6 +14,7 @@ export class MandelbrotField extends VectorField {
 
         const mandelbrotCalculator = new MandelbrotCalculator(escapeValue);
         this._mandelbrotData = mandelbrotCalculator.calculateDistances(this.grid, this._maxIterations);
+        
         this.precomputeVectors();
     }
 
@@ -49,26 +50,6 @@ export class MandelbrotField extends VectorField {
                 const pixel = this._mandelbrotData[this.grid.getIndex(col + ky, row + kx)];
                 const weightX = kernel.x[ky + kernel.order][kx + kernel.order];
                 const weightY = kernel.y[ky + kernel.order][kx + kernel.order];
-                pixelX += pixel * weightX;
-                pixelY += pixel * weightY;
-            }
-        }
-
-        return [pixelX, pixelY];
-    }
-
-    private scharrOperatorForPixel3(col: number, row: number): [number, number] {
-        const kernelX = [[-3, 0, 3], [-10, 0, 10], [-3, 0, 3]];
-        const kernelY = [[-3, -10, -3], [0, 0, 0], [3, 10, 3]];
-
-        let pixelX = 0;
-        let pixelY = 0;
-
-        for (let ky = -1; ky <= 1; ky++) {
-            for (let kx = -1; kx <= 1; kx++) {
-                const pixel = this._mandelbrotData[this.grid.getIndex(col + kx, row + ky)];
-                const weightX = kernelX[ky + 1][kx + 1];
-                const weightY = kernelY[ky + 1][kx + 1];
                 pixelX += pixel * weightX;
                 pixelY += pixel * weightY;
             }

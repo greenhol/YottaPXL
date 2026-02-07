@@ -9,6 +9,7 @@ import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Lic } from './plane/lic/lic';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
+import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
@@ -16,15 +17,8 @@ import { UrlHandler } from './utils/url-handler';
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
 
-enum PlaneID {
-    NOISE = 'NOISE',
-    LIC = 'LIC',
-    MANDELBROT = 'MANDELBROT',
-    MANDELBROT_VECTOR = 'MANDELBROT_VECTOR',
-}
-
 interface MainConfig {
-    currentPlaneId: number,
+    currentPlaneId: PlaneId,
 }
 
 export class Start {
@@ -62,7 +56,7 @@ export class Start {
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
         configVersionCheck(APP_VERSION);
-        this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 0 }, 'mainConfig');
+        this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 'NOISE' }, 'mainConfig');
 
         const [width, height] = this._urlHandler.getResolution();
         let resolution = this.initializeResolution(width, height);
@@ -77,7 +71,7 @@ export class Start {
         window.onload = () => { this.init(planeId) }
     }
 
-    private init(initialPlane: PlaneID) {
+    private init(initialPlane: PlaneId) {
         if (this._htmlCanvas == null || this._htmlSvg == null) {
             console.error('Critical: HTML elements not found');
             return;
@@ -98,26 +92,23 @@ export class Start {
         this.handlePhysicalKeyboardEvents();
     }
 
-    private switchPlane(planeId: PlaneID) {
+    private switchPlane(planeId: PlaneId) {
         this._plane?.onDestroy();
+        this._config.data.currentPlaneId = planeId;
         switch (planeId) {
-            case PlaneID.NOISE: {
-                this._config.data.currentPlaneId = 0;
+            case 'NOISE': {
                 this._plane = new Noise(this._grid);
                 break;
             }
-            case PlaneID.LIC: {
-                this._config.data.currentPlaneId = 1;
+            case 'LIC': {
                 this._plane = new Lic(this._grid);
                 break;
             }
-            case PlaneID.MANDELBROT: {
-                this._config.data.currentPlaneId = 2;
+            case 'MANDELBROT': {
                 this._plane = new MandelbrotSimple(this._grid);
                 break;
             }
-            case PlaneID.MANDELBROT_VECTOR: {
-                this._config.data.currentPlaneId = 3;
+            case 'MANDELBROT_VECTOR': {
                 this._plane = new MandelbrotVector(this._grid);
                 break;
             }
@@ -148,29 +139,20 @@ export class Start {
         return selectedResolution;
     }
 
-    private initializePlaneSelect(): PlaneID {
+    private initializePlaneSelect(): PlaneId {
         this._planeSelect.innerHTML = '';
-        let selectedPlane: PlaneID = this.getPlaneIdFromConfig();
+        let selectedPlaneId = this._config.data.currentPlaneId;
 
-        for (const planeId in PlaneID) {
+        for (const plane of PLANE_TYPES) {
             const option = document.createElement('option');
-            option.label = `${planeId}`;
-            option.value = planeId;
-            if (planeId == selectedPlane) {
+            option.label = plane.short;
+            option.value = plane.id;
+            if (plane.id == selectedPlaneId) {
                 option.selected = true;
             }
             this._planeSelect.appendChild(option);
         };
-        return selectedPlane;
-    }
-
-    private getPlaneIdFromConfig(): PlaneID {
-        switch (this._config.data.currentPlaneId) {
-            case 1: return PlaneID.LIC;
-            case 2: return PlaneID.MANDELBROT;
-            case 3: return PlaneID.MANDELBROT_VECTOR;
-            default: return PlaneID.NOISE;
-        }
+        return selectedPlaneId;
     }
 
     private setHtmlCanvasSize() {
@@ -250,18 +232,10 @@ export class Start {
         this._planeSelect?.addEventListener('change', (event) => {
             const selectedValue = (event.target as HTMLSelectElement).value;
             console.log(`Selected plane: ${selectedValue}`);
-            switch (selectedValue) {
-                case PlaneID.NOISE:
-                case PlaneID.LIC:
-                case PlaneID.MANDELBROT:
-                case PlaneID.MANDELBROT_VECTOR: {
-                    this.switchPlane(selectedValue);
-                    break;
-                }
-                default: {
-                    console.warn(`Invalid plane ID: ${selectedValue}`);
-                    break;
-                }
+            if (VALID_PLANE_IDS.includes(selectedValue as PlaneId)) {
+                this.switchPlane(selectedValue as PlaneId);
+            } else {
+                console.warn(`Invalid plane ID: ${selectedValue}`);
             }
         });
     }

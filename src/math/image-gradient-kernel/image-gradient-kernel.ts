@@ -148,3 +148,16 @@ export const SOBEL_KERNEL_6: ImageGradientKernel = {
     ],
 }
 
+export const SCHARR_KERNEL_1: ImageGradientKernel = {
+    order: 1,
+    x: [
+        [-3, 0, 3],
+        [-10, 0, 10],
+        [-3, 0, 3]
+    ],
+    y: [
+        [-3, -10, -3],
+        [0, 0, 0],
+        [3, 10, 3]
+    ],
+}

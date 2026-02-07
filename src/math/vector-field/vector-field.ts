@@ -8,15 +8,15 @@ export interface SourceData {
 }
 
 export enum ScaleFactor {
-    UNSCALED,
-    FACTOR_2,
-    FACTOR_4,
-    FACTOR_6,
-    FACTOR_8,
-    FACTOR_10,
-    FACTOR_12,
-    FACTOR_14,
-    FACTOR_16,
+    UNSCALED = 0,
+    FACTOR_2 = 2,
+    FACTOR_4 = 4,
+    FACTOR_6 = 6,
+    FACTOR_8 = 8,
+    FACTOR_10 = 10,
+    FACTOR_12 = 12,
+    FACTOR_14 = 14,
+    FACTOR_16 = 16,
 }
 
 export abstract class VectorField {
@@ -54,14 +54,14 @@ export abstract class VectorField {
 
         switch (scaleFactor) {
             case ScaleFactor.UNSCALED: this.precomputeUnscaledVectors(); break;
-            case ScaleFactor.FACTOR_2: this.precomputeScaledVectors(2); break;
-            case ScaleFactor.FACTOR_4: this.precomputeScaledVectors(4); break;
-            case ScaleFactor.FACTOR_6: this.precomputeScaledVectors(6); break;
-            case ScaleFactor.FACTOR_8: this.precomputeScaledVectors(8); break;
-            case ScaleFactor.FACTOR_10: this.precomputeScaledVectors(10); break;
-            case ScaleFactor.FACTOR_12: this.precomputeScaledVectors(12); break;
-            case ScaleFactor.FACTOR_14: this.precomputeScaledVectors(14); break;
-            case ScaleFactor.FACTOR_16: this.precomputeScaledVectors(16); break;
+            case ScaleFactor.FACTOR_2:
+            case ScaleFactor.FACTOR_4:
+            case ScaleFactor.FACTOR_6:
+            case ScaleFactor.FACTOR_8:
+            case ScaleFactor.FACTOR_10:
+            case ScaleFactor.FACTOR_12:
+            case ScaleFactor.FACTOR_14:
+            case ScaleFactor.FACTOR_16: this.precomputeScaledVectors(scaleFactor); break;
         }
     }
 
@@ -120,13 +120,11 @@ export abstract class VectorField {
                 const col1 = Math.min(col0 + 1, lowResGrid.width - 1);
                 const colFrac = colLowRes - col0;
 
-                // Get the four surrounding vectors
                 const q00 = [lowResvX[lowResGrid.getIndex(col0, row0)], lowResvY[lowResGrid.getIndex(col0, row0)]];
                 const q01 = [lowResvX[lowResGrid.getIndex(col0, row1)], lowResvY[lowResGrid.getIndex(col0, row1)]];
                 const q10 = [lowResvX[lowResGrid.getIndex(col1, row0)], lowResvY[lowResGrid.getIndex(col1, row0)]];
                 const q11 = [lowResvX[lowResGrid.getIndex(col1, row1)], lowResvY[lowResGrid.getIndex(col1, row1)]];
 
-                // Interpolate
                 const vector = this.bilinearInterpolation(colFrac, rowFrac, q00, q01, q10, q11);
                 const magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
                 this._vX[this._grid.getIndex(col, row)] = vector[0];

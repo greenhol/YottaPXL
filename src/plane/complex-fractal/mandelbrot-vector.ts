@@ -17,7 +17,7 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     useNoiseAsSource: boolean,
 }
 
-const COLOR_NA: Color = { r: 238, g: 238, b: 255 };
+const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 const LIC_MAX_LENGTH: number = 10;
 
@@ -53,7 +53,7 @@ export class MandelbrotVector extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        const maxIterations = 1000;
+        const maxIterations = 2000;
         const escapeValue = 1000;
 
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);

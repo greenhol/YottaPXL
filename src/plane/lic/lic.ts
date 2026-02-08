@@ -24,8 +24,6 @@ export class Lic extends Plane {
         'licConfig',
     );
 
-    override name: string = 'LIC';
-
     override updateGridRange(selectedRange: GridRange | null) {
         if (selectedRange != null) {
             this.config.data.gridRange = selectedRange;

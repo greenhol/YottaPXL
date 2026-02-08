@@ -23,8 +23,6 @@ export abstract class Plane {
 
     public abstract config: ModuleConfig<PlaneConfig>;
 
-    public abstract name: string;
-
     public abstract updateGridRange(range: GridRange | null): void;
 
     public get grid(): Grid {

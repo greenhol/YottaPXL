@@ -37,8 +37,6 @@ export class MandelbrotVector extends Plane {
         'mandelbrotVectorConfig',
     );
 
-    override name: string = 'Mandelbrot Vector';
-
     override updateGridRange(selectedRange: GridRange | null) {
         if (selectedRange != null) {
             this.config.data.gridRange = selectedRange;

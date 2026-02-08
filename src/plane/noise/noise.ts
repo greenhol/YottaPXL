@@ -25,8 +25,6 @@ export class Noise extends Plane {
         'noise',
     );
 
-    override name: string = 'Noise';
-
     override updateGridRange(selectedRange: GridRange) {
         // ToDo
     }

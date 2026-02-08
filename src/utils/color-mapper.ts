@@ -28,8 +28,7 @@ export class ColorMapper {
             return this._fallBackColor;
         }
 
-        const roundedValue = Math.round(value);
-        const cyclePosition = roundedValue % this._totalCycleLength;
+        const cyclePosition = value % this._totalCycleLength;
         let accumulatedLength = 0;
 
         for (let i = 0; i < this._colorSegments.length; i++) {
@@ -47,7 +46,11 @@ export class ColorMapper {
                 const g = Math.round(segment.color.g + segmentPos * (nextColorSegment.color.g - segment.color.g));
                 const b = Math.round(segment.color.b + segmentPos * (nextColorSegment.color.b - segment.color.b));
 
-                return { r, g, b };
+                return {
+                    r: Math.round(r),
+                    g: Math.round(g),
+                    b: Math.round(b),
+                };
             }
 
             accumulatedLength += segmentLength;

@@ -74,8 +74,7 @@ export class MandelbrotCalculator {
             if (absZ > this._escapeValue) {
                 // Distance estimation
                 const absDz = Math.sqrt(reZdiff * reZdiff + imZdiff * imZdiff);
-                const d = 2 * (absZ * Math.log(absZ)) / absDz;
-                return d;
+                return 2 * (absZ * Math.log(absZ)) / absDz;
             }
             iteration++;
         }

@@ -4,7 +4,7 @@ import { ModuleConfig } from './config/module-config';
 import { Grid } from './grid/grid';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
-import { MandelbrotSimple } from './plane/complex-fractal/mandelbrot-simple';
+import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Lic } from './plane/lic/lic';
 import { Noise } from './plane/noise/noise';
@@ -13,6 +13,7 @@ import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
+import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
@@ -104,8 +105,12 @@ export class Start {
                 this._plane = new Lic(this._grid);
                 break;
             }
-            case 'MANDELBROT': {
-                this._plane = new MandelbrotSimple(this._grid);
+            case 'MANDELBROT_ITERATIONS': {
+                this._plane = new MandelbrotIterations(this._grid);
+                break;
+            }
+            case 'MANDELBROT_DISTANCE': {
+                this._plane = new MandelbrotDistance(this._grid);
                 break;
             }
             case 'MANDELBROT_VECTOR': {

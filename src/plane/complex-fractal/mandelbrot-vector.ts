@@ -1,6 +1,6 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
-import { GridRange } from '../../grid/grid-range';
+import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator } from '../../math/lic/lic-calculator';
@@ -10,28 +10,35 @@ import { SourceData } from '../../math/vector-field/vector-field';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
+import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotVectorConfig extends PlaneConfig {
     gridRange: GridRange,
     maxIterations: number,
+    escapeValue: number,
+    licLength: number,
     useNoiseAsSource: boolean,
 }
 
 const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
-const LIC_MAX_LENGTH: number = 10;
 
 export class MandelbrotVector extends Plane {
 
+    private _effectiveMaxIterations = 255;
+
     constructor(grid: Grid) {
         super(grid);
+        this.grid.updateRange(this.config.data.gridRange);
         this.calculate();
     }
 
     override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            maxIterations: 255,
+            maxIterations: 0,
+            escapeValue: 100,
+            licLength: 5,
             useNoiseAsSource: true,
         },
         'mandelbrotVectorConfig',
@@ -43,19 +50,20 @@ export class MandelbrotVector extends Plane {
         } else {
             this.config.reset();
         }
+        this.grid.updateRange(this.config.data.gridRange);
         this.calculate();
     }
 
     private calculate() {
+        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
+        console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
+
         this.setBusy();
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        const maxIterations = 2000;
-        const escapeValue = 1000;
-
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);
-        const sourceField = new MandelbrotField(sourceGrid, maxIterations, escapeValue);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
+        const sourceField = new MandelbrotField(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
@@ -65,13 +73,13 @@ export class MandelbrotVector extends Plane {
                 field: sourceField,
                 data: this.config.data.useNoiseAsSource ?
                     generator.createBernoulliNoise(0.3) :
-                    this.createMandelbrotData(sourceGrid, maxIterations, escapeValue),
+                    this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue),
             }
             this.updateImage(this.drawSourceImage(sourceData));
 
             setTimeout(() => {
                 const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                const licData = calculator.calculate(LIC_MAX_LENGTH);
+                const licData = calculator.calculate(this.config.data.licLength);
                 this.updateImage(this.drawImage(licData));
 
                 setTimeout(() => {
@@ -92,7 +100,7 @@ export class MandelbrotVector extends Plane {
         for (let row = 0; row < gridWithMargin.height; row++) {
             for (let col = 0; col < gridWithMargin.width; col++) {
                 let value = mbData[gridWithMargin.getIndex(col, row)];
-                if (value === maxIterations) {
+                if (value === this._effectiveMaxIterations) {
                     value = -1;
                 }
                 data[gridWithMargin.getIndex(col, row)] = colorMapper.map(value).r / 255;

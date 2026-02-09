@@ -1,10 +1,11 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
-import { GridRange } from '../../grid/grid-range';
+import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { BLACK, RED, WHITE } from '../../utils/color';
+import { BLACK, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
+import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotDistanceConfig extends PlaneConfig {
     gridRange: GridRange,
@@ -16,15 +17,18 @@ const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 export class MandelbrotDistance extends Plane {
 
+    private _effectiveMaxIterations = 255;
+
     constructor(grid: Grid) {
         super(grid);
+        this.grid.updateRange(this.config.data.gridRange);
         this.calculate();
     }
 
     override config: ModuleConfig<MandelbrotDistanceConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            maxIterations: 2000,
+            maxIterations: 0,
             escapeValue: 100,
         },
         'mandelbrotDistanceConfig',
@@ -36,18 +40,20 @@ export class MandelbrotDistance extends Plane {
         } else {
             this.config.reset();
         }
+        this.grid.updateRange(this.config.data.gridRange);
         this.calculate();
     }
 
     private calculate() {
-        console.log(`#calculate - with max iterations ${this.config.data.maxIterations}`);
-        this.grid.updateRange(this.config.data.gridRange);
+        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
+        console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
+
         this.setBusy();
 
         // ToDo: remove setTimeouts when web workers are implemented
         setTimeout(() => {
             const calculator: MandelbrotCalculator = new MandelbrotCalculator(this.config.data.escapeValue);
-            const data: Float64Array = calculator.calculateDistances(this.grid, this.config.data.maxIterations);
+            const data: Float64Array = calculator.calculateDistances(this.grid, this._effectiveMaxIterations);
             this.updateImage(this.createImage(data));
 
             setTimeout(() => {
@@ -58,7 +64,7 @@ export class MandelbrotDistance extends Plane {
 
     private createImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const cycleLength = (this.grid.range.xMax - this.grid.range.xMin) / this.config.data.escapeValue / 50;
+        const cycleLength = this.grid.xDiff / this.config.data.escapeValue / 50;
         const colorMapper = new ColorMapper([
             { color: BLACK, cycleLength: cycleLength },
             { color: WHITE, cycleLength: cycleLength },

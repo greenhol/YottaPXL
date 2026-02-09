@@ -71,6 +71,7 @@ export class InteractionOverlay {
 
     public shiftRange(direction: ShiftDirection) {
         const currentRange = this._grid.range;
+        const currentXdiff = this._grid.xDiff;
         switch (direction) {
             case ShiftDirection.UP: {
                 this._selectedRange$.next({
@@ -89,19 +90,17 @@ export class InteractionOverlay {
                 break;
             }
             case ShiftDirection.LEFT: {
-                const horizontalRange = currentRange.xMax - currentRange.xMin;
                 this._selectedRange$.next({
-                    xMin: currentRange.xMin - horizontalRange,
-                    xMax: currentRange.xMax - horizontalRange,
+                    xMin: currentRange.xMin - currentXdiff,
+                    xMax: currentRange.xMax - currentXdiff,
                     yCenter: currentRange.yCenter,
                 });
                 break;
             }
             case ShiftDirection.RIGHT: {
-                const horizontalRange = currentRange.xMax - currentRange.xMin;
                 this._selectedRange$.next({
-                    xMin: currentRange.xMin + horizontalRange,
-                    xMax: currentRange.xMax + horizontalRange,
+                    xMin: currentRange.xMin + currentXdiff,
+                    xMax: currentRange.xMax + currentXdiff,
                     yCenter: currentRange.yCenter,
                 });
                 break;

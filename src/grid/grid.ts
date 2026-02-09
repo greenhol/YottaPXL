@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Resolution } from './resolutions';
-import { GridRange } from './grid-range';
+import { GridRange, rangeXdiff } from './grid-range';
 
 const DEFAULT_GRID_RANGE = { xMin: 0, xMax: 1, yCenter: 0 };
 
@@ -10,10 +10,10 @@ export class Grid {
     private _height: number;
     private _xMin: number;
     private _xMax: number;
-    private _xRange: number;
+    private _xDiff: number;
     private _yMin: number;
     private _yMax: number;
-    private _yRange: number;
+    private _yDiff: number;
 
     private _range$ = new BehaviorSubject<GridRange>(DEFAULT_GRID_RANGE);
     public range$: Observable<GridRange> = this._range$;
@@ -37,15 +37,15 @@ export class Grid {
 
     public pixelToMath(col: number, row: number): [number, number] {
         return [
-            this._xMin + col / this.width * this._xRange,
-            this._yMax - row / this.height * this._yRange,
+            this._xMin + col / this.width * this._xDiff,
+            this._yMax - row / this.height * this._yDiff,
         ];
     }
 
     public mathToPixel(x: number, y: number): [number, number] {
         return [
-            Math.round((x - this._xMin) * this.width / this._xRange),
-            Math.round((this._yMax - y) * this.height / this._yRange),
+            Math.round((x - this._xMin) * this.width / this._xDiff),
+            Math.round((this._yMax - y) * this.height / this._yDiff),
         ];
     }
 
@@ -61,17 +61,19 @@ export class Grid {
 
     public get range(): GridRange { return this._range$.value }
 
+    public get xDiff(): number  { return this._xDiff }
+
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;
     }
 
     private setRange(range: GridRange) {
         this._range$.next(range);
-        this._yRange = (range.xMax - range.xMin) / this.ratio;
+        this._yDiff = rangeXdiff(range) / this.ratio;
         this._xMin = range.xMin;
         this._xMax = range.xMax;
-        this._xRange = range.xMax - range.xMin;
-        this._yMin = range.yCenter - this._yRange / 2;
-        this._yMax = range.yCenter + this._yRange / 2;
+        this._xDiff = rangeXdiff(range);
+        this._yMin = range.yCenter - this._yDiff / 2;
+        this._yMax = range.yCenter + this._yDiff / 2;
     }
 }

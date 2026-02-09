@@ -1,5 +1,5 @@
 import { Grid } from './grid';
-import { GridRange } from './grid-range';
+import { GridRange, rangeXdiff } from './grid-range';
 import { Resolution } from './resolutions';
 
 export class GridWithMargin extends Grid {
@@ -20,7 +20,7 @@ export class GridWithMargin extends Grid {
         this._margin = margin;
 
         const newGridRangeFactor = this.resolution.width / baseResolution.width;
-        const mathBaseWidth = baseRange.xMax - baseRange.xMin;
+        const mathBaseWidth = rangeXdiff(baseRange);
         const [cx, cy] = this.getMathCenter(baseRange);
         this.updateRange({
             xMin: cx - mathBaseWidth / 2 * newGridRangeFactor,
@@ -39,7 +39,7 @@ export class GridWithMargin extends Grid {
 
     private getMathCenter(range: GridRange): [number, number] {
         return [
-            range.xMin + (range.xMax - range.xMin) / 2,
+            range.xMin + rangeXdiff(range) / 2,
             range.yCenter,
         ];
     }

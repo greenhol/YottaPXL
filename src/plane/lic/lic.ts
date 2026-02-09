@@ -9,8 +9,12 @@ import { SourceData } from '../../math/vector-field/vector-field';
 import { Color, createGray, RED } from '../../utils/color';
 import { Plane, PlaneConfig } from '../plane';
 
+interface LicConfig extends PlaneConfig {
+    gridRange: GridRange,
+    licLength: number,
+}
+
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
-const LIC_MAX_LENGTH: number = 10;
 
 export class Lic extends Plane {
 
@@ -19,8 +23,11 @@ export class Lic extends Plane {
         this.calculate();
     }
 
-    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
-        { gridRange: INITIAL_GRID_RANGE },
+    override config: ModuleConfig<LicConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            licLength: 10,
+        },
         'licConfig',
     );
 
@@ -38,7 +45,7 @@ export class Lic extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * LIC_MAX_LENGTH);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
         // const sourceField = new ChargeField(sourceGrid);
         const sourceField = new ChargeField(sourceGrid);
 
@@ -54,7 +61,7 @@ export class Lic extends Plane {
 
             setTimeout(() => {
                 const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                const licData = calculator.calculate(LIC_MAX_LENGTH);
+                const licData = calculator.calculate(this.config.data.licLength);
                 this.updateImage(this.createImage(licData));
 
                 setTimeout(() => {

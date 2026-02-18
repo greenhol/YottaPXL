@@ -6,7 +6,6 @@ import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
-import { Lic } from './plane/lic/lic';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
 import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
@@ -14,6 +13,8 @@ import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay'
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
+import { Charges } from './plane/lic/charges';
+import { Weather } from './plane/lic/weather';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
@@ -101,8 +102,12 @@ export class Start {
                 this._plane = new Noise(this._grid);
                 break;
             }
-            case 'LIC': {
-                this._plane = new Lic(this._grid);
+            case 'CHARGES': {
+                this._plane = new Charges(this._grid);
+                break;
+            }
+            case 'WEATHER': {
+                this._plane = new Weather(this._grid);
                 break;
             }
             case 'MANDELBROT_ITERATIONS': {

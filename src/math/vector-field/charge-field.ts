@@ -33,9 +33,9 @@ export class ChargeField extends VectorField {
         }
 
         // Rotate for Potential
-        const temp = vX;
-        vX = -vY;
-        vY = temp;
+        // const temp = vX;
+        // vX = -vY;
+        // vY = temp;
 
         const magnitude = Math.sqrt(vX * vX + vY * vY);
         const value = Math.sqrt(vX * vX + vY * vY);

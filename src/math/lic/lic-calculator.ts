@@ -1,5 +1,12 @@
 import { Grid } from '../../grid/grid';
-import { SourceData } from '../vector-field/vector-field';
+import { GridWithMargin } from '../../grid/grid-with-margin';
+import { VectorField } from '../vector-field/vector-field';
+
+export interface SourceData {
+    grid: GridWithMargin,
+    field: VectorField,
+    data: Float64Array,
+}
 
 interface PointInPixel {
     rowDiff: number;

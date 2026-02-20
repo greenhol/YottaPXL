@@ -1,12 +1,6 @@
 import { Grid } from '../../grid/grid';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 
-export interface SourceData {
-    grid: GridWithMargin,
-    field: VectorField,
-    data: Float64Array,
-}
-
 export enum ScaleFactor {
     UNSCALED = 0,
     FACTOR_2 = 2,
@@ -82,8 +76,7 @@ export abstract class VectorField {
             width: Math.ceil(this.grid.width / factor),
             height: Math.ceil(this.grid.height / factor),
             description: `${this.grid.resolution.description} scaled by factor ${factor}}`,
-        });
-        lowResGrid.updateRange(this.grid.range);
+        }, this.grid.range);
         const lowResvX = new Float64Array(lowResGrid.size);
         const lowResvY = new Float64Array(lowResGrid.size);
         const lowResMagnitude = new Float64Array(lowResGrid.size);

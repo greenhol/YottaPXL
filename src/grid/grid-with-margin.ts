@@ -2,8 +2,20 @@ import { Grid } from './grid';
 import { GridRange, rangeXdiff } from './grid-range';
 import { Resolution } from './resolutions';
 
+export interface GridWithMarginBlueprint {
+    baseResolution: Resolution,
+    baseRange: GridRange,
+    margin: number,
+}
+
+export function gridWithMarginCopy(blueprint: GridWithMarginBlueprint): GridWithMargin {
+    return new GridWithMargin(blueprint.baseResolution, blueprint.baseRange, blueprint.margin);
+}
+
 export class GridWithMargin extends Grid {
 
+    private _baseResolution: Resolution;
+    private _baseRange: GridRange;
     private _margin: number;
 
     private static resolutionWithMargin(resolution: Resolution, margin: number): Resolution {
@@ -15,18 +27,17 @@ export class GridWithMargin extends Grid {
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
-        super(GridWithMargin.resolutionWithMargin(baseResolution, margin));
-
-        this._margin = margin;
-
-        const newGridRangeFactor = this.resolution.width / baseResolution.width;
+        const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin)
+        const newGridRangeFactor = resolution.width / baseResolution.width;
         const mathBaseWidth = rangeXdiff(baseRange);
-        const [cx, cy] = this.getMathCenter(baseRange);
-        this.updateRange({
+        const cx = baseRange.xMin + rangeXdiff(baseRange) / 2;
+
+        super(GridWithMargin.resolutionWithMargin(baseResolution, margin), {
             xMin: cx - mathBaseWidth / 2 * newGridRangeFactor,
             xMax: cx + mathBaseWidth / 2 * newGridRangeFactor,
-            yCenter: cy,
+            yCenter: baseRange.yCenter,
         });
+        this._margin = margin;
     }
 
     public getIndexForCenterArea(col: number, row: number): number {
@@ -37,10 +48,11 @@ export class GridWithMargin extends Grid {
         return this._margin;
     }
 
-    private getMathCenter(range: GridRange): [number, number] {
-        return [
-            range.xMin + rangeXdiff(range) / 2,
-            range.yCenter,
-        ];
+    public get withMarginBlueprint(): GridWithMarginBlueprint {
+        return {
+            baseResolution: { width: this._baseResolution.width, height: this._baseResolution.height, description: `${this._baseResolution.description} (Copy)` },
+            baseRange: this._baseRange,
+            margin: this._margin,
+        }
     }
 }

@@ -2,10 +2,9 @@ import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { LicCalculator } from '../../math/lic/lic-calculator';
+import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { BiasType, NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { ChargeField } from '../../math/vector-field/charge-field';
-import { SourceData } from '../../math/vector-field/vector-field';
 import { Color, createGray, WHITE } from '../../utils/color';
 import { Plane, PlaneConfig } from '../plane';
 

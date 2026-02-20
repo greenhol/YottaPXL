@@ -1,8 +1,14 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Resolution } from './resolutions';
 import { GridRange, rangeXdiff } from './grid-range';
+import { Resolution } from './resolutions';
 
-const DEFAULT_GRID_RANGE = { xMin: 0, xMax: 1, yCenter: 0 };
+export interface GridBlueprint {
+    resolution: Resolution,
+    range: GridRange,
+}
+
+export function gridCopy(blueprint: GridBlueprint): Grid {
+    return new Grid(blueprint.resolution, blueprint.range);
+}
 
 export class Grid {
     private _resolution: Resolution;
@@ -15,14 +21,13 @@ export class Grid {
     private _yMax: number;
     private _yDiff: number;
 
-    private _range$ = new BehaviorSubject<GridRange>(DEFAULT_GRID_RANGE);
-    public range$: Observable<GridRange> = this._range$;
+    private _range: GridRange;
 
-    constructor(resolution: Resolution) {
+    constructor(resolution: Resolution, range: GridRange) {
         this._resolution = resolution;
         this._width = resolution.width;
         this._height = resolution.height;
-        this.setRange(DEFAULT_GRID_RANGE);
+        this.setRange(range);
         console.log(`Grid (${this._width} x ${this._height}) created for resolution: ${resolution.description}`);
     }
 
@@ -59,16 +64,23 @@ export class Grid {
 
     public get ratio(): number { return this._width / this._height }
 
-    public get range(): GridRange { return this._range$.value }
+    public get range(): GridRange { return this._range }
 
-    public get xDiff(): number  { return this._xDiff }
+    public get xDiff(): number { return this._xDiff }
+
+    public get blueprint(): GridBlueprint {
+        return {
+            resolution: { width: this._width, height: this.height, description: `${this._resolution.description} (Copy)` },
+            range: this._range,
+        }
+    }
 
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;
     }
 
     private setRange(range: GridRange) {
-        this._range$.next(range);
+        this._range = range;
         this._yDiff = rangeXdiff(range) / this.ratio;
         this._xMin = range.xMin;
         this._xMax = range.xMax;

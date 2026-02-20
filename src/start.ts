@@ -1,20 +1,20 @@
 import { Subscription } from 'rxjs';
 import { configVersionCheck } from './config/config-version-check';
 import { ModuleConfig } from './config/module-config';
-import { Grid } from './grid/grid';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
+import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
+import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
+import { Charges } from './plane/lic/charges';
+import { Weather } from './plane/lic/weather';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
 import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
-import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
-import { Charges } from './plane/lic/charges';
-import { Weather } from './plane/lic/weather';
 
 declare const APP_VERSION: string;
 declare const APP_NAME: string;
@@ -27,7 +27,7 @@ export class Start {
 
     private _config: ModuleConfig<MainConfig>;
 
-    private readonly _grid: Grid;
+    private readonly _grid: GridRx;
     private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
     private _plane: Plane | null = null;
@@ -66,7 +66,7 @@ export class Start {
             console.error('#ctor - initial resolution not found!');
             resolution = FALLBACK_RESOLUTION;
         }
-        this._grid = new Grid(resolution);
+        this._grid = new GridRx(resolution);
 
         let planeId = this.initializePlaneSelect();
 

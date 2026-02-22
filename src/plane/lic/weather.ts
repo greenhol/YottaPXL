@@ -40,7 +40,7 @@ export class Weather extends Plane {
     }
 
     private calculate() {
-        this.setBusy();
+        this.setProgress(0);
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 

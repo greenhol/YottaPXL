@@ -1,9 +1,25 @@
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
+import { CalculationSetup } from './types';
+import { MessageFromWorker, MessageToWorker } from '../../worker/types';
+
+export interface CalculationState {
+    progress: number;
+    data?: Float64Array;
+}
+
+export enum CalculationType {
+    ITERATIONS,
+    DISTANCE,
+}
 
 export class MandelbrotCalculator {
 
     private _escapeValue: number;
     private _escapeValueSquared: number;
+
+    private _calculationState$ = new BehaviorSubject<CalculationState>({ progress: 0 });
+    public calculationState$: Observable<CalculationState> = this._calculationState$;
 
     constructor(escapeValue: number = 2) {
         this._escapeValue = escapeValue;
@@ -32,6 +48,33 @@ export class MandelbrotCalculator {
         }
         console.info('#calculateDistances - calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
         return targetData;
+    }
+
+    public calculateWithWorker(grid: Grid, maxIterations: number, type: CalculationType) {
+        const worker: Worker = type == CalculationType.ITERATIONS ?
+            new Worker(new URL('./mandelbrot-iterations.worker.ts', import.meta.url)) :
+            new Worker(new URL('./mandelbrot-distance.worker.ts', import.meta.url));
+
+        const setup: CalculationSetup = {
+            gridBlueprint: grid.blueprint,
+            maxIterations: maxIterations,
+            escapeValue: this._escapeValue,
+        }
+        worker.postMessage({ type: MessageToWorker.START, data: setup });
+        worker.onmessage = (e) => {
+            switch (e.data.type) {
+                case MessageFromWorker.UPDATE: {
+                    this._calculationState$.next({ progress: e.data.progress });
+                    break;
+                }
+                case MessageFromWorker.RESULT: {
+                    this._calculationState$.next({ progress: 100, data: e.data.result as Float64Array });
+                    this._calculationState$.complete();
+                    break;
+                }
+                default: { console.warn(`#calculateIterationsWithWorker - unknown message type: ${e.data.type}`) }
+            }
+        };
     }
 
     private calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number): number {

@@ -1,7 +1,7 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
-import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
+import { CalculationType, MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
@@ -49,18 +49,18 @@ export class MandelbrotIterations extends Plane {
         this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
-        this.setBusy();
-
-        // ToDo: remove setTimeouts when web workers are implemented
-        setTimeout(() => {
-            const calculator: MandelbrotCalculator = new MandelbrotCalculator(this.config.data.escapeValue);
-            const data: Float64Array = calculator.calculateIterations(this.grid, this._effectiveMaxIterations);
-            this.updateImage(this.createImage(data));
-
-            setTimeout(() => {
-                this.setIdle();
-            }, 0);
-        }, 0);
+        this.setProgress(0);
+        const calculator: MandelbrotCalculator = new MandelbrotCalculator(this.config.data.escapeValue);
+        calculator.calculateWithWorker(this.grid, this._effectiveMaxIterations, CalculationType.ITERATIONS);
+        calculator.calculationState$.subscribe({
+            next: (state) => {
+                this.setProgress(state.progress);
+                if (state.data != null) {
+                    this.updateImage(this.createImage(state.data));
+                    this.setIdle();
+                }
+            }
+        });
     }
 
     private createImage(data: Float64Array): ImageDataArray {

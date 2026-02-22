@@ -57,7 +57,7 @@ export class MandelbrotVector extends Plane {
         this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
-        this.setBusy();
+        this.setProgress(0);
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 

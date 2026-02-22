@@ -14,8 +14,8 @@ export abstract class Plane {
     private _image$ = new BehaviorSubject<ImageDataArray>(new Uint8ClampedArray(0));
     public image$: Observable<ImageDataArray> = this._image$;
 
-    private _busy$ = new BehaviorSubject<boolean>(false);
-    public busy$: Observable<boolean> = this._busy$;
+    private _busy$ = new BehaviorSubject<number | null>(null);
+    public busy$: Observable<number | null> = this._busy$;
 
     constructor(grid: Grid) {
         this._grid = grid;
@@ -34,11 +34,11 @@ export abstract class Plane {
     }
 
     public setIdle() {
-        this._busy$.next(false);
+        this._busy$.next(null);
     }
 
-    public setBusy() {
-        this._busy$.next(true);
+    public setProgress(progress: number) {
+        this._busy$.next(progress);
     }
 
     public onDestroy(): void {

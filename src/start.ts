@@ -216,10 +216,28 @@ export class Start {
             this._busySubscription = this._plane.busy$.subscribe({
                 next: (busy) => {
                     const busyIndicator = document.getElementById('busyIndicator') as HTMLDivElement;
-                    if (busy) {
+                    const progressBar = document.getElementById('progressBar') as HTMLDivElement;
+                    const progress = document.getElementById('progress') as HTMLDivElement;
+                    const resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
+                    const exportButton = document.getElementById('exportButton') as HTMLDivElement;
+                    if (busy !== null) {
                         busyIndicator.className = 'busyIndicator--busy';
+                        progressBar.classList.remove('gone');
+                        progress.style.width = `${busy * 2.92}px`;
+                        resolutionSelect.classList.add('gone');
+                        exportButton.classList.add('gone');
+                        this._htmlSvg.classList.add('gone');
+                        this._rangeArea?.classList.add('invisible');
+                        this._planeSelectArea?.classList.add('invisible');
                     } else {
                         busyIndicator.className = 'busyIndicator--idle';
+                        progressBar.classList.add('gone');
+                        progress.style.width = '0px';
+                        resolutionSelect.classList.remove('gone');
+                        exportButton.classList.remove('gone');
+                        this._htmlSvg.classList.remove('gone');
+                        this._rangeArea?.classList.remove('invisible');
+                        this._planeSelectArea?.classList.remove('invisible');
                     }
                 }
             });

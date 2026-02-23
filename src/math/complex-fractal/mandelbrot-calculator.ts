@@ -1,16 +1,11 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
-import { CalculationSetup } from './types';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
+import { WorkerSetup } from './worker-setup';
 
 export interface CalculationState {
     progress: number;
     data?: Float64Array;
-}
-
-export enum CalculationType {
-    ITERATIONS,
-    DISTANCE,
 }
 
 export class MandelbrotCalculator {
@@ -50,13 +45,12 @@ export class MandelbrotCalculator {
         return targetData;
     }
 
-    public calculateWithWorker(grid: Grid, maxIterations: number, type: CalculationType) {
-        const worker: Worker = type == CalculationType.ITERATIONS ?
-            new Worker(new URL('./mandelbrot-iterations.worker.ts', import.meta.url)) :
-            new Worker(new URL('./mandelbrot-distance.worker.ts', import.meta.url));
+    public calculateWithWorker(grid: Grid, maxIterations: number, calculateDistance: boolean = false) {
+        const worker = new Worker(new URL('./mandelbrot-calculator.worker.ts', import.meta.url));
 
-        const setup: CalculationSetup = {
+        const setup: WorkerSetup = {
             gridBlueprint: grid.blueprint,
+            calculateDistance: calculateDistance,
             maxIterations: maxIterations,
             escapeValue: this._escapeValue,
         }

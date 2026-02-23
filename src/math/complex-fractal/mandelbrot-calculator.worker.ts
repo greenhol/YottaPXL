@@ -1,16 +1,19 @@
 import { Grid, gridCopy } from '../../grid/grid';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { CalculationSetup } from './types';
+import { WorkerSetup } from './worker-setup';
 
-function calculateDistances(setup: CalculationSetup): Float64Array {
+function calculate(setup: WorkerSetup): Float64Array {
     const grid = gridCopy(setup.gridBlueprint);
     let cnt = 0;
+
+    const escapeValue = (setup.calculateDistance) ? setup.escapeValue : Math.pow(setup.escapeValue, 2);
+    const pixelCalculator = (setup.calculateDistance) ? calculateDistanceForPixel : calculateIterationsForPixel;
 
     let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = calculateDistanceForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
+            targetData[grid.getIndex(col, row)] = pixelCalculator(col, row, grid, setup.maxIterations, escapeValue);
         }
         cnt += grid.width;
         if (cnt > 50000) {
@@ -21,6 +24,20 @@ function calculateDistances(setup: CalculationSetup): Float64Array {
     }
     console.info('#calculateIterations (worker) - calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
     return targetData;
+}
+
+function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
+    const [reC, imC] = grid.pixelToMath(col, row);
+    let reZ = 0;
+    let imZ = 0;
+    let iteration = 0;
+    while (reZ * reZ + imZ * imZ < escapeValue && iteration < maxIterations) {
+        const xTemp = reZ * reZ - imZ * imZ + reC;
+        imZ = 2 * reZ * imZ + imC;
+        reZ = xTemp;
+        iteration++;
+    }
+    return iteration;
 }
 
 function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
@@ -59,7 +76,7 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
 self.onmessage = (e) => {
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
-        const result = calculateDistances(data);
+        const result = calculate(data);
         self.postMessage({ type: MessageFromWorker.RESULT, result });
     }
 };

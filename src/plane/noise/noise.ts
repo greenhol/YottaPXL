@@ -25,8 +25,8 @@ export class Noise extends Plane {
         'noise',
     );
 
-    override updateGridRange(selectedRange: GridRange) {
-        // ToDo
+    override refresh() {
+        // Nothing to do here, Noise does not change depending on Grid Range
     }
 
     override onDestroy(): void {

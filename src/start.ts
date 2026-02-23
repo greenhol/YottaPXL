@@ -7,11 +7,11 @@ import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
-import { Charges } from './plane/lic/charges';
-import { Weather } from './plane/lic/weather';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
 import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
+import { Charges } from './plane/vector-fields/charges';
+import { Weather } from './plane/vector-fields/weather';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';

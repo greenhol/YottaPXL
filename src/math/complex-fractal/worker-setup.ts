@@ -1,7 +1,8 @@
 import { GridBlueprint } from '../../grid/grid';
 
-export interface CalculationSetup {
+export interface WorkerSetup {
     gridBlueprint: GridBlueprint;
+    calculateDistance: boolean,
     maxIterations: number;
     escapeValue: number;
 }

@@ -23,7 +23,17 @@ export abstract class Plane {
 
     public abstract config: ModuleConfig<PlaneConfig>;
 
-    public abstract updateGridRange(range: GridRange | null): void;
+    public abstract refresh(): void;
+
+    public updateGridRange(range: GridRange | null) {
+        if (range != null) {
+            this.config.data.gridRange = range;
+        } else {
+            this.config.reset();
+        }
+        this.grid.updateRange(this.config.data.gridRange);
+        this.refresh();
+    }
 
     public get grid(): Grid {
         return this._grid;

@@ -3,39 +3,34 @@ import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
-import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { WeatherVectorField } from '../../math/vector-field/weather-vector-field';
+import { BiasType, NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { ChargeField } from '../../math/vector-field/charge-field';
 import { Color, createGray, WHITE } from '../../utils/color';
 import { Plane, PlaneConfig } from '../plane';
 
-interface WeatherConfig extends PlaneConfig {
+interface ChargesConfig extends PlaneConfig {
     gridRange: GridRange,
     licLength: number,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: -180, xMax: 180, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
 
-export class Weather extends Plane {
+export class Charges extends Plane {
 
     constructor(grid: Grid) {
         super(grid);
         this.calculate();
     }
 
-    override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
+    override config: ModuleConfig<ChargesConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            licLength: 20,
+            licLength: 10,
         },
-        'weatherConfig',
+        'chargesConfig',
     );
 
-    override updateGridRange(selectedRange: GridRange | null) {
-        if (selectedRange != null) {
-            this.config.data.gridRange = selectedRange;
-        } else {
-            this.config.reset();
-        }
+    override refresh() {
         this.calculate();
     }
 
@@ -45,7 +40,7 @@ export class Weather extends Plane {
         this.grid.updateRange(range);
 
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
-        const sourceField = new WeatherVectorField(sourceGrid);
+        const sourceField = new ChargeField(sourceGrid);
 
         // ToDo: remove setTimeouts when web workers are 
         setTimeout(() => {
@@ -53,14 +48,13 @@ export class Weather extends Plane {
             const sourceData: SourceData = {
                 grid: sourceGrid,
                 field: sourceField,
-                data: generator.createIsolatedBigBlackNoise(0.02),
+                data: generator.createBiasedNoise(BiasType.BOUNDS),
             }
             this.updateImage(this.createSourceImage(sourceData));
 
             setTimeout(() => {
                 const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                // const licData = calculator.calculate(this.config.data.licLength);
-                const licData = calculator.calculate(this.config.data.licLength, 5, 3.6);
+                const licData = calculator.calculate(this.config.data.licLength);
                 this.updateImage(this.createImage(licData));
 
                 setTimeout(() => {

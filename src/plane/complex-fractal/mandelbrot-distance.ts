@@ -1,7 +1,7 @@
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
-import { CalculationType, MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
+import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
@@ -34,13 +34,7 @@ export class MandelbrotDistance extends Plane {
         'mandelbrotDistanceConfig',
     );
 
-    override updateGridRange(selectedRange: GridRange | null) {
-        if (selectedRange != null) {
-            this.config.data.gridRange = selectedRange;
-        } else {
-            this.config.reset();
-        }
-        this.grid.updateRange(this.config.data.gridRange);
+    override refresh() {
         this.calculate();
     }
 
@@ -50,7 +44,7 @@ export class MandelbrotDistance extends Plane {
 
         this.setProgress(0);
         const calculator: MandelbrotCalculator = new MandelbrotCalculator(this.config.data.escapeValue);
-        calculator.calculateWithWorker(this.grid, this._effectiveMaxIterations, CalculationType.DISTANCE);
+        calculator.calculateWithWorker(this.grid, this._effectiveMaxIterations, true);
         calculator.calculationState$.subscribe({
             next: (state) => {
                 this.setProgress(state.progress);

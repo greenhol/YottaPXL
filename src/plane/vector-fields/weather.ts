@@ -47,8 +47,8 @@ export class Weather extends Plane {
             const generator = new NoiseGenerator(sourceGrid);
             const sourceData: SourceData = {
                 grid: sourceGrid,
-                field: sourceField,
-                data: generator.createIsolatedBigBlackNoise(0.02),
+                image: generator.createIsolatedBigBlackNoise(0.02),
+                field: sourceField.data,
             }
             this.updateImage(this.createSourceImage(sourceData));
 
@@ -71,7 +71,7 @@ export class Weather extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const sourceIndex = source.grid.getIndexForCenterArea(col, row);
                 const targetIndex = this.grid.getIndex(col, row);
-                let value = Math.round(source.data[sourceIndex] * 255);
+                let value = Math.round(source.image[sourceIndex] * 255);
                 const pixelIndex = targetIndex * 4;
                 imageData[pixelIndex] = value;     // R
                 imageData[pixelIndex + 1] = value; // G

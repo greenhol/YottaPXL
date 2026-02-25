@@ -20,6 +20,7 @@ export abstract class VectorField {
 
     constructor(grid: GridWithMargin) {
         this._grid = grid;
+        this._data = new Float64Array(this._grid.size * 3);
     }
 
     public abstract computeVector(x: number, y: number): [number, number, number];
@@ -28,21 +29,11 @@ export abstract class VectorField {
         return this._grid;
     }
 
-    public getVector(col: number, row: number): [number, number] {
-        const index = this._grid.getIndex(col, row) * 3;
-        return [
-            this._data[index],     // vX
-            this._data[index + 1], // vY
-        ];
-    }
-
-    public getMagnitude(col: number, row: number): number {
-        return this._data[3 * this._grid.getIndex(col, row) + 2];
+    public get data(): Float64Array {
+        return this._data;
     }
 
     public precomputeVectors(scaleFactor: ScaleFactor = ScaleFactor.UNSCALED) {
-        this._data = new Float64Array(this._grid.size * 3);
-
         switch (scaleFactor) {
             case ScaleFactor.UNSCALED: this.precomputeUnscaledVectors(); break;
             case ScaleFactor.FACTOR_2:

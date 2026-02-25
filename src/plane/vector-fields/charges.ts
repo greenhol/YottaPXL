@@ -47,8 +47,8 @@ export class Charges extends Plane {
             const generator = new NoiseGenerator(sourceGrid);
             const sourceData: SourceData = {
                 grid: sourceGrid,
-                field: sourceField,
-                data: generator.createBiasedNoise(BiasType.BOUNDS),
+                image: generator.createBiasedNoise(BiasType.BOUNDS), 
+                field: sourceField.data,
             }
             this.updateImage(this.createSourceImage(sourceData));
 
@@ -70,7 +70,7 @@ export class Charges extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const sourceIndex = source.grid.getIndexForCenterArea(col, row);
                 const targetIndex = this.grid.getIndex(col, row);
-                let value = Math.round(source.data[sourceIndex] * 255);
+                let value = Math.round(source.image[sourceIndex] * 255);
                 const pixelIndex = targetIndex * 4;
                 imageData[pixelIndex] = value;     // R
                 imageData[pixelIndex + 1] = value; // G

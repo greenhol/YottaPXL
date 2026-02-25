@@ -63,10 +63,10 @@ export class MandelbrotVector extends Plane {
             const generator = new NoiseGenerator(sourceGrid);
             const sourceData: SourceData = {
                 grid: sourceGrid,
-                field: sourceField,
-                data: this.config.data.useNoiseAsSource ?
+                image: this.config.data.useNoiseAsSource ?
                     generator.createBernoulliNoise(0.3) :
-                    this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue),
+                    this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue), 
+                field: sourceField.data,
             }
             this.updateImage(this.drawSourceImage(sourceData));
 
@@ -108,7 +108,7 @@ export class MandelbrotVector extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const sourceIndex = source.grid.getIndexForCenterArea(col, row);
                 const targetIndex = this.grid.getIndex(col, row);
-                let value = Math.round(source.data[sourceIndex] * 255);
+                let value = Math.round(source.image[sourceIndex] * 255);
                 const pixelIndex = targetIndex * 4;
                 imageData[pixelIndex] = value;     // R
                 imageData[pixelIndex + 1] = value; // G

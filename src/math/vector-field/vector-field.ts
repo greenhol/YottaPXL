@@ -16,9 +16,7 @@ export enum ScaleFactor {
 export abstract class VectorField {
 
     private _grid: GridWithMargin;
-    private _vX: Float64Array;
-    private _vY: Float64Array;
-    private _magnitude: Float64Array;
+    private _data: Float64Array;
 
     constructor(grid: GridWithMargin) {
         this._grid = grid;
@@ -31,20 +29,19 @@ export abstract class VectorField {
     }
 
     public getVector(col: number, row: number): [number, number] {
+        const index = this._grid.getIndex(col, row) * 3;
         return [
-            this._vX[this._grid.getIndex(col, row)],
-            this._vY[this._grid.getIndex(col, row)],
+            this._data[index],     // vX
+            this._data[index + 1], // vY
         ];
     }
 
     public getMagnitude(col: number, row: number): number {
-        return this._magnitude[this._grid.getIndex(col, row)];
+        return this._data[3 * this._grid.getIndex(col, row) + 2];
     }
 
     public precomputeVectors(scaleFactor: ScaleFactor = ScaleFactor.UNSCALED) {
-        this._vX = new Float64Array(this._grid.size);
-        this._vY = new Float64Array(this._grid.size);
-        this._magnitude = new Float64Array(this._grid.size);
+        this._data = new Float64Array(this._grid.size * 3);
 
         switch (scaleFactor) {
             case ScaleFactor.UNSCALED: this.precomputeUnscaledVectors(); break;
@@ -59,14 +56,19 @@ export abstract class VectorField {
         }
     }
 
+    private setVector(col: number, row: number, vX: number, vY: number, magnitude: number) {
+        const index = this._grid.getIndex(col, row) * 3;
+        this._data[index] = vX;
+        this._data[index + 1] = vY;
+        this._data[index + 2] = magnitude;
+    }
+
     private precomputeUnscaledVectors() {
         for (let row = 0; row < this._grid.height; row++) {
             for (let col = 0; col < this._grid.width; col++) {
                 const [x, y] = this._grid.pixelToMath(col, row);
                 const [vX, vY, magnitude] = this.computeVector(x, y);
-                this._vX[this._grid.getIndex(col, row)] = vX;
-                this._vY[this._grid.getIndex(col, row)] = vY;
-                this._magnitude[this._grid.getIndex(col, row)] = magnitude;
+                this.setVector(col, row, vX, vY, magnitude);
             }
         }
     }
@@ -77,26 +79,23 @@ export abstract class VectorField {
             height: Math.ceil(this.grid.height / factor),
             description: `${this.grid.resolution.description} scaled by factor ${factor}}`,
         }, this.grid.range);
-        const lowResvX = new Float64Array(lowResGrid.size);
-        const lowResvY = new Float64Array(lowResGrid.size);
-        const lowResMagnitude = new Float64Array(lowResGrid.size);
-
+        const lowResField = new Float64Array(lowResGrid.size * 3);
         for (let row = 0; row < lowResGrid.height; row++) {
             for (let col = 0; col < lowResGrid.width; col++) {
                 const [x, y] = lowResGrid.pixelToMath(col, row);
                 const [vX, vY, magnitude] = this.computeVector(x, y);
-                lowResvX[lowResGrid.getIndex(col, row)] = vX;
-                lowResvY[lowResGrid.getIndex(col, row)] = vY;
-                lowResMagnitude[lowResGrid.getIndex(col, row)] = magnitude;
+                const index = lowResGrid.getIndex(col, row) * 3;
+                lowResField[index] = vX;
+                lowResField[index + 1] = vY;
+                lowResField[index + 2] = magnitude;
             }
         }
-        this.scaleVectorField(lowResGrid, lowResvX, lowResvY);
+        this.scaleVectorField(lowResGrid, lowResField);
     }
 
     private scaleVectorField(
         lowResGrid: Grid,
-        lowResvX: Float64Array,
-        lowResvY: Float64Array,
+        lowResField: Float64Array,
     ) {
         const colScale = (lowResGrid.width - 1) / (this.grid.width - 1);
         const rowScale = (lowResGrid.height - 1) / (this.grid.height - 1);
@@ -112,17 +111,18 @@ export abstract class VectorField {
                 const col0 = Math.floor(colLowRes);
                 const col1 = Math.min(col0 + 1, lowResGrid.width - 1);
                 const colFrac = colLowRes - col0;
-
-                const q00 = [lowResvX[lowResGrid.getIndex(col0, row0)], lowResvY[lowResGrid.getIndex(col0, row0)]];
-                const q01 = [lowResvX[lowResGrid.getIndex(col0, row1)], lowResvY[lowResGrid.getIndex(col0, row1)]];
-                const q10 = [lowResvX[lowResGrid.getIndex(col1, row0)], lowResvY[lowResGrid.getIndex(col1, row0)]];
-                const q11 = [lowResvX[lowResGrid.getIndex(col1, row1)], lowResvY[lowResGrid.getIndex(col1, row1)]];
+                const indexTopLeft = lowResGrid.getIndex(col0, row0) * 3;
+                const indexBottomLeft = lowResGrid.getIndex(col0, row1) * 3;
+                const indexTopRight = lowResGrid.getIndex(col1, row0) * 3;
+                const indexBottomRight = lowResGrid.getIndex(col1, row1) * 3;
+                const q00 = [lowResField[indexTopLeft], lowResField[indexTopLeft + 1]];
+                const q01 = [lowResField[indexBottomLeft], lowResField[indexBottomLeft + 1]];
+                const q10 = [lowResField[indexTopRight], lowResField[indexTopRight + 1]];
+                const q11 = [lowResField[indexBottomRight], lowResField[indexBottomRight + 1]];
 
                 const vector = this.bilinearInterpolation(colFrac, rowFrac, q00, q01, q10, q11);
                 const magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
-                this._vX[this._grid.getIndex(col, row)] = vector[0];
-                this._vY[this._grid.getIndex(col, row)] = vector[1];
-                this._magnitude[this._grid.getIndex(col, row)] = magnitude;
+                this.setVector(col, row, vector[0], vector[1], magnitude);
             }
         }
     }

@@ -25,7 +25,7 @@ export class Charges extends Plane {
     override config: ModuleConfig<ChargesConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            licLength: 3,
+            licLength: 10,
         },
         'chargesConfig',
     );

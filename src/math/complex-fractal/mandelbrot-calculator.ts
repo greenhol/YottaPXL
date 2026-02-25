@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { WorkerSetup } from './worker-setup';
+import { CalculationType, WorkerSetup } from './worker-setup';
 
 export interface CalculationState {
     progress: number;
@@ -10,73 +10,76 @@ export interface CalculationState {
 
 export class MandelbrotCalculator {
 
-    private _escapeValue: number;
-    private _escapeValueSquared: number;
-
-    private _calculationState$ = new BehaviorSubject<CalculationState>({ progress: 0 });
-    public calculationState$: Observable<CalculationState> = this._calculationState$;
-
-    constructor(escapeValue: number = 2) {
-        this._escapeValue = escapeValue;
-        this._escapeValueSquared = Math.pow(escapeValue, 2);
-    }
-
-    public calculateIterations(grid: Grid, maxIterations: number): Float64Array {
+    /** @deprecated Use calculateIterations instead */
+    public calculateIterationsSync(grid: Grid, maxIterations: number): Float64Array {
         let timeStamp = Date.now();
+        const escapeValueSquared = 4; // 2^2
         const targetData = new Float64Array(grid.size);
         for (let row = 0; row < grid.height; row++) {
             for (let col = 0; col < grid.width; col++) {
-                targetData[grid.getIndex(col, row)] = this.calculateIterationsForPixel(col, row, grid, maxIterations);
+                targetData[grid.getIndex(col, row)] = this.calculateIterationsForPixel(col, row, grid, maxIterations, escapeValueSquared);
             }
         }
         console.info('#calculateIterations - calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
         return targetData;
     }
 
-    public calculateDistances(grid: Grid, maxIterations: number): Float64Array {
+    /** @deprecated Use calculateDistances instead */
+    public calculateDistancesSync(grid: Grid, maxIterations: number, escapeValue: number): Float64Array {
         let timeStamp = Date.now();
         const targetData = new Float64Array(grid.size);
         for (let row = 0; row < grid.height; row++) {
             for (let col = 0; col < grid.width; col++) {
-                targetData[grid.getIndex(col, row)] = this.calculateDistanceForPixel(col, row, grid, maxIterations);
+                targetData[grid.getIndex(col, row)] = this.calculateDistanceForPixel(col, row, grid, maxIterations, escapeValue);
             }
         }
         console.info('#calculateDistances - calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
         return targetData;
     }
 
-    public calculateWithWorker(grid: Grid, maxIterations: number, calculateDistance: boolean = false) {
+    public calculateIterations(grid: Grid, maxIterations: number): Observable<CalculationState> {
+        return this.calculateWithWorker(CalculationType.ITERATIONS, grid, maxIterations, 4); // escapeValue = 2^2
+    }
+
+    public calculateDistances(grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState> {
+        return this.calculateWithWorker(CalculationType.DISTANCE, grid, maxIterations, escapeValue);
+    }
+
+    private calculateWithWorker(calculytionType: CalculationType, grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState> {
         const worker = new Worker(new URL('./mandelbrot-calculator.worker.ts', import.meta.url));
+        const calculationState$ = new BehaviorSubject<CalculationState>({ progress: 0 });
 
         const setup: WorkerSetup = {
             gridBlueprint: grid.blueprint,
-            calculateDistance: calculateDistance,
+            type: calculytionType,
             maxIterations: maxIterations,
-            escapeValue: this._escapeValue,
+            escapeValue: escapeValue,
         }
         worker.postMessage({ type: MessageToWorker.START, data: setup });
         worker.onmessage = (e) => {
             switch (e.data.type) {
                 case MessageFromWorker.UPDATE: {
-                    this._calculationState$.next({ progress: e.data.progress });
+                    calculationState$.next({ progress: e.data.progress });
                     break;
                 }
                 case MessageFromWorker.RESULT: {
-                    this._calculationState$.next({ progress: 100, data: e.data.result as Float64Array });
-                    this._calculationState$.complete();
+                    calculationState$.next({ progress: 100, data: e.data.result as Float64Array });
+                    calculationState$.complete();
+                    worker.terminate();
                     break;
                 }
                 default: { console.warn(`#calculateIterationsWithWorker - unknown message type: ${e.data.type}`) }
             }
         };
+        return calculationState$;
     }
 
-    private calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number): number {
+    private calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValueSquared: number): number {
         const [reC, imC] = grid.pixelToMath(col, row);
         let reZ = 0;
         let imZ = 0;
         let iteration = 0;
-        while (reZ * reZ + imZ * imZ < this._escapeValueSquared && iteration < maxIterations) {
+        while (reZ * reZ + imZ * imZ < escapeValueSquared && iteration < maxIterations) {
             const xTemp = reZ * reZ - imZ * imZ + reC;
             imZ = 2 * reZ * imZ + imC;
             reZ = xTemp;
@@ -85,7 +88,7 @@ export class MandelbrotCalculator {
         return iteration;
     }
 
-    private calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number): number {
+    private calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
         const [reC, imC] = grid.pixelToMath(col, row);
 
         let reZ = 0;
@@ -108,7 +111,7 @@ export class MandelbrotCalculator {
             imZdiff = imTemp;
 
             const absZ = Math.sqrt(reZ * reZ + imZ * imZ);
-            if (absZ > this._escapeValue) {
+            if (absZ > escapeValue) {
                 // Distance estimation
                 const absDz = Math.sqrt(reZdiff * reZdiff + imZdiff * imZdiff);
                 return 2 * (absZ * Math.log(absZ)) / absDz;

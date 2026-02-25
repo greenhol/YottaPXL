@@ -1,19 +1,18 @@
 import { Grid, gridCopy } from '../../grid/grid';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { WorkerSetup } from './worker-setup';
+import { CalculationType, WorkerSetup } from './worker-setup';
 
 function calculate(setup: WorkerSetup): Float64Array {
     const grid = gridCopy(setup.gridBlueprint);
     let cnt = 0;
 
-    const escapeValue = (setup.calculateDistance) ? setup.escapeValue : Math.pow(setup.escapeValue, 2);
-    const pixelCalculator = (setup.calculateDistance) ? calculateDistanceForPixel : calculateIterationsForPixel;
+    const pixelCalculator = (setup.type === CalculationType.DISTANCE) ? calculateDistanceForPixel : calculateIterationsForPixel;
 
     let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = pixelCalculator(col, row, grid, setup.maxIterations, escapeValue);
+            targetData[grid.getIndex(col, row)] = pixelCalculator(col, row, grid, setup.maxIterations, setup.escapeValue);
         }
         cnt += grid.width;
         if (cnt > 50000) {

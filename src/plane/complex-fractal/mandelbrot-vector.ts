@@ -83,12 +83,12 @@ export class MandelbrotVector extends Plane {
     }
 
     private createMandelbrotData(gridWithMargin: GridWithMargin, maxIterations: number, escapeValue: number): Float64Array {
-        const calc = new MandelbrotCalculator(escapeValue);
+        const calc = new MandelbrotCalculator();
         const colorMapper = new ColorMapper([
             { color: BLACK, cycleLength: 255 },
             { color: WHITE, cycleLength: 255 },
         ]);
-        const mbData = calc.calculateIterations(gridWithMargin, maxIterations);
+        const mbData = calc.calculateIterationsSync(gridWithMargin, maxIterations);
         const data = new Float64Array(gridWithMargin.size);
         for (let row = 0; row < gridWithMargin.height; row++) {
             for (let col = 0; col < gridWithMargin.width; col++) {

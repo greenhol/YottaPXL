@@ -12,8 +12,8 @@ export class MandelbrotField extends VectorField {
         super(grid);
         this._maxIterations = maxIterations;
 
-        const mandelbrotCalculator = new MandelbrotCalculator(escapeValue);
-        this._mandelbrotData = mandelbrotCalculator.calculateDistances(this.grid, this._maxIterations);
+        const mandelbrotCalculator = new MandelbrotCalculator();
+        this._mandelbrotData = mandelbrotCalculator.calculateDistancesSync(this.grid, this._maxIterations, escapeValue);
         
         this.precomputeVectors();
     }

@@ -26,7 +26,7 @@ export class GridWithMargin extends Grid {
         }
     }
 
-    constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
+    constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {        
         const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin)
         const newGridRangeFactor = resolution.width / baseResolution.width;
         const mathBaseWidth = rangeXdiff(baseRange);
@@ -37,6 +37,8 @@ export class GridWithMargin extends Grid {
             xMax: cx + mathBaseWidth / 2 * newGridRangeFactor,
             yCenter: baseRange.yCenter,
         });
+        this._baseResolution = baseResolution;
+        this._baseRange = baseRange;
         this._margin = margin;
     }
 

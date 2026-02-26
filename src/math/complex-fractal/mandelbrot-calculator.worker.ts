@@ -2,6 +2,14 @@ import { Grid, gridCopy } from '../../grid/grid';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { CalculationType, WorkerSetup } from './worker-setup';
 
+self.onmessage = (e) => {
+    const { type, data } = e.data;
+    if (type === MessageToWorker.START) {
+        const result = calculate(data);
+        self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
+    }
+};
+
 function calculate(setup: WorkerSetup): Float64Array {
     const grid = gridCopy(setup.gridBlueprint);
     let cnt = 0;
@@ -71,11 +79,3 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
     }
     return 0;
 }
-
-self.onmessage = (e) => {
-    const { type, data } = e.data;
-    if (type === MessageToWorker.START) {
-        const result = calculate(data);
-        self.postMessage({ type: MessageFromWorker.RESULT, result });
-    }
-};

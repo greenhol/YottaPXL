@@ -1,3 +1,4 @@
+import { lastValueFrom } from 'rxjs';
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
@@ -34,7 +35,7 @@ export class Weather extends Plane {
         this.calculate();
     }
 
-    private calculate() {
+    private async calculate() {
         this.setProgress(0);
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
@@ -42,27 +43,28 @@ export class Weather extends Plane {
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
         const sourceField = new WeatherVectorField(sourceGrid);
 
-        // ToDo: remove setTimeouts when web workers are 
-        setTimeout(() => {
-            const generator = new NoiseGenerator(sourceGrid);
-            const sourceData: SourceData = {
-                grid: sourceGrid,
-                image: generator.createIsolatedBigBlackNoise(0.02),
-                field: sourceField.data,
-            }
-            this.updateImage(this.createSourceImage(sourceData));
+        // Create Source Image
+        const generator = new NoiseGenerator(sourceGrid);
+        const sourceData: SourceData = {
+            grid: sourceGrid,
+            image: generator.createIsolatedBigBlackNoise(0.02),
+            field: sourceField.data,
+        }
+        this.updateImage(this.createSourceImage(sourceData));
 
-            setTimeout(() => {
-                const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                // const licData = calculator.calculate(this.config.data.licLength);
-                const licData = calculator.calculate(this.config.data.licLength, 5, 3.6);
-                this.updateImage(this.createImage(licData));
-
-                setTimeout(() => {
-                    this.setIdle();
-                }, 50);
-            }, 50);
-        }, 50);
+        // LIC
+        const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
+        const calculation$ = calculator.calculate(this.config.data.licLength, 5, 3.6);
+        calculation$.subscribe({
+            next: (state) => { this.setProgress(state.progress) }
+        });
+        const result = await lastValueFrom(calculation$);
+        if (result.data != null) {
+            this.updateImage(this.createImage(result.data));
+            this.setIdle();
+        } else {
+            console.error('#calculateAndDraw - calculation did not produce data')
+        }
     }
 
     private createSourceImage(source: SourceData): ImageDataArray {

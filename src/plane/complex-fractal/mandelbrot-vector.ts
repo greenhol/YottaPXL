@@ -1,3 +1,4 @@
+import { lastValueFrom } from 'rxjs';
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
@@ -47,7 +48,7 @@ export class MandelbrotVector extends Plane {
         this.calculate();
     }
 
-    private calculate() {
+    private async calculate() {
         this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
@@ -58,28 +59,30 @@ export class MandelbrotVector extends Plane {
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
         const sourceField = new MandelbrotField(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue);
 
-        // ToDo: remove setTimeouts when web workers are 
-        setTimeout(() => {
-            const generator = new NoiseGenerator(sourceGrid);
-            const sourceData: SourceData = {
-                grid: sourceGrid,
-                image: this.config.data.useNoiseAsSource ?
-                    generator.createBernoulliNoise(0.3) :
-                    this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue), 
-                field: sourceField.data,
-            }
-            this.updateImage(this.drawSourceImage(sourceData));
+        // Create Source Image
+        const generator = new NoiseGenerator(sourceGrid);
+        const sourceData: SourceData = {
+            grid: sourceGrid,
+            image: this.config.data.useNoiseAsSource ?
+                generator.createBernoulliNoise(0.3) :
+                this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue),
+            field: sourceField.data,
+        }
+        this.updateImage(this.drawSourceImage(sourceData));
 
-            setTimeout(() => {
-                const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-                const licData = calculator.calculate(this.config.data.licLength);
-                this.updateImage(this.drawImage(licData));
-
-                setTimeout(() => {
-                    this.setIdle();
-                }, 50);
-            }, 50);
-        }, 50);
+        // LIC
+        const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
+        const calculation$ = calculator.calculate(this.config.data.licLength);
+        calculation$.subscribe({
+            next: (state) => { this.setProgress(state.progress) }
+        });
+        const result = await lastValueFrom(calculation$);
+        if (result.data != null) {
+            this.updateImage(this.drawImage(result.data));
+            this.setIdle();
+        } else {
+            console.error('#calculateAndDraw - calculation did not produce data')
+        }
     }
 
     private createMandelbrotData(gridWithMargin: GridWithMargin, maxIterations: number, escapeValue: number): Float64Array {

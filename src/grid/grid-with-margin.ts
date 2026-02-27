@@ -8,10 +8,6 @@ export interface GridWithMarginBlueprint {
     margin: number,
 }
 
-export function gridWithMarginCopy(blueprint: GridWithMarginBlueprint): GridWithMargin {
-    return new GridWithMargin(blueprint.baseResolution, blueprint.baseRange, blueprint.margin);
-}
-
 export class GridWithMargin extends Grid {
 
     private _baseResolution: Resolution;
@@ -24,6 +20,10 @@ export class GridWithMargin extends Grid {
             height: resolution.height + 2 * margin,
             description: `${resolution.description} + buffer:${margin}`,
         }
+    }
+
+    public static copyWithMargin(blueprint: GridWithMarginBlueprint) {
+        return new GridWithMargin(blueprint.baseResolution, blueprint.baseRange, blueprint.margin);
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {        

@@ -1,13 +1,9 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { WorkerSetup } from './worker-setup';
-
-export interface CalculationState {
-    progress: number;
-    data?: Float64Array;
-}
+import { CalculationState, MessageFromWorker, MessageToWorker } from '../../worker/types';
+import { WorkerSetupLIC as WorkerSetupLIC } from './worker-setup-lic';
+import { executeWorker } from '../../worker/execute-worker';
 
 export interface SourceData {
     grid: GridWithMargin,
@@ -29,11 +25,9 @@ export class LicCalculator {
         this._targetGrid = targetGrid;
     }
 
-    public calculate(maxLength: number, minLength: number = 0, strength: number = -1): Observable<CalculationState> {
+    public calculate(maxLength: number, minLength: number = 0, strength: number = -1): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./lic-calculator.worker.ts', import.meta.url));
-        const calculationState$ = new BehaviorSubject<CalculationState>({ progress: 0 });
-
-        const setup: WorkerSetup = {
+        const setup: WorkerSetupLIC = {
             sourceGridBlueprint: this._sourceGrid.withMarginBlueprint,
             image: this._image,
             field: this._fieldData,
@@ -42,26 +36,6 @@ export class LicCalculator {
             minLength: minLength,
             strength: strength,
         }
-
-        worker.postMessage(
-            { type: MessageToWorker.START, data: setup },
-            [setup.image.buffer, setup.field.buffer],
-        );
-        worker.onmessage = (e) => {
-            switch (e.data.type) {
-                case MessageFromWorker.UPDATE: {
-                    calculationState$.next({ progress: e.data.progress });
-                    break;
-                }
-                case MessageFromWorker.RESULT: {
-                    calculationState$.next({ progress: 100, data: e.data.result as Float64Array });
-                    calculationState$.complete();
-                    worker.terminate();
-                    break;
-                }
-                default: { console.warn(`#calculateIterationsWithWorker - unknown message type: ${e.data.type}`) }
-            }
-        };
-        return calculationState$;
+        return executeWorker<WorkerSetupLIC, Float64Array>(worker, setup, [setup.image.buffer, setup.field.buffer])
     }
 }

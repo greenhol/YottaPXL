@@ -1,8 +1,9 @@
-import { gridCopy } from '../../grid/grid';
-import { GridWithMargin, gridWithMarginCopy } from '../../grid/grid-with-margin';
+import { Grid } from '../../grid/grid';
+import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { VectorFieldReader } from './../vector-field/vector-field-reader';
-import { PointInPixel, WorkerSetup } from './worker-setup';
+import { PointInPixel } from './types';
+import { WorkerSetupLIC } from './worker-setup-lic';
 
 self.onmessage = (e) => {
     const { type, data } = e.data;
@@ -12,9 +13,9 @@ self.onmessage = (e) => {
     }
 };
 
-function calculate(setup: WorkerSetup): Float64Array {
-    const targetGrid = gridCopy(setup.targetGridBlueprint);
-    const sourceGrid = gridWithMarginCopy(setup.sourceGridBlueprint);
+function calculate(setup: WorkerSetupLIC): Float64Array {
+    const targetGrid = Grid.copy(setup.targetGridBlueprint);
+    const sourceGrid = GridWithMargin.copyWithMargin(setup.sourceGridBlueprint);
     const image = setup.image;
     const field = new VectorFieldReader(sourceGrid, setup.field);
 

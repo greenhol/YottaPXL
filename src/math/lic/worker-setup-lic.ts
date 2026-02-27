@@ -1,7 +1,7 @@
 import { GridBlueprint } from '../../grid/grid';
 import { GridWithMarginBlueprint } from '../../grid/grid-with-margin';
 
-export interface WorkerSetup {
+export interface WorkerSetupLIC {
     sourceGridBlueprint: GridWithMarginBlueprint;
     image: Float64Array,
     field: Float64Array;
@@ -9,12 +9,4 @@ export interface WorkerSetup {
     maxLength: number;
     minLength: number;
     strength: number;
-}
-
-export interface PointInPixel {
-    rowDiff: number;
-    colDiff: number;
-    x: number;
-    y: number;
-    distance: number;
 }

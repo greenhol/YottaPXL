@@ -64,7 +64,7 @@ export class MandelbrotVector extends Plane {
         const sourceData: SourceData = {
             grid: sourceGrid,
             image: this.config.data.useNoiseAsSource ?
-                generator.createBernoulliNoise(0.3) :
+                generator.createBernoulliNoiseSync(0.3) :
                 this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue),
             field: sourceField.data,
         }

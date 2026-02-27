@@ -1,21 +1,18 @@
-import { Grid } from '../../grid/grid';
-
-export enum BiasType {
-    LOWER,
-    UPPER,
-    CENTER,
-    BOUNDS,
-    BOUNDS_BY_CUBIC,
-    BOUNDS_BY_QUINTIC,
-    BOUNDS_BY_SEPTIC,
-    BOUNDS_BY_TRIG,
-}
+import { BehaviorSubject, Observable } from 'rxjs';
+import { GridWithMargin } from '../../grid/grid-with-margin';
+import { CalculationState, MessageFromWorker, MessageToWorker } from '../../worker/types';
+import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
+import { WorkerSetupBiasedNoise } from './worker-setup-biased-noise';
+import { WorkerSetupWhiteNoise } from './worker-setup-white-noise';
+import { WorkerSetupGaussianNoise } from './worker-setup-gaussian-noise';
+import { BernoulliNoiseType, BiasType } from './types';
+import { executeWorker } from '../../worker/execute-worker';
 
 export class NoiseGenerator {
 
-    private _grid: Grid;
+    private _grid: GridWithMargin;
 
-    constructor(grid: Grid) {
+    constructor(grid: GridWithMargin) {
         this._grid = grid;
     }
 
@@ -30,7 +27,8 @@ export class NoiseGenerator {
         this.printRandomDistribution('randomBiasedToBoundsByTrig', this.randomBiasedToBoundsByTrig);
     }
 
-    public createWhiteNoise(): Float64Array {
+    /** @deprecated Use createWhiteNoise instead */
+    public createWhiteNoiseSync(): Float64Array {
         const data = new Float64Array(this._grid.size);
         for (let row = 0; row < this._grid.height; row++) {
             for (let col = 0; col < this._grid.width; col++) {
@@ -40,7 +38,16 @@ export class NoiseGenerator {
         return data;
     }
 
-    public createBernoulliNoise(p: number = 0.5): Float64Array {
+    public createWhiteNoise(): Observable<CalculationState<Float64Array>> {
+        const worker = new Worker(new URL('./noise-generator-white.worker.ts', import.meta.url));
+        const setup: WorkerSetupWhiteNoise = {
+            gridBlueprint: this._grid.withMarginBlueprint,
+        }
+        return executeWorker<WorkerSetupWhiteNoise, Float64Array>(worker, setup);
+    }
+
+    /** @deprecated Use createBernoulliNoise instead */
+    public createBernoulliNoiseSync(p: number = 0.5): Float64Array {
         const data = new Float64Array(this._grid.size);
         for (let row = 0; row < this._grid.height; row++) {
             for (let col = 0; col < this._grid.width; col++) {
@@ -50,8 +57,9 @@ export class NoiseGenerator {
         return data;
     }
 
-    public createIsolatedBlackNoise(p: number = 0.5): Float64Array {
-        const data = this.createBernoulliNoise(p);
+    /** @deprecated Use createBernoulliNoiseIsolated instead */
+    public createIsolatedBlackNoiseSync(p: number = 0.5): Float64Array {
+        const data = this.createBernoulliNoiseSync(p);
         for (let row = 0; row < this._grid.height; row++) {
             for (let col = 0; col < this._grid.width; col++) {
                 if (data[this._grid.getIndex(col, row)] == 0) {
@@ -77,8 +85,9 @@ export class NoiseGenerator {
         return data;
     }
 
-    public createIsolatedBigBlackNoise(p: number = 0.5): Float64Array {
-        const data = this.createBernoulliNoise(p);
+    /** @deprecated Use createBernoulliNoiseIsolatedBig instead */
+    public createIsolatedBigBlackNoiseSync(p: number = 0.5): Float64Array {
+        const data = this.createBernoulliNoiseSync(p);
         for (let row = 0; row < this._grid.height; row++) {
             for (let col = 0; col < this._grid.width; col++) {
                 if (data[this._grid.getIndex(col, row)] == 0) {
@@ -121,7 +130,7 @@ export class NoiseGenerator {
             for (let col = 0; col < this._grid.width; col++) {
                 if (data[this._grid.getIndex(col, row)] == 0) {
                     if (row > 0 && col > 0) {
-                        data[this._grid.getIndex(col -1, row - 1)] = 0
+                        data[this._grid.getIndex(col - 1, row - 1)] = 0
                     }
                     if (col > 0) {
                         data[this._grid.getIndex(col - 1, row)] = 0
@@ -135,7 +144,30 @@ export class NoiseGenerator {
         return data;
     }
 
-    public createBiasedNoise(type: BiasType): Float64Array {
+    public createBernoulliNoise(p: number = 0.5): Observable<CalculationState<Float64Array>> {
+        return this.createBernoulliNoiseOfType(BernoulliNoiseType.DEFAULT, p);
+    }
+
+    public createBernoulliNoiseIsolated(p: number = 0.5): Observable<CalculationState<Float64Array>> {
+        return this.createBernoulliNoiseOfType(BernoulliNoiseType.ISOLATED, p);
+    }
+
+    public createBernoulliNoiseIsolatedBig(p: number = 0.5): Observable<CalculationState<Float64Array>> {
+        return this.createBernoulliNoiseOfType(BernoulliNoiseType.ISOLATED_BIG, p);
+    }
+
+    private createBernoulliNoiseOfType(type: BernoulliNoiseType, p: number = 0.5): Observable<CalculationState<Float64Array>> {
+        const worker = new Worker(new URL('./noise-generator-bernoulli.worker.ts', import.meta.url));
+        const setup: WorkerSetupBernoulliNoise = {
+            type: type,
+            gridBlueprint: this._grid.withMarginBlueprint,
+            p: p,
+        }
+        return executeWorker<WorkerSetupBernoulliNoise, Float64Array>(worker, setup);
+    }
+
+    /** @deprecated Use createBiasedNoise instead */
+    public createBiasedNoiseSync(type: BiasType): Float64Array {
         const data = new Float64Array(this._grid.size);
         let biasFunction: () => number;
         switch (type) {
@@ -157,7 +189,17 @@ export class NoiseGenerator {
         return data;
     }
 
-    public createGaussianNoise(mean: number = 0, standardDeviation: number = 1, range: number = 6): Float64Array {
+    public createBiasedNoise(type: BiasType): Observable<CalculationState<Float64Array>> {
+        const worker = new Worker(new URL('./noise-generator-biased.worker.ts', import.meta.url));
+        const setup: WorkerSetupBiasedNoise = {
+            type: type,
+            gridBlueprint: this._grid.withMarginBlueprint,
+        }
+        return executeWorker<WorkerSetupBiasedNoise, Float64Array>(worker, setup);
+    }
+
+    /** @deprecated Use createGaussianNoise instead */
+    public createGaussianNoiseSync(mean: number = 0, standardDeviation: number = 1, range: number = 6): Float64Array {
         const min = mean - range / 2 * standardDeviation;
         const max = mean + range / 2 * standardDeviation;
 
@@ -176,6 +218,17 @@ export class NoiseGenerator {
             }
         }
         return data;
+    }
+
+    public createGaussianNoise(mean: number = 0, standardDeviation: number = 1, range: number = 6): Observable<CalculationState<Float64Array>> {
+        const worker = new Worker(new URL('./noise-generator-gaussian.worker.ts', import.meta.url));
+        const setup: WorkerSetupGaussianNoise = {
+            gridBlueprint: this._grid.withMarginBlueprint,
+            mean: mean,
+            standardDeviation: standardDeviation,
+            range: range,
+        }
+        return executeWorker<WorkerSetupGaussianNoise, Float64Array>(worker, setup);
     }
 
     private randomBiasedToLower(): number {

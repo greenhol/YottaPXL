@@ -6,10 +6,6 @@ export interface GridBlueprint {
     range: GridRange,
 }
 
-export function gridCopy(blueprint: GridBlueprint): Grid {
-    return new Grid(blueprint.resolution, blueprint.range);
-}
-
 export class Grid {
     private _resolution: Resolution;
     private _width: number;
@@ -22,6 +18,10 @@ export class Grid {
     private _yDiff: number;
 
     private _range: GridRange;
+
+    public static copy(blueprint: GridBlueprint): Grid {
+        return new Grid(blueprint.resolution, blueprint.range);
+    }
 
     constructor(resolution: Resolution, range: GridRange) {
         this._resolution = resolution;

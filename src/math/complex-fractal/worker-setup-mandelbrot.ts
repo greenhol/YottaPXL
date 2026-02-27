@@ -1,13 +1,9 @@
 import { GridBlueprint } from '../../grid/grid';
+import { CalculationType } from './types';
 
-export interface WorkerSetup {
+export interface WorkerSetupMandelbrot {
     gridBlueprint: GridBlueprint;
     type: CalculationType,
     maxIterations: number;
     escapeValue: number;
-}
-
-export enum CalculationType {
-    ITERATIONS,
-    DISTANCE,
 }

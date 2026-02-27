@@ -4,10 +4,11 @@ import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
-import { BiasType, NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { ChargeField } from '../../math/vector-field/charge-field';
 import { Color, createGray, WHITE } from '../../utils/color';
 import { Plane, PlaneConfig } from '../plane';
+import { BiasType } from '../../math/noise-generator/types';
 
 interface ChargesConfig extends PlaneConfig {
     gridRange: GridRange,
@@ -47,7 +48,7 @@ export class Charges extends Plane {
         const generator = new NoiseGenerator(sourceGrid);
         const sourceData: SourceData = {
             grid: sourceGrid,
-            image: generator.createBiasedNoise(BiasType.BOUNDS),
+            image: generator.createBiasedNoiseSync(BiasType.BOUNDS),
             field: sourceField.data,
         }
         this.updateImage(this.createSourceImage(sourceData));

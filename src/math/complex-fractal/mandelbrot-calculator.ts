@@ -1,12 +1,9 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
-import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { CalculationType, WorkerSetup } from './worker-setup';
-
-export interface CalculationState {
-    progress: number;
-    data?: Float64Array;
-}
+import { CalculationState, MessageFromWorker, MessageToWorker } from '../../worker/types';
+import { CalculationType } from './types';
+import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
+import { executeWorker } from '../../worker/execute-worker';
 
 export class MandelbrotCalculator {
 
@@ -37,41 +34,23 @@ export class MandelbrotCalculator {
         return targetData;
     }
 
-    public calculateIterations(grid: Grid, maxIterations: number): Observable<CalculationState> {
+    public calculateIterations(grid: Grid, maxIterations: number): Observable<CalculationState<Float64Array>> {
         return this.calculateWithWorker(CalculationType.ITERATIONS, grid, maxIterations, 4); // escapeValue = 2^2
     }
 
-    public calculateDistances(grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState> {
+    public calculateDistances(grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState<Float64Array>> {
         return this.calculateWithWorker(CalculationType.DISTANCE, grid, maxIterations, escapeValue);
     }
 
-    private calculateWithWorker(calculytionType: CalculationType, grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState> {
+    private calculateWithWorker(calculytionType: CalculationType, grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./mandelbrot-calculator.worker.ts', import.meta.url));
-        const calculationState$ = new BehaviorSubject<CalculationState>({ progress: 0 });
-
-        const setup: WorkerSetup = {
+        const setup: WorkerSetupMandelbrot = {
             gridBlueprint: grid.blueprint,
             type: calculytionType,
             maxIterations: maxIterations,
             escapeValue: escapeValue,
         }
-        worker.postMessage({ type: MessageToWorker.START, data: setup });
-        worker.onmessage = (e) => {
-            switch (e.data.type) {
-                case MessageFromWorker.UPDATE: {
-                    calculationState$.next({ progress: e.data.progress });
-                    break;
-                }
-                case MessageFromWorker.RESULT: {
-                    calculationState$.next({ progress: 100, data: e.data.result as Float64Array });
-                    calculationState$.complete();
-                    worker.terminate();
-                    break;
-                }
-                default: { console.warn(`#calculateIterationsWithWorker - unknown message type: ${e.data.type}`) }
-            }
-        };
-        return calculationState$;
+        return executeWorker<WorkerSetupMandelbrot, Float64Array>(worker, setup);
     }
 
     private calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValueSquared: number): number {

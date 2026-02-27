@@ -1,6 +1,7 @@
-import { Grid, gridCopy } from '../../grid/grid';
+import { Grid } from '../../grid/grid';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { CalculationType, WorkerSetup } from './worker-setup';
+import { CalculationType } from './types';
+import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
 
 self.onmessage = (e) => {
     const { type, data } = e.data;
@@ -10,8 +11,8 @@ self.onmessage = (e) => {
     }
 };
 
-function calculate(setup: WorkerSetup): Float64Array {
-    const grid = gridCopy(setup.gridBlueprint);
+function calculate(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
 
     const pixelCalculator = (setup.type === CalculationType.DISTANCE) ? calculateDistanceForPixel : calculateIterationsForPixel;

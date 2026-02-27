@@ -1,8 +1,11 @@
-import { Subscription, timer } from 'rxjs';
+import { lastValueFrom, Observable, Subscription, timer } from 'rxjs';
 import { ModuleConfig } from '../../config/module-config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
-import { BiasType, NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { GridWithMargin } from '../../grid/grid-with-margin';
+import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { BiasType } from '../../math/noise-generator/types';
+import { CalculationState } from '../../worker/types';
 import { Plane, PlaneConfig } from '../plane';
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 1, yCenter: 0 };
@@ -16,7 +19,7 @@ export class Noise extends Plane {
 
     constructor(grid: Grid) {
         super(grid);
-        this._generator = new NoiseGenerator(grid);
+        this._generator = new NoiseGenerator(new GridWithMargin(grid.resolution, grid.range, 0));
         this.create();
     }
 
@@ -38,15 +41,27 @@ export class Noise extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        // this._data = this.createNoise(2);
-        // this.updateImage(this.createImage());
-
         this._noiseIndexSubscription = timer(0, 2000).subscribe(() => {
-            this._data = this.createNoise(this._noiseIndex);
             this._noiseIndex++;
+            this.createAndDraw();
             if (this._noiseIndex > 12) this._noiseIndex = 0;
-            this.updateImage(this.createImage());
         });
+    }
+
+    private async createAndDraw() {
+        this.setProgress(0);
+        const calculation$ = this.createNoise(this._noiseIndex);
+        calculation$.subscribe({
+            next: (state) => { this.setProgress(state.progress) }
+        });
+        const result = await lastValueFrom(calculation$);
+        if (result.data != null) {
+            this._data = result.data;
+            this.updateImage(this.createImage());
+            this.setIdle();
+        } else {
+            console.error('#calculate - calculation did not produce data')
+        }
     }
 
     private createImage(): ImageDataArray {
@@ -66,7 +81,7 @@ export class Noise extends Plane {
         return imageData;
     }
 
-    private createNoise(index: number): Float64Array {
+    private createNoise(index: number): Observable<CalculationState<Float64Array>> {
         switch (index) {
             case 1: {
                 console.log('#createNoise - Bernoulli Noise');
@@ -74,11 +89,11 @@ export class Noise extends Plane {
             }
             case 2: {
                 console.log('#createNoise - Isolated Black Noise');
-                return this._generator.createIsolatedBlackNoise();
+                return this._generator.createBernoulliNoiseIsolated();
             }
             case 3: {
                 console.log('#createNoise - Isolated Big Black Noise');
-                return this._generator.createIsolatedBigBlackNoise();
+                return this._generator.createBernoulliNoiseIsolatedBig();
             }
             case 4: {
                 console.log('#createNoise - Gaussian Noise');

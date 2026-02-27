@@ -47,7 +47,7 @@ export class Weather extends Plane {
         const generator = new NoiseGenerator(sourceGrid);
         const sourceData: SourceData = {
             grid: sourceGrid,
-            image: generator.createIsolatedBigBlackNoise(0.02),
+            image: generator.createIsolatedBigBlackNoiseSync(0.02),
             field: sourceField.data,
         }
         this.updateImage(this.createSourceImage(sourceData));

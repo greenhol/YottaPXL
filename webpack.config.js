@@ -22,9 +22,10 @@ module.exports = {
         extensions: ['.ts', '.js']
     },
     output: {
+        path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
-        chunkFilename: '[name].[contenthash].js',
-        path: path.resolve(__dirname, 'dist')
+        chunkFilename: 'chunks/[name].[contenthash].js',
+        clean: true,
     },
     plugins: [
         new webpack.DefinePlugin({

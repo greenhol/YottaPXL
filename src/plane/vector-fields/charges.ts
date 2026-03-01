@@ -5,10 +5,10 @@ import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { BiasType } from '../../math/noise-generator/types';
 import { ChargeField } from '../../math/vector-field/charge-field';
 import { Color, createGray, WHITE } from '../../utils/color';
 import { Plane, PlaneConfig } from '../plane';
-import { BiasType } from '../../math/noise-generator/types';
 
 interface ChargesConfig extends PlaneConfig {
     gridRange: GridRange,

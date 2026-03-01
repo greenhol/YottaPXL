@@ -214,16 +214,18 @@ export class Start {
         this._busySubscription?.unsubscribe();
         if (this._plane != null) {
             this._busySubscription = this._plane.busy$.subscribe({
-                next: (busy) => {
+                next: (progress) => {
                     const busyIndicator = document.getElementById('busyIndicator') as HTMLDivElement;
                     const progressBar = document.getElementById('progressBar') as HTMLDivElement;
-                    const progress = document.getElementById('progress') as HTMLDivElement;
+                    const progressIndicator = document.getElementById('progressIndicator') as HTMLDivElement;
+                    const progressStep = document.getElementById('progressStep') as HTMLDivElement;
                     const resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
                     const exportButton = document.getElementById('exportButton') as HTMLDivElement;
-                    if (busy !== null) {
+                    if (progress !== null) {
                         busyIndicator.className = 'busyIndicator--busy';
                         progressBar.classList.remove('gone');
-                        progress.style.width = `${busy * 2.92}px`;
+                        progressIndicator.style.width = `${progress.percentage * 2.92}px`;
+                        progressStep.textContent = progress.step;
                         resolutionSelect.classList.add('gone');
                         exportButton.classList.add('gone');
                         this._htmlSvg.classList.add('gone');
@@ -232,7 +234,8 @@ export class Start {
                     } else {
                         busyIndicator.className = 'busyIndicator--idle';
                         progressBar.classList.add('gone');
-                        progress.style.width = '0px';
+                        progressIndicator.style.width = '0px';
+                        progressStep.textContent = '';
                         resolutionSelect.classList.remove('gone');
                         exportButton.classList.remove('gone');
                         this._htmlSvg.classList.remove('gone');

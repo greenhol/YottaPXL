@@ -7,6 +7,11 @@ export interface PlaneConfig {
     gridRange: GridRange;
 }
 
+export interface Progress {
+    percentage: number;
+    step: string;
+}
+
 export abstract class Plane {
 
     private _grid: Grid;
@@ -14,8 +19,8 @@ export abstract class Plane {
     private _image$ = new BehaviorSubject<ImageDataArray>(new Uint8ClampedArray(0));
     public image$: Observable<ImageDataArray> = this._image$;
 
-    private _busy$ = new BehaviorSubject<number | null>(null);
-    public busy$: Observable<number | null> = this._busy$;
+    private _busy$ = new BehaviorSubject<Progress | null>(null);
+    public busy$: Observable<Progress | null> = this._busy$;
 
     constructor(grid: Grid) {
         this._grid = grid;
@@ -47,8 +52,8 @@ export abstract class Plane {
         this._busy$.next(null);
     }
 
-    public setProgress(progress: number) {
-        this._busy$.next(progress);
+    public setProgress(progress: number, step: string = "") {
+        this._busy$.next({ percentage: progress, step: step });
     }
 
     public onDestroy(): void {

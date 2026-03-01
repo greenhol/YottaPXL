@@ -9,6 +9,7 @@ import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { MandelbrotField } from '../../math/vector-field/mandelbrot-field';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
+import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
@@ -56,50 +57,67 @@ export class MandelbrotVector extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
+        // Create Source Field
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
-        const sourceField = new MandelbrotField(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue);
+        const mandelbrotCalculator = new MandelbrotCalculator();
+        const mandelbrotCalculation$ = mandelbrotCalculator.calculateDistances(
+            sourceGrid,
+            this._effectiveMaxIterations,
+            this.config.data.escapeValue,
+        )
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/3') } });
+        const mandelbrotDistances = await extractData(mandelbrotCalculation$, 'mandelbrot distances');
+        const sourceField = new MandelbrotField(sourceGrid, mandelbrotDistances, this._effectiveMaxIterations);
 
         // Create Source Image
-        const generator = new NoiseGenerator(sourceGrid);
         const sourceData: SourceData = {
             grid: sourceGrid,
             image: this.config.data.useNoiseAsSource ?
-                generator.createBernoulliNoiseSync(0.3) :
-                this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations, this.config.data.escapeValue),
+                await this.createNoise(sourceGrid) :
+                await this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations),
             field: sourceField.data,
         }
         this.updateImage(this.drawSourceImage(sourceData));
 
         // LIC
-        const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-        const calculation$ = calculator.calculate(this.config.data.licLength);
-        calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress) }
+        const licCalculator = new LicCalculator(sourceData, this.grid);
+        const licCalculation$ = licCalculator.calculate(this.config.data.licLength);
+        licCalculation$.subscribe({
+            next: (state) => { this.setProgress(state.progress, 'LIC 3/3') }
         });
-        const result = await lastValueFrom(calculation$);
-        if (result.data != null) {
-            this.updateImage(this.drawImage(result.data));
+        const licResult = await lastValueFrom(licCalculation$);
+        if (licResult.data != null) {
+            this.updateImage(this.drawImage(licResult.data));
             this.setIdle();
         } else {
             console.error('#calculateAndDraw - calculation did not produce data')
         }
     }
 
-    private createMandelbrotData(gridWithMargin: GridWithMargin, maxIterations: number, escapeValue: number): Float64Array {
-        const calc = new MandelbrotCalculator();
+    private async createNoise(sourceGrid: GridWithMargin): Promise<Float64Array> {
+        const generator = new NoiseGenerator(sourceGrid);
+        const generator$ = generator.createBernoulliNoise(0.3);
+        return await extractData(generator$, 'noise');
+    }
+
+    private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
         const colorMapper = new ColorMapper([
             { color: BLACK, cycleLength: 255 },
             { color: WHITE, cycleLength: 255 },
         ]);
-        const mbData = calc.calculateIterationsSync(gridWithMargin, maxIterations);
-        const data = new Float64Array(gridWithMargin.size);
-        for (let row = 0; row < gridWithMargin.height; row++) {
-            for (let col = 0; col < gridWithMargin.width; col++) {
-                let value = mbData[gridWithMargin.getIndex(col, row)];
+        const mandelbrotCalculator = new MandelbrotCalculator();
+        const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 2/3') } });
+        const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
+
+        const data = new Float64Array(sourceGrid.size);
+        for (let row = 0; row < sourceGrid.height; row++) {
+            for (let col = 0; col < sourceGrid.width; col++) {
+                let value = mandelbrotIterations[sourceGrid.getIndex(col, row)];
                 if (value === this._effectiveMaxIterations) {
                     value = -1;
                 }
-                data[gridWithMargin.getIndex(col, row)] = colorMapper.map(value).r / 255;
+                data[sourceGrid.getIndex(col, row)] = colorMapper.map(value).r / 255;
             }
         }
         return data;

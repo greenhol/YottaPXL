@@ -30,7 +30,7 @@ function calculate(setup: WorkerSetupMandelbrot): Float64Array {
             cnt = 0;
         }
     }
-    console.info('#calculateIterations (worker) - calculation done in ' + (Date.now() - timeStamp) / 1000 + 's');
+    console.info(`#calculate (worker) - mandelbrot:${setup.type} calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 

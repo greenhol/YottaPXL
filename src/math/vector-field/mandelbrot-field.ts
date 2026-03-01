@@ -1,6 +1,5 @@
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ImageGradientKernel, SOBEL_KERNEL_6 } from '../image-gradient-kernel/image-gradient-kernel';
-import { MandelbrotCalculator } from './../complex-fractal/mandelbrot-calculator';
 import { VectorField } from './vector-field';
 
 export class MandelbrotField extends VectorField {
@@ -8,17 +7,14 @@ export class MandelbrotField extends VectorField {
     private _mandelbrotData: Float64Array;
     private _maxIterations: number;
 
-    constructor(grid: GridWithMargin, maxIterations: number, escapeValue: number) {
+    constructor(grid: GridWithMargin, mandelbrotData: Float64Array, maxIterations: number) {
         super(grid);
+        this._mandelbrotData = mandelbrotData;
         this._maxIterations = maxIterations;
-
-        const mandelbrotCalculator = new MandelbrotCalculator();
-        this._mandelbrotData = mandelbrotCalculator.calculateDistancesSync(this.grid, this._maxIterations, escapeValue);
-        
         this.precomputeVectors();
     }
 
-    override computeVector(x: number, y: number): [number, number, number] {
+    public computeVector(x: number, y: number): [number, number, number] {
         let vX = 0;
         let vY = 0;
 

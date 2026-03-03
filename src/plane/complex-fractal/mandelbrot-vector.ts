@@ -6,7 +6,7 @@ import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { MandelbrotField } from '../../math/vector-field/mandelbrot-field';
+import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
 import { extractData } from '../../worker/extract-data';
@@ -57,7 +57,7 @@ export class MandelbrotVector extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
-        // Create Source Field
+        // Create Source Field Input
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateDistances(
@@ -65,9 +65,14 @@ export class MandelbrotVector extends Plane {
             this._effectiveMaxIterations,
             this.config.data.escapeValue,
         )
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/3') } });
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Input 1/4') } });
         const mandelbrotDistances = await extractData(mandelbrotCalculation$, 'mandelbrot distances');
-        const sourceField = new MandelbrotField(sourceGrid, mandelbrotDistances, this._effectiveMaxIterations);
+
+        // Create Source Field
+        const fieldGenerator = new VectorFieldGenerator(sourceGrid);
+        const fieldCalculation$ = fieldGenerator.createMatrixGradientField(mandelbrotDistances, 0, this._effectiveMaxIterations);
+        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 2/4') } });
+        const field = await extractData(fieldCalculation$, 'charges field');
 
         // Create Source Image
         const sourceData: SourceData = {
@@ -75,7 +80,7 @@ export class MandelbrotVector extends Plane {
             image: this.config.data.useNoiseAsSource ?
                 await this.createNoise(sourceGrid) :
                 await this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations),
-            field: sourceField.data,
+            field: field,
         }
         this.updateImage(this.drawSourceImage(sourceData));
 
@@ -83,7 +88,7 @@ export class MandelbrotVector extends Plane {
         const licCalculator = new LicCalculator(sourceData, this.grid);
         const licCalculation$ = licCalculator.calculate(this.config.data.licLength);
         licCalculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress, 'LIC 3/3') }
+            next: (state) => { this.setProgress(state.progress, 'LIC 4/4') }
         });
         const licResult = await lastValueFrom(licCalculation$);
         if (licResult.data != null) {
@@ -107,7 +112,7 @@ export class MandelbrotVector extends Plane {
         ]);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 2/3') } });
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4') } });
         const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
 
         const data = new Float64Array(sourceGrid.size);

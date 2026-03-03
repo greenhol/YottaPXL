@@ -229,8 +229,10 @@ export class Start {
                         resolutionSelect.classList.add('gone');
                         exportButton.classList.add('gone');
                         this._htmlSvg.classList.add('gone');
-                        this._rangeArea?.classList.add('invisible');
-                        this._planeSelectArea?.classList.add('invisible');
+                        if (progress.percentage > 0 && progress.percentage < 100) {
+                            this._rangeArea?.classList.add('invisible');
+                            this._planeSelectArea?.classList.add('invisible');
+                        }
                     } else {
                         busyIndicator.className = 'busyIndicator--idle';
                         progressBar.classList.add('gone');

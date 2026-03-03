@@ -6,8 +6,9 @@ import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType } from '../../math/noise-generator/types';
-import { ChargeField } from '../../math/vector-field/charge-field';
+import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { Color, createGray, WHITE } from '../../utils/color';
+import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 
 interface ChargesConfig extends PlaneConfig {
@@ -41,24 +42,34 @@ export class Charges extends Plane {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
 
+        // Create Source Field
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
-        const sourceField = new ChargeField(sourceGrid);
+        const fieldGenerator = new VectorFieldGenerator(sourceGrid);
+        const fieldCalculation$ = fieldGenerator.createChargeField([
+            { x: 3, y: -1, charge: 5 },
+            { x: 5.5, y: -0.5, charge: -10 },
+            { x: 7, y: 2, charge: 3 },
+        ], true);
+        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2') } });
+        const field = await extractData(fieldCalculation$, 'charges field');
 
         // Create Source Image
-        const generator = new NoiseGenerator(sourceGrid);
+        const noiseGenerator = new NoiseGenerator(sourceGrid);
+        const generator$ = noiseGenerator.createBiasedNoise(BiasType.UPPER);
+        const noise = await extractData(generator$, 'noise');
+
+        // Draw Source Image
         const sourceData: SourceData = {
             grid: sourceGrid,
-            image: generator.createBiasedNoiseSync(BiasType.BOUNDS),
-            field: sourceField.data,
+            image: noise,
+            field: field,
         }
         this.updateImage(this.createSourceImage(sourceData));
 
         // LIC
         const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
         const calculation$ = calculator.calculate(this.config.data.licLength);
-        calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress) }
-        });
+        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2') } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));

@@ -1,9 +1,9 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Grid } from '../../grid/grid';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { CalculationState, MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { WorkerSetupLIC as WorkerSetupLIC } from './worker-setup-lic';
 import { executeWorker } from '../../worker/execute-worker';
+import { CalculationState } from '../../worker/types';
+import { WorkerSetupLIC } from './worker-setup-lic';
 
 export interface SourceData {
     grid: GridWithMargin,

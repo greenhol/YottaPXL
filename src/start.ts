@@ -4,6 +4,7 @@ import { ModuleConfig } from './config/module-config';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
+import { MandelbrotCombined } from './plane/complex-fractal/mandelbrot-combined';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
@@ -116,6 +117,10 @@ export class Start {
             }
             case 'MANDELBROT_DISTANCE': {
                 this._plane = new MandelbrotDistance(this._grid);
+                break;
+            }
+            case 'MANDELBROT_COMBINED': {
+                this._plane = new MandelbrotCombined(this._grid);
                 break;
             }
             case 'MANDELBROT_VECTOR': {

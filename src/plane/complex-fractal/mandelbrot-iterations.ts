@@ -11,7 +11,6 @@ import { estimateMaxIterations } from './estimate-max-iterations';
 interface MandelbrotIterationsConfig extends PlaneConfig {
     gridRange: GridRange,
     maxIterations: number,
-    escapeValue: number,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -30,7 +29,6 @@ export class MandelbrotIterations extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
-            escapeValue: 2,
         },
         'mandelbrotIterationsConfig',
     );

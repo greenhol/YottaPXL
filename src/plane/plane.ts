@@ -1,7 +1,8 @@
 import { BehaviorSubject, Observable } from 'rxjs';
+import { ModuleConfig } from '../config/module-config';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
-import { ModuleConfig } from '../config/module-config';
+import { Initializable } from '../utils/initializable';
 
 export interface PlaneConfig {
     gridRange: GridRange;
@@ -12,7 +13,7 @@ export interface Progress {
     step: string;
 }
 
-export abstract class Plane {
+export abstract class Plane implements Initializable {
 
     private _grid: Grid;
 
@@ -27,6 +28,8 @@ export abstract class Plane {
     }
 
     public abstract config: ModuleConfig<PlaneConfig>;
+
+    public abstract init(): void;
 
     public abstract refresh(): void;
 

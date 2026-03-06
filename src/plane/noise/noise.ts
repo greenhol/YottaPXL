@@ -5,11 +5,13 @@ import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType } from '../../math/noise-generator/types';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { CalculationState } from '../../worker/types';
 import { Plane, PlaneConfig } from '../plane';
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 1, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class Noise extends Plane {
 
     private _generator: NoiseGenerator;
@@ -17,16 +19,15 @@ export class Noise extends Plane {
     private _noiseIndex: number = 0;
     private _noiseIndexSubscription: Subscription;
 
-    constructor(grid: Grid) {
-        super(grid);
-        this._generator = new NoiseGenerator(new GridWithMargin(grid.resolution, grid.range, 0));
-        this.create();
-    }
-
     override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
         { gridRange: INITIAL_GRID_RANGE },
         'noise',
     );
+
+    public init(): void {
+        this._generator = new NoiseGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
+        this.create();
+    }
 
     override refresh() {
         // Nothing to do here, Noise does not change depending on Grid Range

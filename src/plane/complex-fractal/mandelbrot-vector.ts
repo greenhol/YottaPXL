@@ -1,6 +1,5 @@
 import { lastValueFrom } from 'rxjs';
 import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
@@ -9,6 +8,7 @@ import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
@@ -24,15 +24,10 @@ interface MandelbrotVectorConfig extends PlaneConfig {
 const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class MandelbrotVector extends Plane {
 
     private _effectiveMaxIterations = 255;
-
-    constructor(grid: Grid) {
-        super(grid);
-        this.grid.updateRange(this.config.data.gridRange);
-        this.calculate();
-    }
 
     override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
         {
@@ -44,6 +39,11 @@ export class MandelbrotVector extends Plane {
         },
         'mandelbrotVectorConfig',
     );
+
+    public init(): void {
+        this.grid.updateRange(this.config.data.gridRange);
+        this.refresh();
+    }
 
     override refresh() {
         this.calculate();

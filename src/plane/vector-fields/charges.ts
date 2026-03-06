@@ -8,6 +8,7 @@ import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { Color, createGray, WHITE } from '../../utils/color';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 
@@ -18,12 +19,8 @@ interface ChargesConfig extends PlaneConfig {
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class Charges extends Plane {
-
-    constructor(grid: Grid) {
-        super(grid);
-        this.calculate();
-    }
 
     override config: ModuleConfig<ChargesConfig> = new ModuleConfig(
         {
@@ -32,6 +29,10 @@ export class Charges extends Plane {
         },
         'chargesConfig',
     );
+
+    public init(): void {
+        this.refresh();
+    }
 
     override refresh() {
         this.calculate();

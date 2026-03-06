@@ -5,6 +5,7 @@ import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
@@ -15,15 +16,10 @@ interface MandelbrotIterationsConfig extends PlaneConfig {
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class MandelbrotIterations extends Plane {
 
     private _effectiveMaxIterations = 255;
-
-    constructor(grid: Grid) {
-        super(grid);
-        this.grid.updateRange(this.config.data.gridRange);
-        this.calculate();
-    }
 
     override config: ModuleConfig<MandelbrotIterationsConfig> = new ModuleConfig(
         {
@@ -32,6 +28,11 @@ export class MandelbrotIterations extends Plane {
         },
         'mandelbrotIterationsConfig',
     );
+
+    override init(): void {
+        this.grid.updateRange(this.config.data.gridRange);
+        this.refresh();
+    }
 
     override refresh() {
         this.calculate();

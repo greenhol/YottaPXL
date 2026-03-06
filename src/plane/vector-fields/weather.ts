@@ -1,13 +1,13 @@
 import { lastValueFrom } from 'rxjs';
 import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { PressureRegion } from '../../math/vector-field/weather-field/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
+import { PressureRegion } from '../../math/vector-field/weather-field/types';
 import { Color, createGray, WHITE } from '../../utils/color';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 
@@ -18,13 +18,20 @@ interface WeatherConfig extends PlaneConfig {
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -180, xMax: 180, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class Weather extends Plane {
 
     private _pressureRegions: PressureRegion[] = [];
 
-    constructor(grid: Grid) {
-        super(grid);
+    override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            licLength: 20,
+        },
+        'weatherConfig',
+    );
 
+    public init(): void {
         const pressureRegions = [
             { x: 0.0, y: -70.0, strength: 988, spread: 36, isLowPressure: true },      // Antarctic Low (Low)
             { x: 95.0, y: 60.0, strength: 1036, spread: 36, isLowPressure: false },   // Siberian High (High)
@@ -62,16 +69,8 @@ export class Weather extends Plane {
             this._pressureRegions.push(regionRight);
         });
 
-        this.calculate();
+        this.refresh();
     }
-
-    override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
-        {
-            gridRange: INITIAL_GRID_RANGE,
-            licLength: 20,
-        },
-        'weatherConfig',
-    );
 
     override refresh() {
         this.calculate();

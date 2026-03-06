@@ -1,8 +1,8 @@
 import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { ColorMapper } from '../../utils/color-mapper';
+import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { BLUE, CYAN } from './../../utils/color';
@@ -16,15 +16,10 @@ interface MandelbrotCombinedConfig extends PlaneConfig {
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
+@InitializeAfterConstruct()
 export class MandelbrotCombined extends Plane {
 
     private _effectiveMaxIterations = 255;
-
-    constructor(grid: Grid) {
-        super(grid);
-        this.grid.updateRange(this.config.data.gridRange);
-        this.calculate();
-    }
 
     override config: ModuleConfig<MandelbrotCombinedConfig> = new ModuleConfig(
         {
@@ -34,6 +29,11 @@ export class MandelbrotCombined extends Plane {
         },
         'mandelbrotCombinedConfig',
     );
+
+    public init(): void {
+        this.grid.updateRange(this.config.data.gridRange);
+        this.refresh();
+    }
 
     override refresh() {
         this.calculate();
@@ -93,6 +93,15 @@ export class MandelbrotCombined extends Plane {
     private mapLinear(value: number, maxValue: number): number {
         if (maxValue === 0) return 0; // Avoid division by zero
         return 1 - (value / maxValue);
+    }
+
+    private mapSine(value: number, maxValue: number): number {
+        if (maxValue === 0) return 1; // Avoid division by zero
+        const normalizedValue = value / maxValue;
+        // Use a half-period sine wave (0 to π)
+        const sineValue = Math.sin(normalizedValue * Math.PI);
+        // Square the sine to get a smooth curve from 1 to 0 and back to 1
+        return 1 - sineValue * sineValue;
     }
 
     private mapLog(value: number, maxValue: number, beta: number = 1000, gamma: number = 2): number {

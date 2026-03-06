@@ -1,11 +1,9 @@
 import { lastValueFrom } from 'rxjs';
-import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
+import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
-import { InitializeAfterConstruct } from '../../utils/initializable';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
 

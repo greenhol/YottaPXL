@@ -1,5 +1,5 @@
 import { lastValueFrom } from 'rxjs';
-import { ModuleConfig } from '../../config/module-config';
+import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
@@ -8,7 +8,6 @@ import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
-import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';

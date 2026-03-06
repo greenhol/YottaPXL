@@ -1,11 +1,9 @@
 import { lastValueFrom, Observable, Subscription, timer } from 'rxjs';
-import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
+import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType } from '../../math/noise-generator/types';
-import { InitializeAfterConstruct } from '../../utils/initializable';
 import { CalculationState } from '../../worker/types';
 import { Plane, PlaneConfig } from '../plane';
 

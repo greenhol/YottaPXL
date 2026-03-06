@@ -1,6 +1,5 @@
 import { Subscription } from 'rxjs';
-import { configVersionCheck } from './config/config-version-check';
-import { ModuleConfig } from './config/module-config';
+import { configVersionCheck, ModuleConfig } from '../shared';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';

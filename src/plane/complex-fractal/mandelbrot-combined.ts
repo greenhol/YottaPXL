@@ -1,8 +1,7 @@
-import { ModuleConfig } from '../../config/module-config';
+import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { ColorMapper } from '../../utils/color-mapper';
-import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { BLUE, CYAN } from './../../utils/color';

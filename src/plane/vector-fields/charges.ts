@@ -1,6 +1,5 @@
 import { lastValueFrom } from 'rxjs';
-import { ModuleConfig } from '../../config/module-config';
-import { Grid } from '../../grid/grid';
+import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
@@ -8,7 +7,6 @@ import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { Color, createGray, WHITE } from '../../utils/color';
-import { InitializeAfterConstruct } from '../../utils/initializable';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 

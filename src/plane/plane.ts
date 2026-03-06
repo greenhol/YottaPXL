@@ -1,8 +1,7 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ModuleConfig } from '../config/module-config';
+import { Initializable, ModuleConfig } from '../../shared';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
-import { Initializable } from '../utils/initializable';
 
 export interface PlaneConfig {
     gridRange: GridRange;

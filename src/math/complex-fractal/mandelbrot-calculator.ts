@@ -11,6 +11,10 @@ export class MandelbrotCalculator {
         return this.calculateWithWorker(CalculationType.ITERATIONS, grid, maxIterations, 4); // escapeValue = 2^2
     }
 
+    public calculateSmoothIterations(grid: Grid, maxIterations: number): Observable<CalculationState<Float64Array>> {
+        return this.calculateWithWorker(CalculationType.ITERATIONS_SMOOTH, grid, maxIterations, 4); // escapeValue = 2^2
+    }
+
     public calculateDistances(grid: Grid, maxIterations: number, escapeValue: number): Observable<CalculationState<Float64Array>> {
         return this.calculateWithWorker(CalculationType.DISTANCE, grid, maxIterations, escapeValue);
     }

@@ -6,22 +6,30 @@ import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
 self.onmessage = (e) => {
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
-        const result = calculate(data);
+        let result: Float64Array;
+        switch ((data as WorkerSetupMandelbrot).type) {
+            case CalculationType.ITERATIONS:
+                result = calculateIterations(data);
+                break;
+            case CalculationType.ITERATIONS_SMOOTH:
+                result = calculateSmoothIterations(data);
+                break;
+            case CalculationType.DISTANCE:
+                result = calculateDistances(data);
+                break;
+        }
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(setup: WorkerSetupMandelbrot): Float64Array {
+function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
-
-    const pixelCalculator = (setup.type === CalculationType.DISTANCE) ? calculateDistanceForPixel : calculateIterationsForPixel;
-
     let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = pixelCalculator(col, row, grid, setup.maxIterations, setup.escapeValue);
+            targetData[grid.getIndex(col, row)] = calculateIterationsForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
         }
         cnt += grid.width;
         if (cnt > 50000) {
@@ -30,7 +38,7 @@ function calculate(setup: WorkerSetupMandelbrot): Float64Array {
             cnt = 0;
         }
     }
-    console.info(`#calculate (worker) - mandelbrot:${setup.type} calculation done in ${(Date.now() - timeStamp) / 1000}s`);
+    console.info(`#calculateIterations (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 
@@ -46,6 +54,69 @@ function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIt
         iteration++;
     }
     return iteration;
+}
+
+function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
+    let cnt = 0;
+    let timeStamp = Date.now();
+    const targetData = new Float64Array(grid.size);
+    for (let row = 0; row < grid.height; row++) {
+        for (let col = 0; col < grid.width; col++) {
+            targetData[grid.getIndex(col, row)] = calculateSmoothIterationForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
+        }
+        cnt += grid.width;
+        if (cnt > 50000) {
+            const progress = Math.round(100 * (row * grid.width) / grid.size);
+            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
+            cnt = 0;
+        }
+    }
+    console.info(`#calculateSmoothIterations (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
+    return targetData;
+}
+
+function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
+    const [reC, imC] = grid.pixelToMath(col, row);
+    let reZ = 0;
+    let imZ = 0;
+    let iteration = 0;
+    while (iteration < maxIterations) {
+        // z = z^2 + c
+        const re_z_squared = reZ * reZ - imZ * imZ;
+        const im_z_squared = 2 * reZ * imZ;
+        reZ = re_z_squared + reC;
+        imZ = im_z_squared + imC;
+
+        const absZ = Math.sqrt(reZ * reZ + imZ * imZ);
+        if (absZ > escapeValue) {
+            const logZn = Math.log(absZ) / 2;
+            const logLogZn = Math.log(logZn) / Math.log(2);
+            return iteration + 1 - logLogZn;
+        }
+        iteration++;
+    }
+    return 0;
+}
+
+function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
+    let cnt = 0;
+    let timeStamp = Date.now();
+    const targetData = new Float64Array(grid.size);
+    for (let row = 0; row < grid.height; row++) {
+        for (let col = 0; col < grid.width; col++) {
+            targetData[grid.getIndex(col, row)] = calculateDistanceForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
+        }
+        cnt += grid.width;
+        if (cnt > 50000) {
+            const progress = Math.round(100 * (row * grid.width) / grid.size);
+            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
+            cnt = 0;
+        }
+    }
+    console.info(`#calculateDistances (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
+    return targetData;
 }
 
 function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {

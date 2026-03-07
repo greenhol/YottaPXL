@@ -59,10 +59,9 @@ export class MandelbrotVector extends Plane {
         // Create Source Field Input
         const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
         const mandelbrotCalculator = new MandelbrotCalculator();
-        const mandelbrotCalculation$ = mandelbrotCalculator.calculateDistances(
+        const mandelbrotCalculation$ = mandelbrotCalculator.calculateSmoothIterations(
             sourceGrid,
             this._effectiveMaxIterations,
-            this.config.data.escapeValue,
         )
         mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Input 1/4') } });
         const mandelbrotDistances = await extractData(mandelbrotCalculation$, 'mandelbrot distances');

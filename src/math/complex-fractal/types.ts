@@ -1,4 +1,5 @@
 export enum CalculationType {
     ITERATIONS = 'ITERATIONS',
+    ITERATIONS_SMOOTH = 'ITERATIONS_SMOOTH',
     DISTANCE = 'DISTANCE',
 }

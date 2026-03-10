@@ -4,7 +4,7 @@ import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calc
 import { ColorMapper } from '../../utils/color-mapper';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { BLUE, CYAN } from './../../utils/color';
+import { BLACK, GREEN, WHITE } from './../../utils/color';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedConfig extends PlaneConfig {
@@ -60,11 +60,16 @@ export class MandelbrotCombined extends Plane {
     private createImage(iterations: Float64Array, distances: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapperIterations = new ColorMapper([
-            { color: BLUE, cycleLength: 128 },
-            { color: CYAN, cycleLength: 128 },
+            { color: { r: 0, g: 128, b: 0 }, cycleLength: 128 },
+            { color: GREEN, cycleLength: 128 },
         ]);
         let max = 0;
         distances.forEach(value => { if (value > max) max = value });
+        const colorMapperDistances = new ColorMapper([
+            { color: WHITE, cycleLength: max / 25 },
+            { color: WHITE, cycleLength: max / 300 },
+            { color: BLACK, cycleLength: max / 300 },
+        ]);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -78,7 +83,7 @@ export class MandelbrotCombined extends Plane {
                     imageData[pixelIndex + 3] = 255; // A (opaque)
                 } else {
                     const color = colorMapperIterations.map(valueIterations);
-                    const valueFactor = this.mapToLogSineOscillations(distances[index], max, 2);
+                    const valueFactor = colorMapperDistances.map(distances[index]).r / 255;
                     imageData[pixelIndex] = Math.round(valueFactor * color.r);     // R
                     imageData[pixelIndex + 1] = Math.round(valueFactor * color.g); // G
                     imageData[pixelIndex + 2] = Math.round(valueFactor * color.b); // B

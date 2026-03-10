@@ -58,12 +58,14 @@ export class MandelbrotDistance extends Plane {
     }
 
     private createImage(data: Float64Array): ImageDataArray {
+        let max = 0;
+        data.forEach(value => { if (value > max) max = value });
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const cycleLength = this.grid.xDiff / this.config.data.escapeValue / 50;
+        const cycleLength = max;
         const colorMapper = new ColorMapper([
-            { color: BLACK, cycleLength: cycleLength },
-            { color: WHITE, cycleLength: cycleLength },
-        ], WHITE);
+            { color: WHITE, cycleLength: cycleLength / 25 },
+            { color: BLACK, cycleLength: cycleLength / 25 },
+        ]);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {

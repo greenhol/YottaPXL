@@ -119,7 +119,7 @@ function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     return targetData;
 }
 
-function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
+function calculateDistanceForPixelOld(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
     const [reC, imC] = grid.pixelToMath(col, row);
 
     let reZ = 0;
@@ -150,4 +150,37 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
         iteration++;
     }
     return 0;
+}
+
+function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
+    const [reC, imC] = grid.pixelToMath(col, row);
+
+    let reZ = 0;
+    let imZ = 0;
+    let reZdiff = 1;
+    let imZdiff = 0;
+    let iteration = 0;
+
+    do {
+        // z_new = z * z + c
+        const reZnew = reZ * reZ - imZ * imZ +reC;
+        const imZnew = 2 * reZ * imZ + imC;
+
+        // dz_new = 2 * z * dz + 1
+        const reZdiffNew = 2 * (reZ * reZdiff - imZ * imZdiff) + 1;
+        const imZdiffNew = 2 * (reZ * imZdiff + imZ * reZdiff);
+
+        reZ = reZnew;
+        imZ = imZnew;
+        reZdiff = reZdiffNew;
+        imZdiff = imZdiffNew;
+
+        iteration++;
+    } while (iteration <= maxIterations && modulus(reZ, imZ) < escapeValue);
+
+    return (iteration >= maxIterations) ? 0 : (modulus(reZ, imZ) * Math.log(modulus(reZ, imZ))) / modulus(reZdiff, imZdiff);
+}
+
+function modulus(reZ: number, imZ: number): number {
+    return Math.sqrt(reZ * reZ + imZ * imZ);
 }

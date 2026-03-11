@@ -1,16 +1,14 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Grid } from './grid';
-import { GridRange } from './grid-range';
+import { createDefaultGridRange, GridRange } from './grid-range';
 import { Resolution } from './resolutions';
-
-const DEFAULT_GRID_RANGE = { xMin: 0, xMax: 1, yCenter: 0 };
 
 export class GridRx extends Grid {
 
-    private _range$ = new BehaviorSubject<GridRange>(DEFAULT_GRID_RANGE);
+    private _range$ = new BehaviorSubject<GridRange>(createDefaultGridRange());
     public range$: Observable<GridRange> = this._range$;
 
-    constructor(resolution: Resolution, range: GridRange = DEFAULT_GRID_RANGE) {
+    constructor(resolution: Resolution, range: GridRange = createDefaultGridRange()) {
         super(resolution, range)
     }
 

@@ -1,23 +1,59 @@
+import { createDefaultGridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { BernoulliNoiseType } from './types';
+import { BernoulliNoiseType, NoiseScaleFactor, getNoiseScaleFactor } from './types';
 
 self.onmessage = (e) => {
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
+        const factor = getNoiseScaleFactor(data.scale);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
-        let result = createBernoulliNoise(grid, data.p);
-        switch (data.type) {
-            case BernoulliNoiseType.ISOLATED:
-                result = createIsolatedNoise(result, grid);
-                break;
-            case BernoulliNoiseType.ISOLATED_BIG:
-                result = createIsolatedBigNoise(result, grid);
-                break;
+        let result: Float64Array;
+        if (factor == NoiseScaleFactor.NONE) {
+            result = createBernoulliNoise(grid, data.p);
+            switch (data.type) {
+                case BernoulliNoiseType.ISOLATED:
+                    result = createIsolatedNoise(result, grid);
+                    break;
+                case BernoulliNoiseType.ISOLATED_BIG:
+                    result = createIsolatedBigNoise(result, grid);
+                    break;
+            }
+        } else {
+            const baseGrid = new GridWithMargin({ width: grid.width, height: grid.height, description: '' }, createDefaultGridRange(), 0);
+            let baseNoise: Float64Array = createBernoulliNoise(baseGrid, data.p);
+            switch (data.type) {
+                case BernoulliNoiseType.ISOLATED:
+                    baseNoise = createIsolatedNoise(baseNoise, grid);
+                    break;
+                case BernoulliNoiseType.ISOLATED_BIG:
+                    baseNoise = createIsolatedBigNoise(baseNoise, grid);
+                    break;
+            }
+            result = upscaleNoise(baseGrid, baseNoise, grid, factor);
         }
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
+
+function upscaleNoise(sourceGrid: GridWithMargin, sourceData: Float64Array, targetGrid: GridWithMargin, scale: number): Float64Array {
+    const data = new Float64Array(targetGrid.size);
+    for (let baseRow = 0; baseRow < sourceGrid.height; baseRow++) {
+        for (let baseCol = 0; baseCol < sourceGrid.width; baseCol++) {
+            const value = sourceData[sourceGrid.getIndex(baseCol, baseRow)];
+            for (let i = 0; i < scale; i++) {
+                for (let j = 0; j < scale; j++) {
+                    const row = baseRow * scale + j;
+                    const col = baseCol * scale + i;
+                    if (row < targetGrid.height && col < targetGrid.width) {
+                        data[targetGrid.getIndex(col, row)] = value;
+                    }
+                }
+            }
+        }
+    }
+    return data;
+}
 
 function createBernoulliNoise(grid: GridWithMargin, p: number): Float64Array {
     const data = new Float64Array(grid.size);

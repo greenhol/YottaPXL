@@ -6,6 +6,10 @@ export interface GridRange {
     yCenter: number;
 }
 
+export function createDefaultGridRange(): GridRange {
+    return { xMin: 0, xMax: 1, yCenter: 0 };
+}
+
 export function rangeXdiff(range: GridRange): number {
     return range.xMax - range.xMin;
 }

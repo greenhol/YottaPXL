@@ -26,7 +26,7 @@ export class GridWithMargin extends Grid {
         return new GridWithMargin(blueprint.baseResolution, blueprint.baseRange, blueprint.margin);
     }
 
-    constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {        
+    constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
         const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin)
         const newGridRangeFactor = resolution.width / baseResolution.width;
         const mathBaseWidth = rangeXdiff(baseRange);

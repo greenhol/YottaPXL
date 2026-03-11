@@ -5,6 +5,7 @@ import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { getNoiseScaleFactor, NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BLACK, Color, createGray, WHITE } from '../../utils/color';
 import { ColorMapper } from '../../utils/color-mapper';
@@ -18,6 +19,7 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     escapeValue: number,
     licLength: number,
     useNoiseAsSource: boolean,
+    noiseScaleFactor: number,
 }
 
 const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
@@ -35,6 +37,7 @@ export class MandelbrotVector extends Plane {
             escapeValue: 100,
             licLength: 5,
             useNoiseAsSource: true,
+            noiseScaleFactor: NoiseScaleFactor.TWO,
         },
         'mandelbrotVectorConfig',
     );
@@ -100,7 +103,7 @@ export class MandelbrotVector extends Plane {
 
     private async createNoise(sourceGrid: GridWithMargin): Promise<Float64Array> {
         const generator = new NoiseGenerator(sourceGrid);
-        const generator$ = generator.createBernoulliNoise(0.3);
+        const generator$ = generator.createBernoulliNoiseIsolated(0.3, getNoiseScaleFactor(this.config.data.noiseScaleFactor));
         return await extractData(generator$, 'noise');
     }
 

@@ -3,7 +3,7 @@ import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { BiasType } from '../../math/noise-generator/types';
+import { BiasType, NoiseScaleFactor } from '../../math/noise-generator/types';
 import { CalculationState } from '../../worker/types';
 import { Plane, PlaneConfig } from '../plane';
 
@@ -14,7 +14,6 @@ export class Noise extends Plane {
 
     private _generator: NoiseGenerator;
     private _data: Float64Array;
-    private _noiseIndex: number = 0;
     private _noiseIndexSubscription: Subscription;
 
     override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
@@ -39,17 +38,19 @@ export class Noise extends Plane {
     private create() {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
+        let noiseIndex: number = 0;
 
         this._noiseIndexSubscription = timer(0, 2000).subscribe(() => {
-            this._noiseIndex++;
-            this.createAndDraw();
-            if (this._noiseIndex > 12) this._noiseIndex = 0;
+            noiseIndex++;
+            this.createAndDraw(noiseIndex);
+            if (noiseIndex > 15) noiseIndex = 0;
         });
+        // this.createAndDraw(noiseIndex);
     }
 
-    private async createAndDraw() {
+    private async createAndDraw(noiseIndex: number) {
         this.setProgress(0);
-        const calculation$ = this.createNoise(this._noiseIndex);
+        const calculation$ = this.createNoise(noiseIndex);
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress) }
         });
@@ -87,46 +88,58 @@ export class Noise extends Plane {
                 return this._generator.createBernoulliNoise();
             }
             case 2: {
+                console.log('#createNoise - Bernoulli Noise - scaled 4');
+                return this._generator.createBernoulliNoise(0.5, NoiseScaleFactor.FOUR);
+            }
+            case 3: {
                 console.log('#createNoise - Isolated Black Noise');
                 return this._generator.createBernoulliNoiseIsolated();
             }
-            case 3: {
+            case 4: {
+                console.log('#createNoise - Isolated Black Noise - scaled 2');
+                return this._generator.createBernoulliNoiseIsolated(0.5, NoiseScaleFactor.TWO);
+            }
+            case 5: {
                 console.log('#createNoise - Isolated Big Black Noise');
                 return this._generator.createBernoulliNoiseIsolatedBig();
             }
-            case 4: {
+            case 6: {
+                console.log('#createNoise - Isolated Big Black Noise - scaled 2');
+                return this._generator.createBernoulliNoiseIsolatedBig(0.5, NoiseScaleFactor.TWO);
+            }
+            case 7: {
                 console.log('#createNoise - Gaussian Noise');
                 return this._generator.createGaussianNoise();
             }
-            case 5: {
+            case 8: {
                 console.log('#createNoise - Biased Noise LOWER');
                 return this._generator.createBiasedNoise(BiasType.LOWER);
             }
-            case 6: {
+            case 9: {
                 console.log('#createNoise - Biased Noise UPPER');
                 return this._generator.createBiasedNoise(BiasType.UPPER);
             }
-            case 7: {
+            case 10: {
                 console.log('#createNoise - Biased Noise CENTER');
                 return this._generator.createBiasedNoise(BiasType.CENTER);
             }
-            case 8: {
+            case 11: {
                 console.log('#createNoise - Biased Noise BOUNDS');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS);
             }
-            case 9: {
+            case 12: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_CUBIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_CUBIC);
             }
-            case 10: {
+            case 13: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_QUINTIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_QUINTIC);
             }
-            case 11: {
+            case 14: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_SEPTIC');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_SEPTIC);
             }
-            case 12: {
+            case 15: {
                 console.log('#createNoise - Biased Noise BOUNDS_BY_TRIG');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_TRIG);
             }

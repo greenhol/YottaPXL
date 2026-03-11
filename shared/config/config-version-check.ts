@@ -1,5 +1,5 @@
-export function configVersionCheck(appVersion: string) {
-    const appVersionKey = 'app-version';
+export function configVersionCheck(postfix: string, appVersion: string) {
+    const appVersionKey = 'app-version-' + postfix;
     const storedVersion = localStorage.getItem(appVersionKey);
     if (storedVersion !== appVersion) {
         console.info(`#configVersionCheck - storedVersion=${storedVersion} does not match appVersion=${appVersion}`);

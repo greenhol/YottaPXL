@@ -57,8 +57,8 @@ export class Start {
 
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
-        configVersionCheck(APP_VERSION);
-        this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 'MANDELBROT_ITERATIONS' }, 'mainConfig');
+        configVersionCheck(APP_NAME, APP_VERSION);
+        this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 'MANDELBROT_ITERATIONS' }, 'mainConfig' + APP_NAME);
 
         const [width, height] = this._urlHandler.getResolution();
         let resolution = this.initializeResolution(width, height);

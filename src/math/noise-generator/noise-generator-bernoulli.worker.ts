@@ -1,61 +1,34 @@
-import { createDefaultGridRange } from '../../grid/grid-range';
+import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { BernoulliNoiseType, NoiseScaleFactor, getNoiseScaleFactor } from './types';
+import { upscaleNoise } from './utils';
+import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
 
 self.onmessage = (e) => {
-    const { type, data } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupBernoulliNoise } = e.data;
     if (type === MessageToWorker.START) {
-        const factor = getNoiseScaleFactor(data.scale);
+        const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
-        let result: Float64Array;
-        if (factor == NoiseScaleFactor.NONE) {
-            result = createBernoulliNoise(grid, data.p);
-            switch (data.type) {
-                case BernoulliNoiseType.ISOLATED:
-                    result = createIsolatedNoise(result, grid);
-                    break;
-                case BernoulliNoiseType.ISOLATED_BIG:
-                    result = createIsolatedBigNoise(result, grid);
-                    break;
-            }
-        } else {
-            const baseGrid = new GridWithMargin({ width: grid.width, height: grid.height, description: '' }, createDefaultGridRange(), 0);
-            let baseNoise: Float64Array = createBernoulliNoise(baseGrid, data.p);
-            switch (data.type) {
-                case BernoulliNoiseType.ISOLATED:
-                    baseNoise = createIsolatedNoise(baseNoise, grid);
-                    break;
-                case BernoulliNoiseType.ISOLATED_BIG:
-                    baseNoise = createIsolatedBigNoise(baseNoise, grid);
-                    break;
-            }
-            result = upscaleNoise(baseGrid, baseNoise, grid, factor);
+        const baseGrid = (scaleFactor == NoiseScaleFactor.NONE) ? grid : new GridWithoutRange(grid.width, grid.height);
+        let result: Float64Array = createBernoulliNoise(baseGrid, data.p);
+        switch (data.type) {
+            case BernoulliNoiseType.ISOLATED:
+                result = createIsolatedNoise(result, baseGrid);
+                break;
+            case BernoulliNoiseType.ISOLATED_BIG:
+                result = createIsolatedBigNoise(result, baseGrid);
+                break;
+        }
+        if (scaleFactor != NoiseScaleFactor.NONE) {
+            result = upscaleNoise(baseGrid, result, grid, scaleFactor);
         }
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function upscaleNoise(sourceGrid: GridWithMargin, sourceData: Float64Array, targetGrid: GridWithMargin, scale: number): Float64Array {
-    const data = new Float64Array(targetGrid.size);
-    for (let baseRow = 0; baseRow < sourceGrid.height; baseRow++) {
-        for (let baseCol = 0; baseCol < sourceGrid.width; baseCol++) {
-            const value = sourceData[sourceGrid.getIndex(baseCol, baseRow)];
-            for (let i = 0; i < scale; i++) {
-                for (let j = 0; j < scale; j++) {
-                    const row = baseRow * scale + j;
-                    const col = baseCol * scale + i;
-                    if (row < targetGrid.height && col < targetGrid.width) {
-                        data[targetGrid.getIndex(col, row)] = value;
-                    }
-                }
-            }
-        }
-    }
-    return data;
-}
-
-function createBernoulliNoise(grid: GridWithMargin, p: number): Float64Array {
+function createBernoulliNoise(grid: GridReader, p: number): Float64Array {
     const data = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
@@ -65,7 +38,7 @@ function createBernoulliNoise(grid: GridWithMargin, p: number): Float64Array {
     return data;
 }
 
-function createIsolatedNoise(data: Float64Array, grid: GridWithMargin): Float64Array {
+function createIsolatedNoise(data: Float64Array, grid: GridReader): Float64Array {
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             if (data[grid.getIndex(col, row)] == 0) {
@@ -91,7 +64,7 @@ function createIsolatedNoise(data: Float64Array, grid: GridWithMargin): Float64A
     return data;
 }
 
-function createIsolatedBigNoise(data: Float64Array, grid: GridWithMargin): Float64Array {
+function createIsolatedBigNoise(data: Float64Array, grid: GridReader): Float64Array {
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             if (data[grid.getIndex(col, row)] == 0) {

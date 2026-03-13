@@ -41,9 +41,9 @@ export class Noise extends Plane {
         let noiseIndex: number = 0;
 
         this._noiseIndexSubscription = timer(0, 2000).subscribe(() => {
-            noiseIndex++;
             this.createAndDraw(noiseIndex);
-            if (noiseIndex > 15) noiseIndex = 0;
+            noiseIndex++;
+            if (noiseIndex > 17) noiseIndex = 0;
         });
         // this.createAndDraw(noiseIndex);
     }
@@ -83,68 +83,80 @@ export class Noise extends Plane {
 
     private createNoise(index: number): Observable<CalculationState<Float64Array>> {
         switch (index) {
+            case 0: {
+                console.info('#createNoise - White Noise');
+                return this._generator.createWhiteNoise();
+            }
             case 1: {
+                console.info('#createNoise - White Noise - scaled 4');
+                return this._generator.createWhiteNoise(NoiseScaleFactor.FOUR);
+            }
+            case 2: {
                 console.log('#createNoise - Bernoulli Noise');
                 return this._generator.createBernoulliNoise();
             }
-            case 2: {
+            case 3: {
                 console.log('#createNoise - Bernoulli Noise - scaled 4');
                 return this._generator.createBernoulliNoise(0.5, NoiseScaleFactor.FOUR);
             }
-            case 3: {
+            case 4: {
                 console.log('#createNoise - Isolated Black Noise');
                 return this._generator.createBernoulliNoiseIsolated();
             }
-            case 4: {
-                console.log('#createNoise - Isolated Black Noise - scaled 2');
-                return this._generator.createBernoulliNoiseIsolated(0.5, NoiseScaleFactor.TWO);
-            }
             case 5: {
+                console.log('#createNoise - Isolated Black Noise - scaled 4');
+                return this._generator.createBernoulliNoiseIsolated(0.5, NoiseScaleFactor.FOUR);
+            }
+            case 6: {
                 console.log('#createNoise - Isolated Big Black Noise');
                 return this._generator.createBernoulliNoiseIsolatedBig();
             }
-            case 6: {
-                console.log('#createNoise - Isolated Big Black Noise - scaled 2');
-                return this._generator.createBernoulliNoiseIsolatedBig(0.5, NoiseScaleFactor.TWO);
-            }
             case 7: {
+                console.log('#createNoise - Isolated Big Black Noise - scaled 4');
+                return this._generator.createBernoulliNoiseIsolatedBig(0.5, NoiseScaleFactor.FOUR);
+            }
+            case 8: {
                 console.log('#createNoise - Gaussian Noise');
                 return this._generator.createGaussianNoise();
             }
-            case 8: {
+            case 9: {
+                console.log('#createNoise - Gaussian Noise - scaled 4');
+                return this._generator.createGaussianNoise(NoiseScaleFactor.FOUR);
+            }
+            case 10: {
                 console.log('#createNoise - Biased Noise LOWER');
                 return this._generator.createBiasedNoise(BiasType.LOWER);
             }
-            case 9: {
+            case 11: {
+                console.log('#createNoise - Biased Noise LOWER - scaled 4');
+                return this._generator.createBiasedNoise(BiasType.LOWER, NoiseScaleFactor.FOUR);
+            }
+            case 12: {
                 console.log('#createNoise - Biased Noise UPPER');
                 return this._generator.createBiasedNoise(BiasType.UPPER);
             }
-            case 10: {
+            case 13: {
+                console.log('#createNoise - Biased Noise UPPER - scaled 4');
+                return this._generator.createBiasedNoise(BiasType.UPPER, NoiseScaleFactor.FOUR);
+            }
+            case 14: {
                 console.log('#createNoise - Biased Noise CENTER');
                 return this._generator.createBiasedNoise(BiasType.CENTER);
             }
-            case 11: {
+            case 15: {
+                console.log('#createNoise - Biased Noise CENTER - scaled 4');
+                return this._generator.createBiasedNoise(BiasType.CENTER, NoiseScaleFactor.FOUR);
+            }
+            case 16: {
                 console.log('#createNoise - Biased Noise BOUNDS');
                 return this._generator.createBiasedNoise(BiasType.BOUNDS);
             }
-            case 12: {
-                console.log('#createNoise - Biased Noise BOUNDS_BY_CUBIC');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_CUBIC);
-            }
-            case 13: {
-                console.log('#createNoise - Biased Noise BOUNDS_BY_QUINTIC');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_QUINTIC);
-            }
-            case 14: {
-                console.log('#createNoise - Biased Noise BOUNDS_BY_SEPTIC');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_SEPTIC);
-            }
-            case 15: {
-                console.log('#createNoise - Biased Noise BOUNDS_BY_TRIG');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_TRIG);
+            case 17: {
+                console.log('#createNoise - Biased Noise BOUNDS - scaled 4');
+                return this._generator.createBiasedNoise(BiasType.BOUNDS, NoiseScaleFactor.FOUR);
             }
             default: {
-                console.log('#createNoise - White Noise');
+                console.warn('#createNoise - not explicitly handled, using White Noise');
                 return this._generator.createWhiteNoise();
             }
         }

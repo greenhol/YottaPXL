@@ -5,5 +5,5 @@ export interface WorkerSetupBernoulliNoise {
     type: BernoulliNoiseType,
     gridBlueprint: GridWithMarginBlueprint;
     p: number;
-    scale: NoiseScaleFactor;
+    scaleFactor: NoiseScaleFactor;
 }

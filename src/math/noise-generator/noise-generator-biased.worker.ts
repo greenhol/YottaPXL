@@ -1,21 +1,29 @@
+import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { BiasType } from './types';
+import { BiasType, getNoiseScaleFactor, NoiseScaleFactor } from './types';
+import { upscaleNoise } from './utils';
 import { WorkerSetupBiasedNoise } from './worker-setup-biased-noise';
 
 self.onmessage = (e) => {
-    const { type, data } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupBiasedNoise } = e.data;
     if (type === MessageToWorker.START) {
-        const result = calculate(data);
+        const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
+        const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
+        const baseGrid = (scaleFactor == NoiseScaleFactor.NONE) ? grid : new GridWithoutRange(grid.width, grid.height);
+        let result: Float64Array = calculate(baseGrid, data.type);
+        if (scaleFactor != NoiseScaleFactor.NONE) {
+            result = upscaleNoise(baseGrid, result, grid, scaleFactor);
+        }
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(setup: WorkerSetupBiasedNoise): Float64Array {
-    const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
+function calculate(grid: GridReader, type: BiasType): Float64Array {
     const data = new Float64Array(grid.size);
     let biasFunction: () => number;
-    switch (setup.type) {
+    switch (type) {
         case BiasType.LOWER: biasFunction = randomBiasedToLower; break;
         case BiasType.UPPER: biasFunction = randomBiasedToUpper; break;
         case BiasType.CENTER: biasFunction = randomBiasedToCenter; break;

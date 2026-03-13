@@ -1,31 +1,40 @@
+import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
+import { getNoiseScaleFactor, NoiseScaleFactor } from './types';
+import { upscaleNoise } from './utils';
 import { WorkerSetupGaussianNoise } from './worker-setup-gaussian-noise';
 
 self.onmessage = (e) => {
-    const { type, data } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupGaussianNoise } = e.data;
     if (type === MessageToWorker.START) {
-        const result = calculate(data);
+        const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
+        const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
+        const baseGrid = (scaleFactor == NoiseScaleFactor.NONE) ? grid : new GridWithoutRange(grid.width, grid.height);
+        let result: Float64Array = calculate(baseGrid, data.mean, data.range, data.standardDeviation);
+        if (scaleFactor != NoiseScaleFactor.NONE) {
+            result = upscaleNoise(baseGrid, result, grid, scaleFactor);
+        }
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(setup: WorkerSetupGaussianNoise): Float64Array {
-    const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
-    const min = setup.mean - setup.range / 2 * setup.standardDeviation;
-    const max = setup.mean + setup.range / 2 * setup.standardDeviation;
+function calculate(grid: GridReader, mean: number, range: number, standardDeviation: number): Float64Array {
+    const min = mean - range / 2 * standardDeviation;
+    const max = mean + range / 2 * standardDeviation;
     const data = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             let [z0, z1] = boxMullerTransform();
-            z0 = z0 * setup.standardDeviation + setup.mean;
+            z0 = z0 * standardDeviation + mean;
             z0 = Math.max(min, Math.min(max, z0));
-            z1 = z1 * setup.standardDeviation + setup.mean;
+            z1 = z1 * standardDeviation + mean;
             z1 = Math.max(min, Math.min(max, z1));
 
-            data[grid.getIndex(col, row)] = (z0 - min) / setup.range;
+            data[grid.getIndex(col, row)] = (z0 - min) / range;
             col++;
-            data[grid.getIndex(col, row)] = (z1 - min) / setup.range;
+            data[grid.getIndex(col, row)] = (z1 - min) / range;
         }
     }
     return data;

@@ -16,16 +16,14 @@ export class NoiseGenerator {
         this._grid = grid;
     }
 
-    public createWhiteNoise(): Observable<CalculationState<Float64Array>> {
+    public createWhiteNoise(scaleFactor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./noise-generator-white.worker.ts', import.meta.url));
-        const setup: WorkerSetupWhiteNoise = {
-            gridBlueprint: this._grid.withMarginBlueprint,
-        }
+        const setup: WorkerSetupWhiteNoise = { gridBlueprint: this._grid.withMarginBlueprint, scaleFactor: scaleFactor };
         return executeWorker<WorkerSetupWhiteNoise, Float64Array>(worker, setup);
     }
 
-    public createBernoulliNoise(p: number = 0.5, factor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {
-        return this.createBernoulliNoiseOfType(BernoulliNoiseType.DEFAULT, p, factor);
+    public createBernoulliNoise(p: number = 0.5, scaleFactor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {
+        return this.createBernoulliNoiseOfType(BernoulliNoiseType.DEFAULT, p, scaleFactor);
     }
 
     public createBernoulliNoiseIsolated(p: number = 0.5, factor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {
@@ -36,33 +34,40 @@ export class NoiseGenerator {
         return this.createBernoulliNoiseOfType(BernoulliNoiseType.ISOLATED_BIG, p, factor);
     }
 
-    private createBernoulliNoiseOfType(type: BernoulliNoiseType, p: number = 0.5, scale: number): Observable<CalculationState<Float64Array>> {
+    private createBernoulliNoiseOfType(type: BernoulliNoiseType, p: number = 0.5, scaleFactor: NoiseScaleFactor): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./noise-generator-bernoulli.worker.ts', import.meta.url));
         const setup: WorkerSetupBernoulliNoise = {
             type: type,
             gridBlueprint: this._grid.withMarginBlueprint,
             p: p,
-            scale: scale,
+            scaleFactor: scaleFactor,
         }
         return executeWorker<WorkerSetupBernoulliNoise, Float64Array>(worker, setup);
     }
 
-    public createBiasedNoise(type: BiasType): Observable<CalculationState<Float64Array>> {
+    public createBiasedNoise(type: BiasType, scaleFactor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./noise-generator-biased.worker.ts', import.meta.url));
         const setup: WorkerSetupBiasedNoise = {
             type: type,
             gridBlueprint: this._grid.withMarginBlueprint,
+            scaleFactor: scaleFactor,
         }
         return executeWorker<WorkerSetupBiasedNoise, Float64Array>(worker, setup);
     }
 
-    public createGaussianNoise(mean: number = 0, standardDeviation: number = 1, range: number = 6): Observable<CalculationState<Float64Array>> {
+    public createGaussianNoise(
+        scaleFactor: NoiseScaleFactor = NoiseScaleFactor.NONE,
+        mean: number = 0,
+        standardDeviation: number = 1,
+        range: number = 6,
+    ): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./noise-generator-gaussian.worker.ts', import.meta.url));
         const setup: WorkerSetupGaussianNoise = {
             gridBlueprint: this._grid.withMarginBlueprint,
             mean: mean,
             standardDeviation: standardDeviation,
             range: range,
+            scaleFactor: scaleFactor,
         }
         return executeWorker<WorkerSetupGaussianNoise, Float64Array>(worker, setup);
     }

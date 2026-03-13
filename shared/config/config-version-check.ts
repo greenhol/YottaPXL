@@ -1,7 +1,10 @@
 export function configVersionCheck(postfix: string, appVersion: string) {
     const appVersionKey = 'app-version-' + postfix;
     const storedVersion = localStorage.getItem(appVersionKey);
-    if (storedVersion !== appVersion) {
+    if (storedVersion == null) {
+        console.info(`#configVersionCheck - storedVersion=${storedVersion} is null`);
+        localStorage.setItem(appVersionKey, appVersion);
+    } else if (storedVersion !== appVersion) {
         console.info(`#configVersionCheck - storedVersion=${storedVersion} does not match appVersion=${appVersion}`);
         localStorage.clear();
         caches.keys().then((names) => {

@@ -9,12 +9,19 @@ export function configVersionCheck() {
         localStorage.setItem(appVersionKey, APP_VERSION);
     } else if (storedVersion !== APP_VERSION) {
         console.info(`#configVersionCheck - storedVersion=${storedVersion} does not match appVersion=${APP_VERSION}`);
-        localStorage.clear();
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes(APP_NAME)) {
+                localStorage.removeItem(key);
+            }
+        });
+        Object.keys(sessionStorage).forEach(key => {
+            if (key.includes(APP_NAME)) {
+                sessionStorage.removeItem(key);
+            }
+        });
         caches.keys().then((names) => {
             names.forEach((name) => {
-                if (name.includes(APP_NAME)) {
-                    caches.delete(name);
-                }
+                caches.delete(name);
             });
         });
         localStorage.setItem(appVersionKey, APP_VERSION);

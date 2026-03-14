@@ -1,3 +1,5 @@
+declare const APP_NAME: string;
+
 export class ModuleConfig<T> {
     data: T;
     private _initialConfig: T;
@@ -7,11 +9,11 @@ export class ModuleConfig<T> {
 
     constructor(
         initialConfig: T,
-        storageKey: string = '',
+        storageKey: string,
         storageType: 'local' | 'session' = 'local',
     ) {
         this._initialConfig = initialConfig;
-        this._storageKey = storageKey;
+        this._storageKey = APP_NAME + '_' + storageKey;
         this._persistable = !!storageKey;
         this._storageType = storageType;
         
@@ -45,7 +47,7 @@ export class ModuleConfig<T> {
 
     save(): void {
         if (!this._persistable) {
-            console.log(`Configuration ${this._storageKey} not persistable`);
+            console.log(`#save - Configuration ${this._storageKey} not persistable`);
         } else {
             const storageObject = this._storageType === 'local' ? localStorage : sessionStorage;
             storageObject.setItem(this._storageKey, JSON.stringify(this.data));
@@ -62,14 +64,14 @@ export class ModuleConfig<T> {
             if (data) {
                 try {
                     this.data = JSON.parse(data);
-                    console.log(`Configuration ${this._storageKey} loaded from ${this._storageType}`);
+                    console.log(`#load - Configuration ${this._storageKey} loaded from ${this._storageType}`);
                     return true;
                 } catch (e) {
-                    console.error('Error loading configuration ${this._storageKey}:', e);
+                    console.error('#load - Error loading configuration ${this._storageKey}:', e);
                     return false;
                 }
             } else {
-                console.log(`No Configuration ${this._storageKey} found in ${this._storageType}`);
+                console.log(`#load - No Configuration ${this._storageKey} found in ${this._storageType}`);
                 return false;
             }
         }
@@ -78,15 +80,15 @@ export class ModuleConfig<T> {
     clear(): void {
         const storageObject = this._storageType === 'local' ? localStorage : sessionStorage;
         storageObject.removeItem(this._storageKey);
-        console.log(`Configuration ${this._storageKey} cleared from ${this._storageType}`);
+        console.log(`#clear - Configuration ${this._storageKey} cleared from ${this._storageType}`);
     }
 
     print(): void {
-        console.log('Current configuration ${this._storageKey}:', this.data);
+        console.log('#print - Current configuration ${this._storageKey}:', this.data);
     }
 
     reset(): void {
         this.data = { ...this._initialConfig };
-        console.log(`Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
+        console.log(`#reset - Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
     }
 }

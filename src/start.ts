@@ -16,8 +16,8 @@ import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay'
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
 
-declare const APP_VERSION: string;
 declare const APP_NAME: string;
+declare const APP_VERSION: string;
 
 interface MainConfig {
     currentPlaneId: PlaneId,
@@ -57,7 +57,7 @@ export class Start {
 
     constructor() {
         console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
-        configVersionCheck(APP_NAME, APP_VERSION);
+        configVersionCheck();
         this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 'MANDELBROT_ITERATIONS' }, 'mainConfig' + APP_NAME);
 
         const [width, height] = this._urlHandler.getResolution();

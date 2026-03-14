@@ -9,7 +9,7 @@ export class ModuleConfig<T> {
 
     constructor(
         initialConfig: T,
-        storageKey: string,
+        storageKey: string = '',
         storageType: 'local' | 'session' = 'local',
     ) {
         this._initialConfig = initialConfig;

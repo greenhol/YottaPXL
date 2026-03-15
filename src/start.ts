@@ -1,4 +1,4 @@
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { configVersionCheck, ModuleConfig } from '../shared';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
@@ -289,9 +289,7 @@ export class Start {
             link.download = filename;
             link.href = dataURL;
             link.click();
-            setTimeout(() => {
-                link.remove();
-            }, 100);
+            timer(100).subscribe(() => link.remove());
         });
     }
 

@@ -1,4 +1,4 @@
-import { BehaviorSubject, filter, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, filter, Observable, Subject, takeUntil, timer } from 'rxjs';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
 
@@ -55,6 +55,8 @@ export class InteractionOverlay {
     private _validRect: Rectangles | null = null;
     private _frozen: boolean = false;
     private _overlayRect: DOMRect;
+
+    private _longPressCancel$ = new Subject<void>();
 
     constructor(overlay: HTMLElement, grid: Grid) {
         this._overlay = overlay;
@@ -127,11 +129,11 @@ export class InteractionOverlay {
     }
 
     private onTouchStart(e: TouchEvent) {
-        if (this.processIncomingTouchEvents(e)) { e.preventDefault() }
+        if (this.processIncomingTouchEvents(e, true)) { e.preventDefault() }
     }
 
     private onTouchMove(e: TouchEvent) {
-        if (this.processIncomingTouchEvents(e)) { e.preventDefault() }
+        if (this.processIncomingTouchEvents(e, false)) { e.preventDefault() }
     }
 
     private onTouchEnd(e: TouchEvent) {
@@ -140,14 +142,21 @@ export class InteractionOverlay {
             this.emitSelection(selection);
             e.preventDefault();
         } else if (this._p1 != null && this._p2 == null) {
+            this.cancelLongPress();
             return;
         }
         this.resetInteraction();
     }
 
-    private processIncomingTouchEvents(e: TouchEvent): boolean {
-        if (e.touches.length == 1) { return false }
-        else if (e.touches.length == 2) { if (!this.evaluateTouchRect(e)) this.resetInteraction() }
+    private processIncomingTouchEvents(e: TouchEvent, start: boolean): boolean {
+        if (e.touches.length == 1) {
+            if (start) this.detectLongPress({ x: e.touches[0].pageX, y: e.touches[0].pageY });
+            return false;
+        }
+        else if (e.touches.length == 2) {
+            if (start) this.cancelLongPress();
+            if (!this.evaluateTouchRect(e)) this.resetInteraction();
+        }
         else if (e.touches.length > 2) { this.resetInteraction() }
         return true;
     }
@@ -179,6 +188,7 @@ export class InteractionOverlay {
 
     private onMouseDown(e: MouseEvent) {
         this._p1 = { x: e.offsetX, y: e.offsetY };
+        this.detectLongPress();
     }
 
     private onMouseMove(e: MouseEvent) {
@@ -187,6 +197,7 @@ export class InteractionOverlay {
             return;
         }
         this._p2 = { x: e.offsetX, y: e.offsetY };
+        this.checkForLongPressCancel();
         this.evaluateRect(this._p1, this._p2);
     }
 
@@ -195,6 +206,7 @@ export class InteractionOverlay {
             const selection = this.getMathCoordinatesFromRectangle(this._validRect.norm);
             this.emitSelection(selection);
         } else if (this._p1 != null && this._p2 == null) {
+            this.cancelLongPress();
             this.emitFromPosition(e.offsetX, e.offsetY, 1);
             return;
         }
@@ -203,11 +215,6 @@ export class InteractionOverlay {
 
     private onMouseLeave() {
         this.resetInteraction();
-    }
-
-    private resetInteraction() {
-        this.resetAllSelections();
-        this.emitDisplayableCoordinates();
     }
 
     private onMouseWheel(e: WheelEvent) {
@@ -220,6 +227,33 @@ export class InteractionOverlay {
         this.emitFromPosition(e.offsetX, e.offsetY, factor);
     }
 
+    private detectLongPress(p1: Point | null = null) {
+        const point = (p1 == null) ? structuredClone(this._p1) : p1;
+        timer(350).pipe(
+            takeUntil(this._longPressCancel$)
+        ).subscribe(() => {
+            if (point != null) this.emitFromPosition(point.x, point.y, 4);
+            this.resetInteraction();
+        });
+    }
+
+    private checkForLongPressCancel() {
+        if (this._p1 != null && this._p2 != null) {
+            const distance = Math.sqrt(Math.pow(this._p1.x - this._p2.x, 2) + Math.pow(this._p1.y - this._p2.y, 2));
+            if (distance > 7) this.cancelLongPress();
+        }
+    }
+
+    private cancelLongPress() {
+        this._longPressCancel$.next();
+    }
+
+    private resetInteraction() {
+        this.cancelLongPress();
+        this.resetAllSelections();
+        this.emitDisplayableCoordinates();
+    }
+
     private emitFromPosition(x: number, y: number, factor: number) {
         this.freeze();
         const newWidth = this._grid.width * factor;
@@ -230,11 +264,11 @@ export class InteractionOverlay {
 
         if (this._validRect != null) {
             const selection = this.getMathCoordinatesFromRectangle(this._validRect.norm);
-            setTimeout(() => {
+            timer(250).subscribe(() => {
                 this.unFreeze();
                 this.resetAllSelections();
                 this.emitSelection(selection);
-            }, 250);
+            });
         }
     }
 

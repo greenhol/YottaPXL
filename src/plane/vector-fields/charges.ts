@@ -48,7 +48,7 @@ export class Charges extends Plane {
             { x: 3, y: -1, charge: 5 },
             { x: 5.5, y: -0.5, charge: -10 },
             { x: 7, y: 2, charge: 3 },
-        ], true);
+        ]);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2') } });
         const field = await extractData(fieldCalculation$, 'charges field');
 
@@ -66,7 +66,7 @@ export class Charges extends Plane {
         this.updateImage(this.createSourceImage(sourceData));
 
         // LIC
-        const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
+        const calculator: LicCalculator = new LicCalculator(sourceData, this.grid, true);
         const calculation$ = calculator.calculate(this.config.data.licLength);
         calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2') } });
         const result = await lastValueFrom(calculation$);

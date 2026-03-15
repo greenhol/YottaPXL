@@ -17,7 +17,7 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
     const targetGrid = Grid.copy(setup.targetGridBlueprint);
     const sourceGrid = GridWithMargin.copyWithMargin(setup.sourceGridBlueprint);
     const image = setup.image;
-    const field = new VectorFieldReader(sourceGrid, setup.field);
+    const field = new VectorFieldReader(sourceGrid, setup.field, setup.orthogonal);
 
     let timeStamp = Date.now();
     const targetData = new Float64Array(targetGrid.size);

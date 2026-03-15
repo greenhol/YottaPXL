@@ -13,14 +13,13 @@ self.onmessage = (e) => {
 
 function calculate(setup: WorkerSetupChargeField): Float64Array {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
-    const compute = setup.potential ? computePotentialVector : computeVector;
     const data = setup.data;
     let cnt = 0;
 
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
-            const [vX, vY, magnitude] = compute(setup.charges, x, y);
+            const [vX, vY, magnitude] = computeVector(setup.charges, x, y);
             const index = grid.getIndex(col, row) * 3;
             data[index] = vX;
             data[index + 1] = vY;
@@ -54,9 +53,4 @@ function computeVector(charges: Charge[], x: number, y: number): [number, number
         vY / value,
         magnitude,
     ];
-}
-
-function computePotentialVector(charges: Charge[], x: number, y: number): [number, number, number] {
-    const [vX, vY, magnitude] = computeVector(charges, x, y);
-    return [-vY, vX, magnitude];
 }

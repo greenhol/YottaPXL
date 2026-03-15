@@ -15,12 +15,14 @@ export class LicCalculator {
 
     private _image: Float64Array;
     private _fieldData: Float64Array;
+    private _orthogonal: boolean;
     private _sourceGrid: GridWithMargin;
     private _targetGrid: Grid;
 
-    constructor(sourceData: SourceData, targetGrid: Grid) {
+    constructor(sourceData: SourceData, targetGrid: Grid, orthogonal: boolean = false) {
         this._image = sourceData.image;
         this._fieldData = sourceData.field;
+        this._orthogonal = orthogonal;
         this._sourceGrid = sourceData.grid;
         this._targetGrid = targetGrid;
     }
@@ -31,6 +33,7 @@ export class LicCalculator {
             sourceGridBlueprint: this._sourceGrid.withMarginBlueprint,
             image: this._image,
             field: this._fieldData,
+            orthogonal: this._orthogonal,
             targetGridBlueprint: this._targetGrid.blueprint,
             maxLength: maxLength,
             minLength: minLength,

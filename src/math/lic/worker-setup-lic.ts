@@ -5,6 +5,7 @@ export interface WorkerSetupLIC {
     sourceGridBlueprint: GridWithMarginBlueprint;
     image: Float64Array,
     field: Float64Array;
+    orthogonal: boolean;
     targetGridBlueprint: GridBlueprint;
     maxLength: number;
     minLength: number;

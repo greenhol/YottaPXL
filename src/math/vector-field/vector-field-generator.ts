@@ -18,13 +18,12 @@ export class VectorFieldGenerator {
         this._data = new Float64Array(this._grid.size * 3);
     }
 
-    public createChargeField(charges: Charge[], potential: boolean): Observable<CalculationState<Float64Array>> {
+    public createChargeField(charges: Charge[]): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./charge-field/charge-field.worker.ts', import.meta.url));
         const setup: WorkerSetupChargeField = {
             gridBlueprint: this._grid.withMarginBlueprint,
             data: this._data,
             charges: charges,
-            potential: potential,
         }
         return executeWorker<WorkerSetupChargeField, Float64Array>(worker, setup, [setup.data.buffer]);
     }

@@ -56,6 +56,7 @@ export class InteractionOverlay {
     private _frozen: boolean = false;
     private _overlayRect: DOMRect;
 
+    private _longPressWindowOffset: number | null = null;
     private _longPressCancel$ = new Subject<void>();
 
     constructor(overlay: HTMLElement, grid: Grid) {
@@ -126,6 +127,7 @@ export class InteractionOverlay {
         this._overlay.addEventListener('touchstart', (e) => { if (!this._frozen) this.onTouchStart(e) });
         this._overlay.addEventListener('touchmove', (e) => { if (!this._frozen) this.onTouchMove(e) });
         this._overlay.addEventListener('touchend', (e) => { if (!this._frozen) this.onTouchEnd(e) });
+        window.addEventListener('scroll', () => { this.onWindowScroll() })
     }
 
     private onTouchStart(e: TouchEvent) {
@@ -227,9 +229,17 @@ export class InteractionOverlay {
         this.emitFromPosition(e.offsetX, e.offsetY, factor);
     }
 
+    private onWindowScroll() {
+        if (this._longPressWindowOffset != null) {
+            const distance = Math.abs(this._longPressWindowOffset - window.screenY);
+            if (distance > 5) this.cancelLongPress();
+        }
+    }
+
     private detectLongPress(p1: Point | null = null) {
         const point = (p1 == null) ? structuredClone(this._p1) : p1;
-        timer(350).pipe(
+        this.setWaitingForLongPress();
+        timer(500).pipe(
             takeUntil(this._longPressCancel$)
         ).subscribe(() => {
             if (point != null) this.emitFromPosition(point.x, point.y, 4);
@@ -244,7 +254,16 @@ export class InteractionOverlay {
         }
     }
 
+    private setWaitingForLongPress() {
+        this._longPressWindowOffset = window.scrollY;
+    }
+
+    private resetWaitingForLongPress() {
+        this._longPressWindowOffset = null;
+    }
+
     private cancelLongPress() {
+        this.resetWaitingForLongPress();
         this._longPressCancel$.next();
     }
 

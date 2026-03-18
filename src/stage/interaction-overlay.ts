@@ -56,7 +56,6 @@ export class InteractionOverlay {
     private _frozen: boolean = false;
     private _overlayRect: DOMRect;
 
-    private _longPressWindowOffset: number | null = null;
     private _longPressCancel$ = new Subject<void>();
 
     constructor(overlay: HTMLElement, grid: Grid) {
@@ -230,15 +229,11 @@ export class InteractionOverlay {
     }
 
     private onWindowScroll() {
-        if (this._longPressWindowOffset != null) {
-            const distance = Math.abs(this._longPressWindowOffset - window.screenY);
-            if (distance > 5) this.cancelLongPress();
-        }
+        this._longPressCancel$.next();
     }
 
     private detectLongPress(p1: Point | null = null) {
         const point = (p1 == null) ? structuredClone(this._p1) : p1;
-        this.setWaitingForLongPress();
         timer(500).pipe(
             takeUntil(this._longPressCancel$)
         ).subscribe(() => {
@@ -254,16 +249,7 @@ export class InteractionOverlay {
         }
     }
 
-    private setWaitingForLongPress() {
-        this._longPressWindowOffset = window.scrollY;
-    }
-
-    private resetWaitingForLongPress() {
-        this._longPressWindowOffset = null;
-    }
-
     private cancelLongPress() {
-        this.resetWaitingForLongPress();
         this._longPressCancel$.next();
     }
 

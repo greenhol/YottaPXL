@@ -11,7 +11,6 @@ import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 
 interface WeatherConfig extends PlaneConfig {
-    gridRange: GridRange,
     licLength: number,
 }
 

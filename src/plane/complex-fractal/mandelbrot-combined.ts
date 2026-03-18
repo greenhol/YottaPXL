@@ -8,7 +8,6 @@ import { BLACK, GREEN, WHITE } from './../../utils/color';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedConfig extends PlaneConfig {
-    gridRange: GridRange,
     maxIterations: number,
     escapeValue: number,
 }

@@ -14,7 +14,6 @@ import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotVectorConfig extends PlaneConfig {
-    gridRange: GridRange,
     maxIterations: number,
     escapeValue: number,
     licLength: number,

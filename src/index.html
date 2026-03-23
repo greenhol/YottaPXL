@@ -22,6 +22,9 @@
             </div>
             <select id="resolutionSelect" name="resolutions"></select>
             <div id="exportButton" class="button">Save Image</div>
+            <select id="planeSelect" name="plane"></select>
+            <div id="configButton" class="button">Settings</div>
+            <div id="resetConfigButton" class="button">Reset</div>
         </div>
         <div id="canvasArea">
             <canvas id="canvas"></canvas>
@@ -35,13 +38,10 @@
             <div id="setRangeArea">
                 <input id="rangeInput" type="string" placeholder="xMin_xMax_yCenter" />
                 <div id="setRangeButton" class="button">Set</div>
-                <div id="resetRangeButton" class="button">Reset</div>
             </div>
         </div>
-        <div id="planeSelectArea">
-            <select id="planeSelect" name="plane"></select>
-        </div>
     </div>
+    <div id="overlay-container"></div>
     <script defer="defer" src="bundle.js?v=<%= htmlWebpackPlugin.options.version %>"></script>
 </body>
 

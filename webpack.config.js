@@ -42,6 +42,7 @@ module.exports = {
             patterns: [
                 { from: 'src/favicon.ico', to: 'favicon.ico' },
                 { from: 'src/index.css', to: 'index.css' },
+                { from: 'shared/config/ui/config-overlay.html', to: 'config-overlay.html' },
             ],
         }),
     ],

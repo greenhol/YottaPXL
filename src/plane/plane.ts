@@ -32,12 +32,14 @@ export abstract class Plane implements Initializable {
 
     public abstract refresh(): void;
 
-    public updateGridRange(range: GridRange | null) {
-        if (range != null) {
-            this.config.data.gridRange = range;
-        } else {
-            this.config.reset();
-        }
+    public updateGridRange(range: GridRange) {
+        this.config.data.gridRange = range;
+        this.grid.updateRange(this.config.data.gridRange);
+        this.refresh();
+    }
+
+    public resetConfiguration() {
+        this.config.reset();
         this.grid.updateRange(this.config.data.gridRange);
         this.refresh();
     }

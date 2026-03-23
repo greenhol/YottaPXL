@@ -1,5 +1,5 @@
 import { Subscription, timer } from 'rxjs';
-import { configVersionCheck, ModuleConfig } from '../shared';
+import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
@@ -31,6 +31,7 @@ export class Start {
     private _stage: Stage;
     private _interactionOverlay: InteractionOverlay;
     private _plane: Plane | null = null;
+    private _configOverlay: ConfigOverlay;
 
     private _urlHandler = new UrlHandler();
 
@@ -38,6 +39,7 @@ export class Start {
     private _headerArea: HTMLDivElement | null = document.getElementById('header') as HTMLDivElement;
     private _resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
     private _exportButton = document.getElementById('exportButton') as HTMLDivElement;
+    private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
     // Canvas Area
     private _mainDiv = document.getElementById('main') as HTMLDivElement;
     private _htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -47,9 +49,6 @@ export class Start {
     private _mathCoordsArea = document.getElementById('mathCoordsArea') as HTMLSpanElement;
     private _pixelCoordsArea = document.getElementById('pixelCoordsArea') as HTMLSpanElement;
     private _rangeInput = document.getElementById('rangeInput') as HTMLInputElement;
-    // Plane Area
-    private _planeSelectArea = document.getElementById('planeSelectArea') as HTMLDivElement;
-    private _planeSelect = document.getElementById('planeSelect') as HTMLSelectElement;
 
     // subscriptions
     private _busySubscription: Subscription | null = null;
@@ -92,6 +91,7 @@ export class Start {
         this.addExportButtonClickListener();
         this.addSetRangeButtonClickListener();
         this.handlePhysicalKeyboardEvents();
+        this.addConfigurationOverlay();
     }
 
     private switchPlane(planeId: PlaneId) {
@@ -180,7 +180,6 @@ export class Start {
         this._htmlSvg.setAttribute('height', `${height}px`);
         this.setAreaWidth(this._headerArea, width);
         this.setAreaWidth(this._rangeArea, width);
-        this.setAreaWidth(this._planeSelectArea, width);
         this._mainDiv.style.setProperty('visibility', `visible`);
     }
 
@@ -225,18 +224,20 @@ export class Start {
                     const progressStep = document.getElementById('progressStep') as HTMLDivElement;
                     const resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
                     const exportButton = document.getElementById('exportButton') as HTMLDivElement;
+                    const configButton = document.getElementById('configButton') as HTMLDivElement;
+                    const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
                     if (progress !== null) {
                         busyIndicator.className = 'busyIndicator--busy';
                         progressBar.classList.remove('gone');
-                        progressIndicator.style.width = `${progress.percentage * 2.92}px`;
+                        progressIndicator.style.width = `${progress.percentage * 3.92}px`;
                         progressStep.textContent = progress.step;
                         resolutionSelect.classList.add('gone');
                         exportButton.classList.add('gone');
+                        configButton.classList.add('gone');
+                        resetConfigButton.classList.add('gone');
+                        if (this._planeSelect != null) this._planeSelect.disabled = true;
                         this._htmlSvg.classList.add('gone');
-                        if (progress.percentage > 0 && progress.percentage < 100) {
-                            this._rangeArea?.classList.add('invisible');
-                            this._planeSelectArea?.classList.add('invisible');
-                        }
+                        this._rangeArea?.classList.add('invisible');
                     } else {
                         busyIndicator.className = 'busyIndicator--idle';
                         progressBar.classList.add('gone');
@@ -244,9 +245,11 @@ export class Start {
                         progressStep.textContent = '';
                         resolutionSelect.classList.remove('gone');
                         exportButton.classList.remove('gone');
+                        configButton.classList.remove('gone');
+                        resetConfigButton.classList.remove('gone');
+                        if (this._planeSelect != null) this._planeSelect.disabled = false;
                         this._htmlSvg.classList.remove('gone');
                         this._rangeArea?.classList.remove('invisible');
-                        this._planeSelectArea?.classList.remove('invisible');
                     }
                 }
             });
@@ -302,11 +305,15 @@ export class Start {
                 this._interactionOverlay.selectRange(newRange);
             }
         });
+    }
 
-        const resetRangeButton = document.getElementById('resetRangeButton') as HTMLDivElement;
-        resetRangeButton?.addEventListener('click', (e: PointerEvent) => {
+    private addConfigurationOverlay() {
+        this._configOverlay = new ConfigOverlay('overlay-container', 'configButton');
+
+        const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
+        resetConfigButton?.addEventListener('click', (e: PointerEvent) => {
             if (this._plane != null) {
-                this._plane.updateGridRange(null);
+                this._plane.resetConfiguration();
             } else {
                 console.error('#subscribeToBusyState - unexpected _plane is null');
             }
@@ -317,6 +324,7 @@ export class Start {
         document.addEventListener(
             "keydown",
             (event) => {
+                if (this._configOverlay.isOpen) return;
                 const activeElement = document.activeElement;
                 if (activeElement === null || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'SELECT')) {
                     this.handleKeyPress(event.key);
@@ -332,7 +340,6 @@ export class Start {
             case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN) } break;
             case 'ArrowLeft': { this._interactionOverlay.shiftRange(ShiftDirection.LEFT) } break;
             case 'ArrowRight': { this._interactionOverlay.shiftRange(ShiftDirection.RIGHT) } break;
-            case 'Escape': { this._plane?.updateGridRange(null) } break;
         }
     }
 }

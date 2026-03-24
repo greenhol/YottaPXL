@@ -82,8 +82,6 @@ export class Start {
 
         this._stage = new Stage(this._htmlCanvas, this._grid);
 
-        this.switchPlane(initialPlane);
-
         this.subscribeToCoordinates();
         this.subscribeToRange();
         this.addResulutionsDropdownEventListener();
@@ -92,6 +90,7 @@ export class Start {
         this.addSetRangeButtonClickListener();
         this.handlePhysicalKeyboardEvents();
         this.addConfigurationOverlay();
+        this.switchPlane(initialPlane);
     }
 
     private switchPlane(planeId: PlaneId) {
@@ -131,6 +130,7 @@ export class Start {
         this.subscribeToSelection();
         if (this._plane != null) {
             this._stage.setPlane(this._plane);
+            this._configOverlay.setConfig(this._plane.config);
         } else {
             console.error('Plane not initialized');
         }

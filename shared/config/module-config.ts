@@ -1,3 +1,5 @@
+import { ConfigUiField } from './ui/config-ui-field';
+
 declare const APP_NAME: string;
 
 export class ModuleConfig<T> {
@@ -6,46 +8,31 @@ export class ModuleConfig<T> {
     private _storageKey: string;
     private _persistable: boolean;
     private _storageType: 'local' | 'session';
+    private _configUiSchema: ConfigUiField<any>[];
 
     constructor(
         initialConfig: T,
         storageKey: string = '',
+        configUiSchema: ConfigUiField<any>[] = [],
         storageType: 'local' | 'session' = 'local',
     ) {
         this._initialConfig = initialConfig;
         this._storageKey = APP_NAME + '_' + storageKey;
         this._persistable = !!storageKey;
+        this._configUiSchema = configUiSchema;
         this._storageType = storageType;
         
         if (!this.load()) {
             this.data = { ...this._initialConfig };
         }
-        this.init();
+        this.appendToWindow();
     }
 
-    private init() {
-        // @ts-ignore
-        if (window.appConfig == null) {
-            // @ts-ignore
-            window.appConfig = [];
-        }
-        // @ts-ignore
-        if (window.appConfigCtrl == null) {
-            // @ts-ignore
-            window.appConfigCtrl = [];
-        }
-
-        // @ts-ignore
-        window.appConfig[this._storageKey] = this.data;
-        // @ts-ignore
-        window.appConfigCtrl[this._storageKey] = this;
-
-        window.addEventListener('beforeunload', () => {
-            this.save();
-        });
+    public get configUiSchema() {
+        return this._configUiSchema;
     }
 
-    save(): void {
+    public save(): void {
         if (!this._persistable) {
             console.log(`#save - Configuration ${this._storageKey} not persistable`);
         } else {
@@ -55,7 +42,7 @@ export class ModuleConfig<T> {
         }
     }
 
-    load(): boolean {
+    public load(): boolean {
         if (!this._persistable) {
             return false;
         } else {
@@ -77,18 +64,40 @@ export class ModuleConfig<T> {
         }
     }
 
-    clear(): void {
+    public clear(): void {
         const storageObject = this._storageType === 'local' ? localStorage : sessionStorage;
         storageObject.removeItem(this._storageKey);
         console.log(`#clear - Configuration ${this._storageKey} cleared from ${this._storageType}`);
     }
 
-    print(): void {
+    public print(): void {
         console.log('#print - Current configuration ${this._storageKey}:', this.data);
     }
 
-    reset(): void {
+    public reset(): void {
         this.data = { ...this._initialConfig };
         console.log(`#reset - Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
+    }
+
+    private appendToWindow() {
+        // @ts-ignore
+        if (window.appConfig == null) {
+            // @ts-ignore
+            window.appConfig = [];
+        }
+        // @ts-ignore
+        if (window.appConfigCtrl == null) {
+            // @ts-ignore
+            window.appConfigCtrl = [];
+        }
+
+        // @ts-ignore
+        window.appConfig[this._storageKey] = this.data;
+        // @ts-ignore
+        window.appConfigCtrl[this._storageKey] = this;
+
+        window.addEventListener('beforeunload', () => {
+            this.save();
+        });
     }
 }

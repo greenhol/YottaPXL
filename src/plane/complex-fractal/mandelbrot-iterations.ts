@@ -1,5 +1,5 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
+import { InitializeAfterConstruct, ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger } from '../../../shared';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
@@ -22,8 +22,16 @@ export class MandelbrotIterations extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
+            testInteger: 5,
+            testFloat: 5.5,
+            testBool: true,
         },
         'mandelbrotIterationsConfig',
+        [
+            new UiFieldInteger('testInteger', 5, 'Test Integer', 'Integer Just for testing purpose', 3, 13),
+            new UiFieldFloat('testFloat', 5.5, 'Test Float', 'Float Just for testing purpose', -3, 16),
+            new UiFieldBool('testInteger', true, 'Test Bool', 'Bool Just for testing purpose'),
+        ]
     );
 
     override init(): void {

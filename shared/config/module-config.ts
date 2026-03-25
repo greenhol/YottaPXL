@@ -3,7 +3,7 @@ import { ConfigUiField } from './ui/config-ui-field';
 declare const APP_NAME: string;
 
 export class ModuleConfig<T> {
-    data: T;
+    public data: T;
     private _initialConfig: T;
     private _storageKey: string;
     private _persistable: boolean;
@@ -21,9 +21,9 @@ export class ModuleConfig<T> {
         this._persistable = !!storageKey;
         this._configUiSchema = configUiSchema;
         this._storageType = storageType;
-        
+
         if (!this.load()) {
-            this.data = { ...this._initialConfig };
+            this.updateData({ ...this._initialConfig });
         }
         this.appendToWindow();
     }
@@ -50,7 +50,7 @@ export class ModuleConfig<T> {
             const data = storageObject.getItem(this._storageKey);
             if (data) {
                 try {
-                    this.data = JSON.parse(data);
+                    this.updateData(JSON.parse(data));
                     console.log(`#load - Configuration ${this._storageKey} loaded from ${this._storageType}`);
                     return true;
                 } catch (e) {
@@ -75,7 +75,7 @@ export class ModuleConfig<T> {
     }
 
     public reset(): void {
-        this.data = { ...this._initialConfig };
+        this.updateData({ ...this._initialConfig });
         console.log(`#reset - Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
     }
 
@@ -99,5 +99,10 @@ export class ModuleConfig<T> {
         window.addEventListener('beforeunload', () => {
             this.save();
         });
+    }
+
+    private updateData(data: T) {
+        this.data = data;
+        this._configUiSchema.forEach((field) => field.loadFromData(this.data));
     }
 }

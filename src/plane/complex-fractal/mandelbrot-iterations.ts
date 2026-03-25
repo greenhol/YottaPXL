@@ -1,5 +1,5 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct, ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger } from '../../../shared';
+import { InitializeAfterConstruct, ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldStringEnum } from '../../../shared';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { BLACK, WHITE } from '../../utils/color';
@@ -9,6 +9,12 @@ import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
+}
+
+enum MyStringEnum {
+    BLA = 'Bla',
+    BLUB = 'Blub',
+    HUHU = 'Huhu',
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -25,12 +31,15 @@ export class MandelbrotIterations extends Plane {
             testInteger: 5,
             testFloat: 5.5,
             testBool: true,
+            testEnum: MyStringEnum.BLUB,
         },
         'mandelbrotIterationsConfig',
         [
-            new UiFieldInteger('testInteger', 5, 'Test Integer', 'Integer Just for testing purpose', 3, 13),
-            new UiFieldFloat('testFloat', 5.5, 'Test Float', 'Float Just for testing purpose', -3, 16),
-            new UiFieldBool('testInteger', true, 'Test Bool', 'Bool Just for testing purpose'),
+            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
+            new UiFieldInteger('testInteger', 'Test Integer', 'Integer Just for testing purpose', 3, 13),
+            new UiFieldFloat('testFloat', 'Test Float', 'Float Just for testing purpose', -3, 16),
+            new UiFieldBool('testBool', 'Test Bool', 'Bool Just for testing purpose'),
+            new UiFieldStringEnum('testEnum', MyStringEnum, 'Test Enum', 'Enum Just for testing purpose'),
         ]
     );
 

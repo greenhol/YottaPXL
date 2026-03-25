@@ -1,36 +1,28 @@
-import { Subject } from 'rxjs';
-import { Initializable, InitializeAfterConstruct } from '../../initializable';
+import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
 export type UiFieldType = 'integer' | 'float' | 'boolean' | 'enum';
 
-export abstract class ConfigUiField<T> implements Initializable {
+export abstract class ConfigUiField<T> {
 
     private _id: string;
     private _path: string;
     private _type: UiFieldType;
-    private _initValue: T;
     private _label: string;
     private _description: string;
-    private _value$ = new Subject<T>();
+    private _value$ = new BehaviorSubject<T | null>(null);
 
     constructor(
         path: string,
         type: UiFieldType,
-        value: T,
         label: string,
         description: string,
     ) {
         this._id = idGenerator.newId(type);
         this._path = path;
         this._type = type;
-        this._initValue = value;
         this._label = (label != null) ? label : path;
         this._description = description;
-    }
-
-    init(): void {
-        this._value$.next(this.validate(this._initValue));
     }
 
     public get id() {
@@ -45,8 +37,12 @@ export abstract class ConfigUiField<T> implements Initializable {
         return this._type;
     }
 
-    public set value(v: T) {
+    public set value(v: string) {
         this._value$.next(this.validate(v));
+    }
+
+    public get value$() {
+        return this._value$;
     }
 
     public get label() {
@@ -57,12 +53,43 @@ export abstract class ConfigUiField<T> implements Initializable {
         return this._description;
     }
 
+    public loadFromData(data: any) {
+        const { parent, key } = this.traverseToParent(data, this._path);
+        if (parent[key] === undefined) {
+            throw new Error(`Property ${key} does not exist in the object.`);
+        }
+        this.value = parent[key].toString();
+    }
+
+    public saveToData(data: any) {
+        const { parent, key } = this.traverseToParent(data, this._path);
+        if (parent[key] === undefined) {
+            throw new Error(`Property ${key} does not exist in the object.`);
+        }
+        parent[key] = this._value$.value;
+    }
+
     abstract fullDescription: string;
 
-    abstract validate(v: T): T
+    abstract validate(v: string): T
+
+    private traverseToParent(data: any, path: string) {
+        const parts = path.split('.');
+        let current = data;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i];
+            if (current[part] === undefined) {
+                throw new Error(`Path ${path} does not exist in the object.`);
+            }
+            current = current[part];
+        }
+
+        const lastPart = parts[parts.length - 1];
+        return { parent: current, key: lastPart };
+    }
 }
 
-@InitializeAfterConstruct()
 export class UiFieldInteger extends ConfigUiField<number> {
 
     private _min: number;
@@ -70,29 +97,27 @@ export class UiFieldInteger extends ConfigUiField<number> {
 
     constructor(
         path: string,
-        value: number,
         label: string,
         description: string,
         min: number = Number.MIN_SAFE_INTEGER,
         max: number = Number.MAX_SAFE_INTEGER,
     ) {
-        super(path, 'float', value, label, description);
+        super(path, 'integer', label, description);
         this._min = min;
         this._max = max;
         if (this._max <= this._min) throw Error(`min and max values invalid: min=${min}, max=${max}`);
     }
 
     override get fullDescription() {
-        return `${this.description} (Integer, Range ${this._min} -> ${this._max})`;
+        return `Int ${this._min}..${this._max}: ${this.description}`;
     }
 
-    override validate(v: number): number {
-        const asInteger = Math.round(v);
+    override validate(v: string): number {
+        const asInteger = parseInt(v);
         return Math.min(Math.max(asInteger, this._min), this._max);
     }
 }
 
-@InitializeAfterConstruct()
 export class UiFieldFloat extends ConfigUiField<number> {
 
     private _min: number;
@@ -100,74 +125,76 @@ export class UiFieldFloat extends ConfigUiField<number> {
 
     constructor(
         path: string,
-        value: number,
         label: string,
         description: string,
         min: number = Number.MIN_VALUE,
         max: number = Number.MAX_VALUE,
     ) {
-        super(path, 'integer', value, label, description);
+        super(path, 'float', label, description);
         this._min = min;
         this._max = max;
         if (this._max <= this._min) throw Error(`min and max values invalid: min=${min}, max=${max}`);
     }
 
     override get fullDescription() {
-        return `${this.description} (Float, Range ${this._min} -> ${this._max})`;
+        return `Float ${this._min}..${this._max}: ${this.description}`;
     }
 
-    override validate(v: number): number {
-        return Math.min(Math.max(v, this._min), this._max);
+    override validate(v: string): number {
+        return Math.min(Math.max(parseFloat(v), this._min), this._max);
     }
 }
 
-@InitializeAfterConstruct()
 export class UiFieldBool extends ConfigUiField<boolean> {
 
     constructor(
         path: string,
-        value: boolean,
         label: string,
         description: string,
     ) {
-        super(path, 'boolean', value, label, description);
+        super(path, 'boolean', label, description);
     }
 
     override get fullDescription() {
-        return `${this.description} (Bool)`;
+        return this.description;
     }
 
-    override validate(v: boolean): boolean {
-        return v;
+    override validate(v: string): boolean {
+        return v === 'true';
     }
 }
 
-@InitializeAfterConstruct()
-export class UiFieldEnum<U extends Record<string, unknown>> extends ConfigUiField<U[keyof U]> {
-    private _enumValues: Array<U[keyof U]>;
+export class UiFieldStringEnum<U extends Record<string, unknown>> extends ConfigUiField<U[keyof U]> {
 
-    constructor(
-        path: string,
-        value: U[keyof U],
-        enumObj: U,
-        label: string,
-        description: string,
-    ) {
-        super(path, 'enum', value, label, description);
-        this._enumValues = UiFieldEnum.getEnumValues(enumObj);
-    }
+    private _enumObj: U;
+    private _enumValues: Array<U[keyof U]>;
 
     private static getEnumValues<T extends Record<string, unknown>>(enumObj: T): Array<T[keyof T]> {
         return Object.values(enumObj) as Array<T[keyof T]>;
     }
 
-    override get fullDescription() {
-        return `${this.description} (Enum)`;
+    constructor(
+        path: string,
+        enumObj: U,
+        label: string,
+        description: string,
+    ) {
+        super(path, 'enum', label, description);
+        this._enumObj = enumObj;
+        this._enumValues = UiFieldStringEnum.getEnumValues(enumObj);
     }
 
-    override validate(v: U[keyof U]): U[keyof U] {
-        if (this._enumValues.includes(v)) {
-            return v;
+    public get enumObj() {
+        return this._enumObj;
+    }
+
+    override get fullDescription() {
+        return this.description;
+    }
+
+    override validate(v: string): U[keyof U] {
+        if (this._enumValues.includes(v as U[keyof U])) {
+            return v as U[keyof U];
         } else {
             console.warn(`Invalid enum value: ${v}. Defaulting to the first enum value.`);
             return this._enumValues[0];

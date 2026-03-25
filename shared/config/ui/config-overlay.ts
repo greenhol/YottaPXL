@@ -1,5 +1,6 @@
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ModuleConfig } from '../module-config';
+import { UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldStringEnum } from './config-ui-field';
 
 export class ConfigOverlay {
 
@@ -54,6 +55,7 @@ export class ConfigOverlay {
                         this.closeOverlay();
                     });
                     document.getElementById(this._applyButtonId)?.addEventListener('click', () => {
+                        this.updateConfiguration();
                         location.reload();
                     });
                     resolve();
@@ -85,57 +87,76 @@ export class ConfigOverlay {
             // Column 2: Input
             switch (field.type) {
                 case 'integer':
-                    row.appendChild(this.appendIntegerField(field.id));
+                    row.appendChild(this.appendIntegerField(field as UiFieldInteger));
                     break;
                 case 'float':
-                    row.appendChild(this.appendFloatField(field.id));
+                    row.appendChild(this.appendFloatField(field as UiFieldFloat));
                     break;
                 case 'boolean':
-                    row.appendChild(this.appendBoolField(field.id));
+                    row.appendChild(this.appendBoolField(field as UiFieldBool));
                     break;
                 case 'enum':
-                    row.appendChild(this.appendEnumField(field.id));
+                    row.appendChild(this.appendEnumField(field as UiFieldStringEnum<any>));
                     break;
             }
 
             // Column 3: Description
-            const description = document.createElement('div');
+            const description = document.createElement('div') as HTMLDivElement;
             description.classList.add('config-overlay-description');
             description.classList.add('config-overlay-labels');
             description.textContent = field.fullDescription;
+            description.title = field.fullDescription;
             row.appendChild(description);
 
             gridContainer.appendChild(row);
         });
     }
 
-    private appendIntegerField(rowKey: string): HTMLInputElement {
+    private appendIntegerField(field: UiFieldInteger): HTMLInputElement {
         const input = document.createElement('input');
         input.type = 'number';
-        input.id = rowKey;
+        input.id = field.id;
         input.step = '1';
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).value;
+        });
         return input;
     }
 
-    private appendFloatField(rowKey: string): HTMLInputElement {
+    private appendFloatField(field: UiFieldFloat): HTMLInputElement {
         const input = document.createElement('input');
         input.type = 'number';
-        input.id = rowKey;
+        input.id = field.id;
         input.step = 'any';
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).value;
+        });
         return input;
     }
 
-    private appendBoolField(rowKey: string): HTMLInputElement {
+    private appendBoolField(field: UiFieldBool): HTMLInputElement {
         const input = document.createElement('input');
         input.type = 'checkbox';
-        input.id = rowKey;
+        input.id = field.id;
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).checked.toString();
+        });
         return input;
     }
 
-    private appendEnumField(rowKey: string): HTMLInputElement {
-        const input = document.createElement('input');
-        input.type = 'checkbox'; // ToDo
-        input.id = rowKey;
+    private appendEnumField(field: UiFieldStringEnum<any>): HTMLSelectElement {
+        const input = document.createElement('select');
+        input.id = field.id;
+        Object.keys(field.enumObj!).filter((key) => isNaN(Number(key))).forEach((key) => {
+            const option = document.createElement('option');
+            option.value = field.enumObj![key];
+            option.textContent = field.enumObj![key];
+            input.appendChild(option);
+        });
+        input.value = field.value as string;
+        input.addEventListener('change', () => {
+            field.value = input.value;
+        });
         return input;
     }
 
@@ -151,6 +172,7 @@ export class ConfigOverlay {
     }
 
     private openOverlay() {
+        this.subsribeToFields();
         this._isOpen = true;
         this._overlay?.classList.remove(this._overlayGoneId);
     }
@@ -159,5 +181,41 @@ export class ConfigOverlay {
         this._abortFieldSubscriptions$.next();
         this._isOpen = false;
         this._overlay?.classList.add(this._overlayGoneId);
+    }
+
+    private subsribeToFields() {
+        this._config.configUiSchema.forEach((field) => {
+            switch (field.type) {
+                case 'integer':
+                case 'float':
+                    field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
+                        // console.log(`#subsribeToFields: number value ${v}`);
+                        const uiField = document.getElementById(field.id) as HTMLInputElement;
+                        uiField.value = v;
+                    });
+                    break;
+                case 'boolean':
+                    field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
+                        // console.log(`#subsribeToFields: bool value ${v}`);
+                        const uiField = document.getElementById(field.id) as HTMLInputElement;
+                        uiField.checked = v;
+                    });
+                    break;
+                case 'enum':
+                    field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
+                        // console.log(`#subsribeToFields: enum value ${v}`);
+                        const uiField = document.getElementById(field.id) as HTMLSelectElement;
+                        uiField.value = v;
+                    });
+                    break;
+            }
+        });
+    }
+
+    private updateConfiguration() {
+        this._config.configUiSchema.forEach((field) => {
+            field.saveToData(this._config.data);
+            this._config.save();
+        });
     }
 }

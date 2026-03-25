@@ -1,4 +1,5 @@
-import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
+import { InitializeAfterConstruct } from '../../../shared';
+import { ModuleConfig, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { ColorMapper } from '../../utils/color-mapper';
@@ -26,6 +27,10 @@ export class MandelbrotCombined extends Plane {
             escapeValue: 100,
         },
         'mandelbrotCombinedConfig',
+        [
+            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
+            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
+        ],
     );
 
     public init(): void {

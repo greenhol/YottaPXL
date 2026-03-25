@@ -1,5 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Initializable, ModuleConfig } from '../../shared';
+import { Initializable } from '../../shared';
+import { ModuleConfig } from '../../shared/config';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
 

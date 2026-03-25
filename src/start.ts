@@ -1,5 +1,5 @@
 import { Subscription, timer } from 'rxjs';
-import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared';
+import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/config';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';

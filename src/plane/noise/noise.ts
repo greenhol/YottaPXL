@@ -1,11 +1,34 @@
-import { lastValueFrom, Observable, Subscription, timer } from 'rxjs';
-import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
+import { lastValueFrom, Observable, Subscription } from 'rxjs';
+import { InitializeAfterConstruct } from '../../../shared';
+import { ModuleConfig, UiFieldFloat, UiFieldInteger, UiFieldStringEnum } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { BiasType, NoiseScaleFactor } from '../../math/noise-generator/types';
 import { CalculationState } from '../../worker/types';
 import { Plane, PlaneConfig } from '../plane';
+
+enum NoiseType {
+    WHITE = 'White Noise',
+    BERNOULLI = 'Bernoulli Noise',
+    BERNOULLI_ISOLATED = 'Bernoulli Noise Isolated',
+    BERNOULLI_ISOLATED_BIG = 'Bernoulli Noise Isolated Big',
+    GAUSSIAN = 'Gaussian Noise',
+    BIASED_LOWER = 'Biased Lower',
+    BIASED_UPPER = 'Biased Upper',
+    BIASED_CENTER = 'Biased Center',
+    BIASED_BOUNDS = 'Biased Bounds',
+    BIASED_BOUNDS_CUBIC = 'Biased Bounds Cubic',
+    BIASED_BOUNDS_QUINTIC = 'Biased Bounds Quintic',
+    BIASED_BOUNDS_SEPTIC = 'Biased Bounds Septic',
+    BIASED_BOUNDS_TRIG = 'Biased Bounds Trigonometric',
+}
+
+interface NoiseConfig extends PlaneConfig {
+    noiseType: NoiseType,
+    noiseScaleFactor: number,
+    bernoulliProbability: number,
+}
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 1, yCenter: 0 };
 
@@ -16,9 +39,19 @@ export class Noise extends Plane {
     private _data: Float64Array;
     private _noiseIndexSubscription: Subscription;
 
-    override config: ModuleConfig<PlaneConfig> = new ModuleConfig(
-        { gridRange: INITIAL_GRID_RANGE },
+    override config: ModuleConfig<NoiseConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            noiseType: NoiseType.WHITE,
+            noiseScaleFactor: NoiseScaleFactor.NONE,
+            bernoulliProbability: 0.5,
+        },
         'noise',
+        [
+            new UiFieldStringEnum('noiseType', NoiseType, 'Noise Type', 'Noise Image type'),
+            new UiFieldInteger('noiseScaleFactor', 'Noise Scale', 'Scaling of Noise Image', 1, 10),
+            new UiFieldFloat('bernoulliProbability', 'Bernoulli p', 'Probability a pixel is set to Black or White', 0, 1),
+        ]
     );
 
     public init(): void {
@@ -27,7 +60,7 @@ export class Noise extends Plane {
     }
 
     override refresh() {
-        // Nothing to do here, Noise does not change depending on Grid Range
+        this.create();
     }
 
     override onDestroy(): void {
@@ -38,19 +71,12 @@ export class Noise extends Plane {
     private create() {
         const range = this.config.data.gridRange;
         this.grid.updateRange(range);
-        let noiseIndex: number = 0;
-
-        this._noiseIndexSubscription = timer(0, 2000).subscribe(() => {
-            this.createAndDraw(noiseIndex);
-            noiseIndex++;
-            if (noiseIndex > 17) noiseIndex = 0;
-        });
-        // this.createAndDraw(noiseIndex);
+        this.createAndDraw(this.config.data.noiseType);
     }
 
-    private async createAndDraw(noiseIndex: number) {
+    private async createAndDraw(noiseType: NoiseType) {
         this.setProgress(0);
-        const calculation$ = this.createNoise(noiseIndex);
+        const calculation$ = this.createNoise(noiseType);
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress) }
         });
@@ -81,83 +107,56 @@ export class Noise extends Plane {
         return imageData;
     }
 
-    private createNoise(index: number): Observable<CalculationState<Float64Array>> {
-        switch (index) {
-            case 0: {
-                console.info('#createNoise - White Noise');
-                return this._generator.createWhiteNoise();
+    private createNoise(noiseType: NoiseType): Observable<CalculationState<Float64Array>> {
+        console.info(`#createNoise - ${noiseType}, ${this.config.data.noiseScaleFactor}`);
+        switch (noiseType) {
+            case NoiseType.WHITE: {
+                return this._generator.createWhiteNoise(this.config.data.noiseScaleFactor);
             }
-            case 1: {
-                console.info('#createNoise - White Noise - scaled 4');
-                return this._generator.createWhiteNoise(NoiseScaleFactor.FOUR);
+            case NoiseType.BERNOULLI: {
+                return this._generator.createBernoulliNoise(
+                    this.config.data.bernoulliProbability,
+                    this.config.data.noiseScaleFactor,
+                );
             }
-            case 2: {
-                console.log('#createNoise - Bernoulli Noise');
-                return this._generator.createBernoulliNoise();
+            case NoiseType.BERNOULLI_ISOLATED: {
+                return this._generator.createBernoulliNoiseIsolated(
+                    this.config.data.bernoulliProbability,
+                    this.config.data.noiseScaleFactor,
+                );
             }
-            case 3: {
-                console.log('#createNoise - Bernoulli Noise - scaled 4');
-                return this._generator.createBernoulliNoise(0.5, NoiseScaleFactor.FOUR);
+            case NoiseType.BERNOULLI_ISOLATED_BIG: {
+                return this._generator.createBernoulliNoiseIsolatedBig(
+                    this.config.data.bernoulliProbability,
+                    this.config.data.noiseScaleFactor,
+                );
             }
-            case 4: {
-                console.log('#createNoise - Isolated Black Noise');
-                return this._generator.createBernoulliNoiseIsolated();
+            case NoiseType.GAUSSIAN: {
+                return this._generator.createGaussianNoise(this.config.data.noiseScaleFactor);
             }
-            case 5: {
-                console.log('#createNoise - Isolated Black Noise - scaled 4');
-                return this._generator.createBernoulliNoiseIsolated(0.5, NoiseScaleFactor.FOUR);
+            case NoiseType.BIASED_LOWER: {
+                return this._generator.createBiasedNoise(BiasType.LOWER, this.config.data.noiseScaleFactor);
             }
-            case 6: {
-                console.log('#createNoise - Isolated Big Black Noise');
-                return this._generator.createBernoulliNoiseIsolatedBig();
+            case NoiseType.BIASED_UPPER: {
+                return this._generator.createBiasedNoise(BiasType.UPPER, this.config.data.noiseScaleFactor);
             }
-            case 7: {
-                console.log('#createNoise - Isolated Big Black Noise - scaled 4');
-                return this._generator.createBernoulliNoiseIsolatedBig(0.5, NoiseScaleFactor.FOUR);
+            case NoiseType.BIASED_CENTER: {
+                return this._generator.createBiasedNoise(BiasType.CENTER, this.config.data.noiseScaleFactor);
             }
-            case 8: {
-                console.log('#createNoise - Gaussian Noise');
-                return this._generator.createGaussianNoise();
+            case NoiseType.BIASED_BOUNDS: {
+                return this._generator.createBiasedNoise(BiasType.BOUNDS, this.config.data.noiseScaleFactor);
             }
-            case 9: {
-                console.log('#createNoise - Gaussian Noise - scaled 4');
-                return this._generator.createGaussianNoise(NoiseScaleFactor.FOUR);
+            case NoiseType.BIASED_BOUNDS_CUBIC: {
+                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_CUBIC, this.config.data.noiseScaleFactor);
             }
-            case 10: {
-                console.log('#createNoise - Biased Noise LOWER');
-                return this._generator.createBiasedNoise(BiasType.LOWER);
+            case NoiseType.BIASED_BOUNDS_QUINTIC: {
+                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_QUINTIC, this.config.data.noiseScaleFactor);
             }
-            case 11: {
-                console.log('#createNoise - Biased Noise LOWER - scaled 4');
-                return this._generator.createBiasedNoise(BiasType.LOWER, NoiseScaleFactor.FOUR);
+            case NoiseType.BIASED_BOUNDS_SEPTIC: {
+                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_SEPTIC, this.config.data.noiseScaleFactor);
             }
-            case 12: {
-                console.log('#createNoise - Biased Noise UPPER');
-                return this._generator.createBiasedNoise(BiasType.UPPER);
-            }
-            case 13: {
-                console.log('#createNoise - Biased Noise UPPER - scaled 4');
-                return this._generator.createBiasedNoise(BiasType.UPPER, NoiseScaleFactor.FOUR);
-            }
-            case 14: {
-                console.log('#createNoise - Biased Noise CENTER');
-                return this._generator.createBiasedNoise(BiasType.CENTER);
-            }
-            case 15: {
-                console.log('#createNoise - Biased Noise CENTER - scaled 4');
-                return this._generator.createBiasedNoise(BiasType.CENTER, NoiseScaleFactor.FOUR);
-            }
-            case 16: {
-                console.log('#createNoise - Biased Noise BOUNDS');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS);
-            }
-            case 17: {
-                console.log('#createNoise - Biased Noise BOUNDS - scaled 4');
-                return this._generator.createBiasedNoise(BiasType.BOUNDS, NoiseScaleFactor.FOUR);
-            }
-            default: {
-                console.warn('#createNoise - not explicitly handled, using White Noise');
-                return this._generator.createWhiteNoise();
+            case NoiseType.BIASED_BOUNDS_TRIG: {
+                return this._generator.createBiasedNoise(BiasType.BOUNDS_BY_TRIG, this.config.data.noiseScaleFactor);
             }
         }
     }

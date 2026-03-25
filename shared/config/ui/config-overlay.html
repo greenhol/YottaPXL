@@ -15,6 +15,12 @@
         -ms-user-select: none;
     }
 
+    .config-overlay-button:hover {
+        -moz-box-shadow: 0 0 5px #aaf;
+        -webkit-box-shadow: 0 0 5px #aaf;
+        box-shadow: 0 0 5px #aaf;
+    }
+
     .config-overlay-labels {
         font-size: 16px;
         font-family: Arial, Helvetica, sans-serif;
@@ -72,7 +78,7 @@
     .config-overlay-grid {
         display: grid;
         grid-template-columns: 120px 120px 452px;
-        gap: 8px;
+        column-gap: 8px;
         align-items: center;
         padding: 8px;
     }

@@ -1,5 +1,6 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
+import { InitializeAfterConstruct } from '../../../shared';
+import { ModuleConfig, UiFieldFloat } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
@@ -25,6 +26,9 @@ export class Charges extends Plane {
             licLength: 10,
         },
         'chargesConfig',
+        [
+            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+        ],
     );
 
     public init(): void {

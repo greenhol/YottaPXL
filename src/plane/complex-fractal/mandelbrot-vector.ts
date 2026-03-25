@@ -1,5 +1,6 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct, ModuleConfig } from '../../../shared';
+import { InitializeAfterConstruct } from '../../../shared';
+import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
@@ -39,6 +40,13 @@ export class MandelbrotVector extends Plane {
             noiseScaleFactor: NoiseScaleFactor.TWO,
         },
         'mandelbrotVectorConfig',
+        [
+            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
+            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
+            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+            new UiFieldBool('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
+            new UiFieldInteger('noiseScaleFactor', 'Noise Scale', 'Scaling of input noise image', 1, 10),
+        ],
     );
 
     public init(): void {

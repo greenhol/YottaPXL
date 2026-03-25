@@ -35,6 +35,12 @@ input {
     -ms-user-select: none;
 }
 
+.button:hover {
+    -moz-box-shadow: 0 0 5px #aaf;
+    -webkit-box-shadow: 0 0 5px #aaf;
+    box-shadow: 0 0 5px #aaf;
+}
+
 #header {
     display: block;
     position: relative;

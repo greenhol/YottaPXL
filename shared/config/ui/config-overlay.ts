@@ -8,7 +8,8 @@ export class ConfigOverlay {
 
     private _overlayId: string = 'config-overlay';
     private _overlay: HTMLDivElement | null;
-    private _overlayGoneId: string = 'config-overlay--gone';
+    private _configOverlayContentId: string = 'config-overlay-content';
+    private _overlayGoneClass: string = 'config-overlay--gone';
     private _closeButtonId: string = 'config-overlay-close-button';
     private _applyButtonId: string = 'config-overlay-apply-button';
 
@@ -51,6 +52,12 @@ export class ConfigOverlay {
                 })
                 .then(_ => {
                     this._overlay = document.getElementById(this._overlayId) as HTMLDivElement;
+                    this._overlay.addEventListener('click', (e) => {
+                        this.closeOverlay();
+                    });
+                    document.getElementById(this._configOverlayContentId)?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
                     document.getElementById(this._closeButtonId)?.addEventListener('click', () => {
                         this.closeOverlay();
                     });
@@ -81,6 +88,7 @@ export class ConfigOverlay {
             const label = document.createElement('label');
             label.className = 'config-overlay-labels';
             label.textContent = field.label;
+            label.title = field.fullDescription;
             label.htmlFor = field.id;
             row.appendChild(label);
 
@@ -101,12 +109,12 @@ export class ConfigOverlay {
             }
 
             // Column 3: Description
-            const description = document.createElement('div') as HTMLDivElement;
-            description.classList.add('config-overlay-description');
-            description.classList.add('config-overlay-labels');
-            description.textContent = field.fullDescription;
-            description.title = field.fullDescription;
-            row.appendChild(description);
+            // const description = document.createElement('div') as HTMLDivElement;
+            // description.classList.add('config-overlay-description');
+            // description.classList.add('config-overlay-labels');
+            // description.textContent = field.fullDescription;
+            // description.title = field.fullDescription;
+            // row.appendChild(description);
 
             gridContainer.appendChild(row);
         });
@@ -174,13 +182,13 @@ export class ConfigOverlay {
     private openOverlay() {
         this.subsribeToFields();
         this._isOpen = true;
-        this._overlay?.classList.remove(this._overlayGoneId);
+        this._overlay?.classList.remove(this._overlayGoneClass);
     }
 
     private closeOverlay() {
         this._abortFieldSubscriptions$.next();
         this._isOpen = false;
-        this._overlay?.classList.add(this._overlayGoneId);
+        this._overlay?.classList.add(this._overlayGoneClass);
     }
 
     private subsribeToFields() {

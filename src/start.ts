@@ -281,19 +281,21 @@ export class Start {
     }
 
     private addExportButtonClickListener() {
-        this._exportButton?.addEventListener('click', (e: PointerEvent) => {
-            const rangeString = gridRangeToString(this._grid.range);
-            let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}`);
-            if (!filename) return;
-            filename += '.png';
+        this._exportButton?.addEventListener('click', () => { this.exportImage() });
+    }
 
-            const dataURL = this._htmlCanvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = dataURL;
-            link.click();
-            timer(100).subscribe(() => link.remove());
-        });
+    private exportImage() {
+        const rangeString = gridRangeToString(this._grid.range);
+        let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}`);
+        if (!filename) return;
+        filename += '.png';
+
+        const dataURL = this._htmlCanvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataURL;
+        link.click();
+        timer(100).subscribe(() => link.remove());
     }
 
     private addSetRangeButtonClickListener() {
@@ -308,7 +310,10 @@ export class Start {
     }
 
     private addConfigurationOverlay() {
-        this._configOverlay = new ConfigOverlay('overlay-container', 'configButton');
+        this._configOverlay = new ConfigOverlay('overlayContainer', ['Escape', 'o']);
+        document.getElementById('configButton')?.addEventListener('click', () => {
+            this._configOverlay.openOverlay();
+        });
 
         const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
         resetConfigButton?.addEventListener('click', (e: PointerEvent) => {
@@ -336,6 +341,8 @@ export class Start {
 
     private handleKeyPress(event: string) {
         switch (event) {
+            case 's': { this.exportImage(); } break;
+            case 'o': { this._configOverlay.openOverlay() } break;
             case 'ArrowUp': { this._interactionOverlay.shiftRange(ShiftDirection.UP) } break;
             case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN) } break;
             case 'ArrowLeft': { this._interactionOverlay.shiftRange(ShiftDirection.LEFT) } break;

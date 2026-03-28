@@ -11,12 +11,22 @@ export class ConfigOverlay {
 
     private _isOpen: boolean = false;
 
+    private _closeKeys: string[];
+    private _boundKeyboardHandler: (event: KeyboardEvent) => void;
+
     private _initialized$: Promise<void>;
     private _abortFieldSubscriptions$ = new Subject<void>();
 
-    constructor(containerId: string, openButtonId: string) {
+    constructor(containerId: string, closeKeys: string[] = []) {
+        this._closeKeys = closeKeys;
         this._initialized$ = this.appendConfigurationOverlay(containerId);
-        this.addOpenButtonEvent(openButtonId);
+    }
+
+    public async setConfig(config: ModuleConfig<any>) {
+        await this._initialized$;
+        this._abortFieldSubscriptions$.next();
+        this._config = config;
+        this.appendFields();
     }
 
     public get isOpen() {
@@ -27,11 +37,18 @@ export class ConfigOverlay {
         return !this._isOpen;
     }
 
-    public async setConfig(config: ModuleConfig<any>) {
-        await this._initialized$;
+    public openOverlay() {
+        this.addKeyboardEvents();
+        this.subsribeToFields();
+        this._isOpen = true;
+        this._overlay?.classList.remove(this._overlayGoneClass);
+    }
+
+    private closeOverlay() {
+        this.removeKeyboardEvents();
         this._abortFieldSubscriptions$.next();
-        this._config = config;
-        this.appendFields();
+        this._isOpen = false;
+        this._overlay?.classList.add(this._overlayGoneClass);
     }
 
     private async appendConfigurationOverlay(containerId: string): Promise<void> {
@@ -167,27 +184,19 @@ export class ConfigOverlay {
         return input;
     }
 
-    private addOpenButtonEvent(openButtonId: string) {
-        const buttonDiv = document.getElementById(openButtonId) as HTMLDivElement;
-        if (buttonDiv != null) {
-            buttonDiv?.addEventListener('click', () => {
-                this.openOverlay();
-            });
-        } else {
-            console.error(`#addOpenButtonEvent - button ${openButtonId} not found`);
-        }
+    private keyboardHandler(event: KeyboardEvent, keys: string[]) {
+        if (keys.includes(event.key)) this.closeOverlay();
     }
 
-    private openOverlay() {
-        this.subsribeToFields();
-        this._isOpen = true;
-        this._overlay?.classList.remove(this._overlayGoneClass);
+    private addKeyboardEvents() {
+        this._boundKeyboardHandler = (event: KeyboardEvent) => {
+            this.keyboardHandler(event, this._closeKeys);
+        };
+        document.addEventListener('keydown', this._boundKeyboardHandler);
     }
 
-    private closeOverlay() {
-        this._abortFieldSubscriptions$.next();
-        this._isOpen = false;
-        this._overlay?.classList.add(this._overlayGoneClass);
+    private removeKeyboardEvents() {
+        document.removeEventListener('keydown', this._boundKeyboardHandler);
     }
 
     private subsribeToFields() {

@@ -6,12 +6,8 @@ export class ConfigOverlay {
 
     private _config: ModuleConfig<any>;
 
-    private _overlayId: string = 'config-overlay';
     private _overlay: HTMLDivElement | null;
-    private _configOverlayContentId: string = 'config-overlay-content';
     private _overlayGoneClass: string = 'config-overlay--gone';
-    private _closeButtonId: string = 'config-overlay-close-button';
-    private _applyButtonId: string = 'config-overlay-apply-button';
 
     private _isOpen: boolean = false;
 
@@ -51,19 +47,15 @@ export class ConfigOverlay {
                     }
                 })
                 .then(_ => {
-                    this._overlay = document.getElementById(this._overlayId) as HTMLDivElement;
-                    this._overlay.addEventListener('click', (e) => {
+                    this._overlay = document.getElementById('config-overlay') as HTMLDivElement;
+                    this._overlay.addEventListener('click', () => {
                         this.closeOverlay();
                     });
-                    document.getElementById(this._configOverlayContentId)?.addEventListener('click', (e) => {
+                    document.getElementById('config-overlay-content')?.addEventListener('click', (e) => {
                         e.stopPropagation();
                     });
-                    document.getElementById(this._closeButtonId)?.addEventListener('click', () => {
+                    document.getElementById('config-overlay-close-button')?.addEventListener('click', () => {
                         this.closeOverlay();
-                    });
-                    document.getElementById(this._applyButtonId)?.addEventListener('click', () => {
-                        this.updateConfiguration();
-                        location.reload();
                     });
                     resolve();
                 });
@@ -71,14 +63,19 @@ export class ConfigOverlay {
     }
 
     private appendFields() {
-        const gridContainer = document.getElementById('config-overlay-dynamic-content');
-        if (!gridContainer) throw Error('container for config not found!');
+        const dynamicContainer = document.getElementById('config-overlay-dynamic-content');
+        if (!dynamicContainer) throw Error('container for config not found!');
 
-        gridContainer.innerHTML = '';
+        dynamicContainer.innerHTML = '';
         if (this._config.configUiSchema.length == 0) {
-            gridContainer.innerHTML = 'Nothing defined for configuration';
+            dynamicContainer.innerHTML = '&nbsp;Nothing declared for configuration';
             return;
         }
+
+        const gridContainer = document.createElement('div');
+        gridContainer.id = 'config-overlay-grid-content';
+        gridContainer.className = 'config-overlay-grid';
+        dynamicContainer.append(gridContainer);
 
         this._config.configUiSchema.forEach((field) => {
             const row: HTMLDivElement = document.createElement('div');
@@ -108,16 +105,18 @@ export class ConfigOverlay {
                     break;
             }
 
-            // Column 3: Description
-            // const description = document.createElement('div') as HTMLDivElement;
-            // description.classList.add('config-overlay-description');
-            // description.classList.add('config-overlay-labels');
-            // description.textContent = field.fullDescription;
-            // description.title = field.fullDescription;
-            // row.appendChild(description);
-
             gridContainer.appendChild(row);
         });
+
+        const appendButton = document.createElement('div');
+        appendButton.id = 'config-overlay-apply-button';
+        appendButton.className = 'config-overlay-button';
+        appendButton.textContent = 'Apply';
+        appendButton.addEventListener('click', () => {
+            this.updateConfiguration();
+            location.reload();
+        });
+        dynamicContainer.append(appendButton);
     }
 
     private appendIntegerField(field: UiFieldInteger): HTMLInputElement {

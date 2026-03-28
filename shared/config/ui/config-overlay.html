@@ -5,6 +5,7 @@
 
     .config-overlay-button {
         height: 22px;
+        width: 100px;
         line-height: 22px;
         background-color: #eef;
         border: 1px solid black;
@@ -50,27 +51,23 @@
         background-color: rgba(255, 255, 255);
         padding: 24px;
         margin: 24px;
-        width: 80%;
         width: 400px;
-        min-height: 100px;
         border: 1px solid black;
     }
 
     #config-overlay-close-button {
         position: relative;
-        width: 80px;
         margin-bottom: 8px;
     }
 
     #config-overlay-apply-button {
         position: relative;
-        width: 80px;
+        margin: 8px;
     }
 
     #config-overlay-dynamic-content {
         position: relative;
-        width: 380px;
-        margin-bottom: 24px;
+        width: 400px;
         line-height: 30px;
         border: 0.5px solid #eef;
     }
@@ -116,7 +113,6 @@
 <div id="config-overlay" class="config-overlay--gone">
     <div id="config-overlay-content">
         <div id="config-overlay-close-button" class="config-overlay-button">Close</div>
-        <div id="config-overlay-dynamic-content" class="config-overlay-grid">ToDo</div>
-        <div id="config-overlay-apply-button" class="config-overlay-button">Apply</div>
+        <div id="config-overlay-dynamic-content"></div>
     </div>
 </div>

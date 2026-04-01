@@ -3,13 +3,13 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { ColorMapper } from '../../math/color-mapper/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { getNoiseScaleFactor, NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { COLOR, Color, createGrey } from '../../types';
-import { ColorMapperLegacy } from '../../utils/color-mapper-legacy';
+import { Color, COLORS, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
@@ -115,10 +115,7 @@ export class MandelbrotVector extends Plane {
     }
 
     private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
-        const colorMapper = new ColorMapperLegacy([
-            { color: COLOR.BLACK, cycleLength: 255 },
-            { color: COLOR.WHITE, cycleLength: 255 },
-        ]);
+        const colorMapper = ColorMapper.fromColors(COLORS.BW);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
         mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4') } });
@@ -131,7 +128,7 @@ export class MandelbrotVector extends Plane {
                 if (value === this._effectiveMaxIterations) {
                     value = -1;
                 }
-                data[sourceGrid.getIndex(col, row)] = colorMapper.map(value).r / 255;
+                data[sourceGrid.getIndex(col, row)] = colorMapper.map(value, 512).r / 255;
             }
         }
         return data;

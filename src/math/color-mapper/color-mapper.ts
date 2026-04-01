@@ -8,12 +8,13 @@ interface SupportPoint {
 export class ColorMapper {
     private _supportPoints: SupportPoint[];
     private _easingFactor: number;
+    private _colorCalculator: (t: number, left: SupportPoint, right: SupportPoint) => Color;
 
-    public static fromString(input: string, easingFactor: number = 0): ColorMapper {
+    public static fromString(input: string, easingFactor: number | null = 0): ColorMapper {
         return new ColorMapper(ColorMapper.parseSupportPoints(input), easingFactor);
     }
 
-    public static fromColors(colors: Color[], easingFactor: number = 0): ColorMapper {
+    public static fromColors(colors: Color[], easingFactor: number | null = 0): ColorMapper {
         const points: SupportPoint[] = colors.map((color, index) => {
             return { pos: index / colors.length, color: color };
         });
@@ -64,7 +65,7 @@ export class ColorMapper {
         }
     }
 
-    constructor(supportPoints: SupportPoint[], easingFactor: number = 0) {
+    constructor(supportPoints: SupportPoint[], easingFactor: number | null = 0) {
         if (supportPoints.length < 2) {
             throw new Error('At least two support points are required.');
         }
@@ -73,11 +74,14 @@ export class ColorMapper {
             console.warn('#ctor - The first support point is always 0');
             supportPoints[0].pos = 0;
         }
-        this._easingFactor = easingFactor;
+        this._easingFactor = (easingFactor == null) ? 0 : easingFactor;
+        this._colorCalculator = (easingFactor == null) ?
+            this.leftColor :
+            this.interpolateColor;
     }
 
-    public map(x: number, scale: number = 1): Color {
-        const loopedX = this.getLoopingX(x / scale);
+    public map(x: number, scaling: number = 1, offset: number = 0): Color {
+        const loopedX = this.getLoopingX(x / scaling - offset);
         let left: SupportPoint | undefined;
         let right: SupportPoint | undefined;
 
@@ -93,11 +97,7 @@ export class ColorMapper {
             throw new Error('Could not find a valid range for interpolation.');
         }
 
-        return this.interpolateColor(
-            this.getInterpolationFactor(loopedX, left, right, this._easingFactor),
-            left,
-            right,
-        );
+        return this._colorCalculator(loopedX, left, right);
     }
 
     public get supportPointsString(): string {
@@ -118,17 +118,22 @@ export class ColorMapper {
         return ((x % range) + range) % range;
     }
 
-    private getInterpolationFactor(x: number, left: SupportPoint, right: SupportPoint, easingFactor: number): number {
+    private getInterpolationFactor(x: number, left: SupportPoint, right: SupportPoint): number {
         const normalizedX = (x - left.pos) / (right.pos - left.pos);
         const linearT = normalizedX;
         const smoothstepT = normalizedX * normalizedX * (3 - 2 * normalizedX);
-        return (1 - easingFactor) * linearT + easingFactor * smoothstepT;
+        return (1 - this._easingFactor) * linearT + this._easingFactor * smoothstepT;
+    }
+
+    private leftColor(t: number, left: SupportPoint, right: SupportPoint): Color {
+        return { r: left.color.r, g: left.color.g, b: left.color.b };
     }
 
     private interpolateColor(t: number, left: SupportPoint, right: SupportPoint): Color {
-        const r = Math.round(left.color.r + (right.color.r - left.color.r) * t);
-        const g = Math.round(left.color.g + (right.color.g - left.color.g) * t);
-        const b = Math.round(left.color.b + (right.color.b - left.color.b) * t);
+        const easedT = this.getInterpolationFactor(t, left, right);
+        const r = Math.round(left.color.r + (right.color.r - left.color.r) * easedT);
+        const g = Math.round(left.color.g + (right.color.g - left.color.g) * easedT);
+        const b = Math.round(left.color.b + (right.color.b - left.color.b) * easedT);
         return { r, g, b };
     }
 }

@@ -8,8 +8,8 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { getNoiseScaleFactor, NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { BLACK, Color, createGray, WHITE } from '../../utils/color';
-import { ColorMapper } from '../../utils/color-mapper';
+import { COLOR, Color, createGrey } from '../../types';
+import { ColorMapperLegacy } from '../../utils/color-mapper-legacy';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
@@ -115,9 +115,9 @@ export class MandelbrotVector extends Plane {
     }
 
     private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
-        const colorMapper = new ColorMapper([
-            { color: BLACK, cycleLength: 255 },
-            { color: WHITE, cycleLength: 255 },
+        const colorMapper = new ColorMapperLegacy([
+            { color: COLOR.BLACK, cycleLength: 255 },
+            { color: COLOR.WHITE, cycleLength: 255 },
         ]);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
@@ -160,7 +160,7 @@ export class MandelbrotVector extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : createGray(value));
+                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : createGrey(value));
             }
         }
         return imageData;

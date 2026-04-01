@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
-export type UiFieldType = 'integer' | 'float' | 'boolean' | 'enum';
+export type UiFieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
 export abstract class ConfigUiField<T> {
 
@@ -87,6 +87,25 @@ export abstract class ConfigUiField<T> {
 
         const lastPart = parts[parts.length - 1];
         return { parent: current, key: lastPart };
+    }
+}
+
+export class UiFieldString extends ConfigUiField<string> {
+
+    constructor(
+        path: string,
+        label: string,
+        description: string,
+    ) {
+        super(path, 'string', label, description);
+    }
+
+    override get fullDescription() {
+        return this.description;
+    }
+
+    override validate(v: string): string {
+        return v;
     }
 }
 

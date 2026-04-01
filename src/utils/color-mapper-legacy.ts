@@ -1,16 +1,17 @@
-import { BLACK, Color } from './color';
+import { COLOR, Color } from '../types';
 
 export interface ColorSegment {
     color: Color;
     cycleLength: number;
 }
 
-export class ColorMapper {
+/** @deprecated use new ColorMapper instead */
+export class ColorMapperLegacy {
     private _colorSegments: ColorSegment[];
     private _totalCycleLength: number;
     private _fallBackColor: Color;
 
-    constructor(segments: ColorSegment[], fallBackColor: Color = BLACK) {
+    constructor(segments: ColorSegment[], fallBackColor: Color = COLOR.BLACK) {
         if (segments.length < 2) {
             throw new Error("At least two color segments are required.");
         }

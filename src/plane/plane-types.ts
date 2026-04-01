@@ -1,4 +1,12 @@
-export type PlaneId = 'MANDELBROT_ITERATIONS' | 'MANDELBROT_DISTANCE' | 'MANDELBROT_COMBINED' | 'MANDELBROT_VECTOR' | 'CHARGES' | 'WEATHER' | 'NOISE';
+export type PlaneId =
+    'MANDELBROT_ITERATIONS' |
+    'MANDELBROT_DISTANCE' |
+    'MANDELBROT_COMBINED' |
+    'MANDELBROT_VECTOR' |
+    'CHARGES' |
+    'WEATHER' |
+    'NOISE' |
+    'GRADIENT';
 
 export interface PlaneType {
     id: PlaneId,
@@ -14,6 +22,7 @@ export const VALID_PLANE_IDS: PlaneId[] = [
     'CHARGES',
     'WEATHER',
     'NOISE',
+    'GRADIENT',
 ];
 
 export const PLANE_TYPES: PlaneType[] = [
@@ -24,4 +33,5 @@ export const PLANE_TYPES: PlaneType[] = [
     { id: 'CHARGES', short: 'Charge Field', description: 'A vector field visualization for a charge field using an LIC algorithm' },
     { id: 'WEATHER', short: 'Weather patterns', description: 'A vector field visualization for for weather patterns of pressure systems' },
     { id: 'NOISE', short: 'Noise types', description: 'A set of different noise types' },
+    { id: 'GRADIENT', short: 'Color Gradients', description: 'A selection of color gradients and custom for defining your own' },
 ];

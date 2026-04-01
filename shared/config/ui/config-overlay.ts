@@ -1,6 +1,6 @@
 import { Subject, takeUntil } from 'rxjs';
 import { ModuleConfig } from '../module-config';
-import { UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldStringEnum } from './config-ui-field';
+import { UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
 export class ConfigOverlay {
 
@@ -108,6 +108,9 @@ export class ConfigOverlay {
 
             // Column 2: Input
             switch (field.type) {
+                case 'string':
+                    row.appendChild(this.appendStringField(field as UiFieldString))
+                    break;
                 case 'integer':
                     row.appendChild(this.appendIntegerField(field as UiFieldInteger));
                     break;
@@ -134,6 +137,16 @@ export class ConfigOverlay {
             location.reload();
         });
         dynamicContainer.append(appendButton);
+    }
+
+    private appendStringField(field: UiFieldString): HTMLInputElement {
+        const input = document.createElement('input');
+        input.type = 'string';
+        input.id = field.id;
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).value;
+        });
+        return input;
     }
 
     private appendIntegerField(field: UiFieldInteger): HTMLInputElement {
@@ -202,24 +215,22 @@ export class ConfigOverlay {
     private subsribeToFields() {
         this._config.configUiSchema.forEach((field) => {
             switch (field.type) {
+                case 'string':
                 case 'integer':
                 case 'float':
                     field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
-                        // console.log(`#subsribeToFields: number value ${v}`);
                         const uiField = document.getElementById(field.id) as HTMLInputElement;
                         uiField.value = v;
                     });
                     break;
                 case 'boolean':
                     field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
-                        // console.log(`#subsribeToFields: bool value ${v}`);
                         const uiField = document.getElementById(field.id) as HTMLInputElement;
                         uiField.checked = v;
                     });
                     break;
                 case 'enum':
                     field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
-                        // console.log(`#subsribeToFields: enum value ${v}`);
                         const uiField = document.getElementById(field.id) as HTMLSelectElement;
                         uiField.value = v;
                     });

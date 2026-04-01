@@ -2,10 +2,10 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { ColorMapper } from '../../utils/color-mapper';
+import { COLOR } from '../../types';
+import { ColorMapperLegacy } from '../../utils/color-mapper-legacy';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { BLACK, GREEN, WHITE } from './../../utils/color';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedConfig extends PlaneConfig {
@@ -63,16 +63,16 @@ export class MandelbrotCombined extends Plane {
 
     private createImage(iterations: Float64Array, distances: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperIterations = new ColorMapper([
+        const colorMapperIterations = new ColorMapperLegacy([
             { color: { r: 0, g: 128, b: 0 }, cycleLength: 128 },
-            { color: GREEN, cycleLength: 128 },
+            { color: COLOR.GREEN, cycleLength: 128 },
         ]);
         let max = 0;
         distances.forEach(value => { if (value > max) max = value });
-        const colorMapperDistances = new ColorMapper([
-            { color: WHITE, cycleLength: max / 25 },
-            { color: WHITE, cycleLength: max / 300 },
-            { color: BLACK, cycleLength: max / 300 },
+        const colorMapperDistances = new ColorMapperLegacy([
+            { color: COLOR.WHITE, cycleLength: max / 25 },
+            { color: COLOR.WHITE, cycleLength: max / 300 },
+            { color: COLOR.BLACK, cycleLength: max / 300 },
         ]);
 
         for (let row = 0; row < this.grid.height; row++) {

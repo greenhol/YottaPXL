@@ -7,7 +7,7 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { PressureRegion } from '../../math/vector-field/weather-field/types';
-import { Color, createGray, WHITE } from '../../utils/color';
+import { Color, COLOR, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 
@@ -139,7 +139,7 @@ export class Weather extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? WHITE : createGray(value));
+                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR.WHITE : createGrey(value));
             }
         }
         return imageData;

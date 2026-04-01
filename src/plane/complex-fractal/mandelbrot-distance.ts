@@ -3,10 +3,10 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { BLACK, WHITE } from '../../utils/color';
-import { ColorMapper } from '../../utils/color-mapper';
+import { ColorMapperLegacy } from '../../utils/color-mapper-legacy';
 import { Plane, PlaneConfig } from '../plane';
 import { estimateMaxIterations } from './estimate-max-iterations';
+import { COLOR } from '../../types';
 
 interface MandelbrotDistanceConfig extends PlaneConfig {
     maxIterations: number,
@@ -65,9 +65,9 @@ export class MandelbrotDistance extends Plane {
         let max = 0;
         data.forEach(value => { if (value > max) max = value });
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapper = new ColorMapper([
-            { color: WHITE, cycleLength: max / 25 },
-            { color: BLACK, cycleLength: max / 25 },
+        const colorMapper = new ColorMapperLegacy([
+            { color: COLOR.WHITE, cycleLength: max / 25 },
+            { color: COLOR.BLACK, cycleLength: max / 25 },
         ]);
 
         for (let row = 0; row < this.grid.height; row++) {

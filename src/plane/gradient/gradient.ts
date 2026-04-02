@@ -17,6 +17,7 @@ enum GradientType {
     SUNSET = 'Sunset',
     ELECTRIC = 'Electric',
     PASTEL = 'Pastel',
+    CAPPUCCINO = 'Cappuccino',
     C64_RAINBOW = 'C64 Rainbow',
     C64_MANDELBROT = 'C64 Mandelbrot',
     C64_ALL_COLORS = 'C64 All Colors',
@@ -102,6 +103,7 @@ export class Gradient extends Plane {
             case GradientType.SUNSET: return ColorMapper.fromColors(COLORS.SUNSET, easingFactor);
             case GradientType.ELECTRIC: return ColorMapper.fromColors(COLORS.ELECTRIC, easingFactor);
             case GradientType.PASTEL: return ColorMapper.fromColors(COLORS.PASTEL, easingFactor);
+            case GradientType.CAPPUCCINO: return ColorMapper.fromColors(COLORS.CAPPUCCINO, easingFactor);
             case GradientType.C64_RAINBOW: return ColorMapper.fromColors(COLORS.C64_RAINBOW, easingFactor);
             case GradientType.C64_MANDELBROT: return ColorMapper.fromColors(COLORS.C64_MANDELBROT, easingFactor);
             case GradientType.C64_ALL_COLORS: return ColorMapper.fromColors(COLORS.C64_ALL_COLORS, easingFactor);

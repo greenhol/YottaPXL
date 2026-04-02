@@ -1,6 +1,6 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
+import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldHeader, UiFieldInteger } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ColorMapper } from '../../math/color-mapper/color-mapper';
@@ -41,11 +41,14 @@ export class MandelbrotVector extends Plane {
         },
         'mandelbrotVectorConfig',
         [
-            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
-            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
-            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+            new UiFieldHeader('Source Image'),
             new UiFieldBool('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
             new UiFieldInteger('noiseScaleFactor', 'Noise Scale', 'Scaling of input noise image', 1, 10),
+            new UiFieldHeader('Fractal properties'),
+            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
+            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
+            new UiFieldHeader('LIC properties'),
+            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
         ],
     );
 

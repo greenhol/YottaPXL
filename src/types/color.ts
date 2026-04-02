@@ -71,6 +71,13 @@ export const COLOR = {
     TAN: { r: 210, g: 180, b: 140 } as Color, // #D2B48C
     THISTLE: { r: 216, g: 191, b: 216 } as Color, // #D8BFD8
     VIOLET: { r: 238, g: 130, b: 238 } as Color, // #EE82EE
+    
+    // Coffee
+    WARM_MILK: { r: 242, g: 235, b: 220 },  // #F2EBDC
+    MILKY_COFFEE: { r: 210, g: 170, b: 120 },  // #D2AA78
+    COFFEE_BROWN: { r: 130, g: 74, b: 37 },  // #824A25
+    DARK_ESPRESSO: { r: 65, g: 35, b: 19 },  // #412313
+    FOAM_WHITE: { r: 250, g: 245, b: 237 },  // #FAF5ED
 
     // C64 Colors
     C64_BLACK: { r: 0, g: 0, b: 0 } as Color, // #000000

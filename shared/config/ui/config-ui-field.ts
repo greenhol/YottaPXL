@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
-export type UiFieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
+export type UiFieldType = 'header' | 'string' | 'integer' | 'float' | 'boolean' | 'enum';
 
 export abstract class ConfigUiField<T> {
 
@@ -54,6 +54,7 @@ export abstract class ConfigUiField<T> {
     }
 
     public loadFromData(data: any) {
+        if (this._path.length == 0) return;
         const { parent, key } = this.traverseToParent(data, this._path);
         if (parent[key] === undefined) {
             throw new Error(`Property ${key} does not exist in the object.`);
@@ -62,6 +63,7 @@ export abstract class ConfigUiField<T> {
     }
 
     public saveToData(data: any) {
+        if (this._path.length == 0) return;
         const { parent, key } = this.traverseToParent(data, this._path);
         if (parent[key] === undefined) {
             throw new Error(`Property ${key} does not exist in the object.`);
@@ -87,6 +89,21 @@ export abstract class ConfigUiField<T> {
 
         const lastPart = parts[parts.length - 1];
         return { parent: current, key: lastPart };
+    }
+}
+
+export class UiFieldHeader extends ConfigUiField<void> {
+
+    constructor(label: string) {
+        super('', 'header', label, '');
+    }
+
+    override get fullDescription() {
+        return this.description;
+    }
+
+    override validate(v: string): void {
+        // Nothing to validate
     }
 }
 

@@ -1,6 +1,7 @@
 import { lastValueFrom, Observable, Subscription } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldFloat, UiFieldInteger, UiFieldStringEnum } from '../../../shared/config';
+import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
@@ -39,6 +40,11 @@ export class Noise extends Plane {
     private _data: Float64Array;
     private _noiseIndexSubscription: Subscription;
 
+    constructor(grid: Grid) {
+        super(grid);
+        this._generator = new NoiseGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
+    }
+
     override config: ModuleConfig<NoiseConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
@@ -53,11 +59,6 @@ export class Noise extends Plane {
             new UiFieldFloat('bernoulliProbability', 'Bernoulli p', 'Probability a pixel is set to Black or White', 0, 1),
         ]
     );
-
-    public init(): void {
-        this._generator = new NoiseGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
-        this.create();
-    }
 
     override refresh() {
         this.create();

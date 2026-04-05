@@ -33,11 +33,6 @@ export class MandelbrotDistance extends Plane {
         ],
     );
 
-    override init(): void {
-        this.grid.updateRange(this.config.data.gridRange);
-        this.refresh();
-    }
-
     override refresh() {
         this.calculate();
     }
@@ -67,6 +62,7 @@ export class MandelbrotDistance extends Plane {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapper = ColorMapper.fromColors(COLORS.WB);
         const gradientScale = max / 12.5;
+        this.config.setInfo('Gradient', colorMapper.supportPointsString);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {

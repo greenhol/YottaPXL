@@ -1,4 +1,5 @@
 import { Subscription, timer } from 'rxjs';
+import { idGenerator } from '../shared';
 import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/config';
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
@@ -293,14 +294,34 @@ export class Start {
         const rangeString = gridRangeToString(this._grid.range);
         let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}`);
         if (!filename) return;
-        filename += '.png';
+        filename += `_${idGenerator.newId('file')}`;
 
+        // Export the image
         const dataURL = this._htmlCanvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = dataURL;
-        link.click();
-        timer(100).subscribe(() => link.remove());
+        const imgLink = document.createElement('a');
+        imgLink.download = `${filename}.png`;
+        imgLink.href = dataURL;
+        imgLink.click();
+
+        // Export the metadata
+        const metaLink = document.createElement('a');
+        const planeConfig = this._plane?.config;
+        if (planeConfig != null) {
+            const metaData = planeConfig.export();
+            metaData.info.push(`Resolution: ${resolutionAsString(this._grid.resolution)} - ${this._grid.resolution.description}`);
+            const metaDataJson = JSON.stringify(metaData, null, 2);
+            const blob = new Blob([metaDataJson], { type: 'application/json' });
+            metaLink.download = `${filename}.json`;
+            metaLink.href = URL.createObjectURL(blob);
+            metaLink.click();
+        }
+
+        // Clean up
+        timer(100).subscribe(() => {
+            imgLink.remove();
+            metaLink.remove();
+            URL.revokeObjectURL(metaLink.href);
+        });
     }
 
     private addSetRangeButtonClickListener() {
@@ -346,7 +367,7 @@ export class Start {
 
     private handleKeyPress(event: string) {
         switch (event) {
-            case 's': { this.exportImage(); } break;
+            case 'e': { this.exportImage(); } break;
             case 'o': { this._configOverlay.openOverlay() } break;
             case 'ArrowUp': { this._interactionOverlay.shiftRange(ShiftDirection.UP) } break;
             case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN) } break;

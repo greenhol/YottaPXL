@@ -1,6 +1,7 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldFloat } from '../../../shared/config';
+import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
@@ -22,18 +23,9 @@ export class Weather extends Plane {
 
     private _pressureRegions: PressureRegion[] = [];
 
-    override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
-        {
-            gridRange: INITIAL_GRID_RANGE,
-            licLength: 20,
-        },
-        'weatherConfig',
-        [
-            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
-        ],
-    );
+    constructor(grid: Grid) {
+        super(grid);
 
-    public init(): void {
         const pressureRegions = [
             { x: 0.0, y: -70.0, strength: 988, spread: 36, isLowPressure: true },      // Antarctic Low (Low)
             { x: 95.0, y: 60.0, strength: 1036, spread: 36, isLowPressure: false },   // Siberian High (High)
@@ -70,9 +62,18 @@ export class Weather extends Plane {
             this._pressureRegions.push(region);
             this._pressureRegions.push(regionRight);
         });
-
-        this.refresh();
     }
+
+    override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
+        {
+            gridRange: INITIAL_GRID_RANGE,
+            licLength: 20,
+        },
+        'weatherConfig',
+        [
+            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+        ],
+    );
 
     override refresh() {
         this.calculate();
@@ -80,11 +81,9 @@ export class Weather extends Plane {
 
     private async calculate() {
         this.setProgress(0);
-        const range = this.config.data.gridRange;
-        this.grid.updateRange(range);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createWeatherField(this._pressureRegions, 1);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2') } });

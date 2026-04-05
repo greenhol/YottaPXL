@@ -2,7 +2,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Initializable } from '../../shared';
 import { ModuleConfig } from '../../shared/config';
 import { Grid } from '../grid/grid';
-import { GridRange } from '../grid/grid-range';
+import { GridRange, gridRangeToString } from '../grid/grid-range';
 
 export interface PlaneConfig {
     gridRange: GridRange;
@@ -29,12 +29,15 @@ export abstract class Plane implements Initializable {
 
     public abstract config: ModuleConfig<PlaneConfig>;
 
-    public abstract init(): void;
+    public init(): void {
+        this.updateGridRange(this.config.data.gridRange);
+    }
 
     public abstract refresh(): void;
 
     public updateGridRange(range: GridRange) {
         this.config.data.gridRange = range;
+        this.config.setInfo('Grid Range as String', gridRangeToString(range));
         this.grid.updateRange(this.config.data.gridRange);
         this.refresh();
     }

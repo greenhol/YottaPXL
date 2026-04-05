@@ -1,6 +1,12 @@
 import { ConfigUiField } from './ui/config-ui-field';
 
 declare const APP_NAME: string;
+declare const APP_VERSION: string;
+
+interface ConfigExport {
+    info: string[],
+    data: any,
+}
 
 export class ModuleConfig<T> {
     public data: T;
@@ -9,6 +15,7 @@ export class ModuleConfig<T> {
     private _persistable: boolean;
     private _storageType: 'local' | 'session';
     private _configUiSchema: ConfigUiField<any>[];
+    private _info = new Map<string, string>;
 
     constructor(
         initialConfig: T,
@@ -21,6 +28,8 @@ export class ModuleConfig<T> {
         this._persistable = !!storageKey;
         this._configUiSchema = configUiSchema;
         this._storageType = storageType;
+        this.setInfo('App Version', `${APP_NAME}_${APP_VERSION}`);
+        this.setInfo('Storage Key', this._storageKey);
 
         if (!this.load()) {
             this.updateData({ ...this._initialConfig });
@@ -77,6 +86,17 @@ export class ModuleConfig<T> {
     public reset(): void {
         this.updateData({ ...this._initialConfig });
         console.log(`#reset - Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
+    }
+
+    public setInfo(key: string, data: string) {
+        this._info.set(key, data);
+    }
+
+    public export(): ConfigExport {
+        return structuredClone({
+            info: Array.from(this._info).map(([key, value]) => `${key}: ${value}`),
+            data: this.data,
+        });
     }
 
     private appendToWindow() {

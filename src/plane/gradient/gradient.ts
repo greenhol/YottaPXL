@@ -6,7 +6,6 @@ import { COLORS } from '../../types/colors';
 import { Plane, PlaneConfig } from '../plane';
 
 enum GradientType {
-    CUSTOM = 'Custom',
     BW = 'BlackWhite',
     HOT_METAL = 'Hot Metal',
     RAINBOW = 'Rainbow',
@@ -25,11 +24,11 @@ enum GradientType {
 
 interface GradientConfig extends PlaneConfig {
     type: GradientType,
+    custom: string,
     easing: boolean,
     easingFactor: number,
     scaling: number,
     offset: number,
-    custom: string,
 };
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
@@ -41,27 +40,22 @@ export class Gradient extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             type: GradientType.BW,
+            custom: '',
             easing: true,
             easingFactor: 0,
             scaling: 1,
             offset: 0,
-            custom: '0:#FF0000, 0.333:#00FF00, 0.667:#0000FF, 1:#FF0000',
         },
         'gradientConfig',
         [
             new UiFieldStringEnum('type', GradientType, 'Gradient Type', 'Type of Gradient (selection of predefined or a custom one)'),
-            new UiFieldString('custom', 'Custum String', 'Custom input for Gradient. Syntax comma separated x:color, e.g. \'0:#FF0000, 1:#0000FF\''),
+            new UiFieldString('custom', 'Custom String', 'Overriding custom input for Gradient. Syntax comma separated x:color, e.g. \'0:#FF0000, 1:#0000FF\''),
             new UiFieldBool('easing', 'Easing', 'Whether colors should be interpolated (bahave like Gradient) or just show solid colors'),
             new UiFieldFloat('easingFactor', 'Easing Factor', 'How Gradient behaves around the support points (0: linear, 1: quadratic)', 0, 1),
             new UiFieldFloat('scaling', 'Scaling', 'Gradient is scaled by this factor', 0.01, 10000),
             new UiFieldFloat('offset', 'Offset', 'Gradient Offset (applied after scaling)', -10000, 10000),
         ],
     );
-
-    override init(): void {
-        this.grid.updateRange(this.config.data.gridRange);
-        this.refresh();
-    }
 
     override refresh() {
         this.calculate();
@@ -74,6 +68,7 @@ export class Gradient extends Plane {
     private createImage(): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapper = this.getColorMapper();
+        this.config.setInfo('Effective Gradient', colorMapper.supportPointsString);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -92,6 +87,9 @@ export class Gradient extends Plane {
 
     private getColorMapper(): ColorMapper {
         const easingFactor: number | null = (this.config.data.easing) ? this.config.data.easingFactor : null;
+        if (this.config.data.custom.length > 0) {
+            return ColorMapper.fromString(this.config.data.custom, easingFactor);
+        }
         switch (this.config.data.type) {
             case GradientType.BW: return ColorMapper.fromColors(COLORS.BW, easingFactor);
             case GradientType.HOT_METAL: return ColorMapper.fromColors(COLORS.HOT_METAL, easingFactor);
@@ -107,7 +105,6 @@ export class Gradient extends Plane {
             case GradientType.C64_RAINBOW: return ColorMapper.fromColors(COLORS.C64_RAINBOW, easingFactor);
             case GradientType.C64_MANDELBROT: return ColorMapper.fromColors(COLORS.C64_MANDELBROT, easingFactor);
             case GradientType.C64_ALL_COLORS: return ColorMapper.fromColors(COLORS.C64_ALL_COLORS, easingFactor);
-            default: return ColorMapper.fromString(this.config.data.custom, easingFactor);
         }
     }
 

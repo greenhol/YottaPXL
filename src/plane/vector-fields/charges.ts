@@ -31,21 +31,15 @@ export class Charges extends Plane {
         ],
     );
 
-    public init(): void {
-        this.refresh();
-    }
-
     override refresh() {
         this.calculate();
     }
 
     private async calculate() {
         this.setProgress(0);
-        const range = this.config.data.gridRange;
-        this.grid.updateRange(range);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createChargeField([
             { x: 3, y: -1, charge: 5 },

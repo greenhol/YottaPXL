@@ -33,11 +33,6 @@ export class MandelbrotCombined extends Plane {
         ],
     );
 
-    public init(): void {
-        this.grid.updateRange(this.config.data.gridRange);
-        this.refresh();
-    }
-
     override refresh() {
         this.calculate();
     }
@@ -76,6 +71,8 @@ export class MandelbrotCombined extends Plane {
             { pos: max / 25 + max / 300, color: COLOR.BLACK },
             { pos: max / 25 + 2 * max / 300, color: COLOR.WHITE },
         ]);
+        this.config.setInfo('Iterations Gradient', colorMapperIterations.supportPointsString);
+        this.config.setInfo('Distances Gradient', colorMapperDistances.supportPointsString);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {

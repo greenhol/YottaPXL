@@ -52,11 +52,6 @@ export class MandelbrotVector extends Plane {
         ],
     );
 
-    public init(): void {
-        this.grid.updateRange(this.config.data.gridRange);
-        this.refresh();
-    }
-
     override refresh() {
         this.calculate();
     }
@@ -66,11 +61,9 @@ export class MandelbrotVector extends Plane {
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);
-        const range = this.config.data.gridRange;
-        this.grid.updateRange(range);
-
+        
         // Create Source Field Input
-        const sourceGrid = new GridWithMargin(this.grid.resolution, range, 2 * this.config.data.licLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateDistances(
             sourceGrid,

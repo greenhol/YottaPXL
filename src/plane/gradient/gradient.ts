@@ -1,11 +1,12 @@
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
+import { ModuleConfig, UiFieldFloat, UiFieldStringEnum } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
-import { ColorMapper } from '../../math/color-mapper/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color-mapper/color-mapper';
 import { COLORS } from '../../types/colors';
 import { Plane, PlaneConfig } from '../plane';
+import { UI_SCHEMA_HEADER_GRADIENT, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
 
-enum GradientType {
+enum GradientDemos {
     BW = 'BlackWhite',
     HOT_METAL = 'Hot Metal',
     RAINBOW = 'Rainbow',
@@ -22,12 +23,9 @@ enum GradientType {
     C64_ALL_COLORS = 'C64 All Colors',
 }
 
-interface GradientConfig extends PlaneConfig {
-    type: GradientType,
-    custom: string,
-    easing: boolean,
-    easingFactor: number,
-    scaling: number,
+interface GradientPlaneConfig extends PlaneConfig {
+    demo: GradientDemos,
+    config: ColorMapperConfig,
     offset: number,
 };
 
@@ -36,23 +34,24 @@ const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
 @InitializeAfterConstruct()
 export class Gradient extends Plane {
 
-    override config: ModuleConfig<GradientConfig> = new ModuleConfig(
+    override config: ModuleConfig<GradientPlaneConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            type: GradientType.BW,
-            custom: '',
-            easing: true,
-            easingFactor: 0,
-            scaling: 1,
+            demo: GradientDemos.BW,
+            config: {
+                supportPoints: '',
+                easing: Easing.LINEAR,
+                scaling: 1,
+            },
             offset: 0,
         },
         'gradientConfig',
         [
-            new UiFieldStringEnum('type', GradientType, 'Gradient Type', 'Type of Gradient (selection of predefined or a custom one)'),
-            new UiFieldString('custom', 'Custom String', 'Overriding custom input for Gradient. Syntax comma separated x:color, e.g. \'0:#FF0000, 1:#0000FF\''),
-            new UiFieldBool('easing', 'Easing', 'Whether colors should be interpolated (bahave like Gradient) or just show solid colors'),
-            new UiFieldFloat('easingFactor', 'Easing Factor', 'How Gradient behaves around the support points (0: linear, 1: quadratic)', 0, 1),
-            new UiFieldFloat('scaling', 'Scaling', 'Gradient is scaled by this factor', 0.01, 10000),
+            UI_SCHEMA_HEADER_GRADIENT,
+            new UiFieldStringEnum('demo', GradientDemos, 'Gradient Demos', 'Gradient Demos (selection of predefined definitions)'),
+            uiSchemaGradientSupportPoints('config.supportPoints'),
+            uiSchemaGradientEasing('config.easing'),
+            uiSchemaGradientScaling('config.scaling'),
             new UiFieldFloat('offset', 'Offset', 'Gradient Offset (applied after scaling)', -10000, 10000),
         ],
     );
@@ -74,7 +73,7 @@ export class Gradient extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const [x, y] = this.grid.pixelToMath(col, row);
                 const index = this.grid.getIndex(col, row);
-                const color = colorMapper.map(x, 10 / this.mapYToScale(y) * this.config.data.scaling, this.config.data.offset);
+                const color = colorMapper.map(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset);
                 const pixelIndex = index * 4;
                 imageData[pixelIndex] = color.r;
                 imageData[pixelIndex + 1] = color.g;
@@ -86,25 +85,24 @@ export class Gradient extends Plane {
     }
 
     private getColorMapper(): ColorMapper {
-        const easingFactor: number | null = (this.config.data.easing) ? this.config.data.easingFactor : null;
-        if (this.config.data.custom.length > 0) {
-            return ColorMapper.fromString(this.config.data.custom, easingFactor);
+        if (this.config.data.config.supportPoints.length > 0) {
+            return ColorMapper.fromString(this.config.data.config.supportPoints, this.config.data.config.easing);
         }
-        switch (this.config.data.type) {
-            case GradientType.BW: return ColorMapper.fromColors(COLORS.BW, easingFactor);
-            case GradientType.HOT_METAL: return ColorMapper.fromColors(COLORS.HOT_METAL, easingFactor);
-            case GradientType.RAINBOW: return ColorMapper.fromColors(COLORS.RAINBOW, easingFactor);
-            case GradientType.OCEAN: return ColorMapper.fromColors(COLORS.OCEAN, easingFactor);
-            case GradientType.FIRE: return ColorMapper.fromColors(COLORS.FIRE, easingFactor);
-            case GradientType.PURPLE_HAZE: return ColorMapper.fromColors(COLORS.PURPLE_HAZE, easingFactor);
-            case GradientType.GREYSCALE: return ColorMapper.fromColors(COLORS.GREYSCALE, easingFactor);
-            case GradientType.SUNSET: return ColorMapper.fromColors(COLORS.SUNSET, easingFactor);
-            case GradientType.ELECTRIC: return ColorMapper.fromColors(COLORS.ELECTRIC, easingFactor);
-            case GradientType.PASTEL: return ColorMapper.fromColors(COLORS.PASTEL, easingFactor);
-            case GradientType.CAPPUCCINO: return ColorMapper.fromColors(COLORS.CAPPUCCINO, easingFactor);
-            case GradientType.C64_RAINBOW: return ColorMapper.fromColors(COLORS.C64_RAINBOW, easingFactor);
-            case GradientType.C64_MANDELBROT: return ColorMapper.fromColors(COLORS.C64_MANDELBROT, easingFactor);
-            case GradientType.C64_ALL_COLORS: return ColorMapper.fromColors(COLORS.C64_ALL_COLORS, easingFactor);
+        switch (this.config.data.demo) {
+            case GradientDemos.BW: return ColorMapper.fromColors(COLORS.BW, this.config.data.config.easing);
+            case GradientDemos.HOT_METAL: return ColorMapper.fromColors(COLORS.HOT_METAL, this.config.data.config.easing);
+            case GradientDemos.RAINBOW: return ColorMapper.fromColors(COLORS.RAINBOW, this.config.data.config.easing);
+            case GradientDemos.OCEAN: return ColorMapper.fromColors(COLORS.OCEAN, this.config.data.config.easing);
+            case GradientDemos.FIRE: return ColorMapper.fromColors(COLORS.FIRE, this.config.data.config.easing);
+            case GradientDemos.PURPLE_HAZE: return ColorMapper.fromColors(COLORS.PURPLE_HAZE, this.config.data.config.easing);
+            case GradientDemos.GREYSCALE: return ColorMapper.fromColors(COLORS.GREYSCALE, this.config.data.config.easing);
+            case GradientDemos.SUNSET: return ColorMapper.fromColors(COLORS.SUNSET, this.config.data.config.easing);
+            case GradientDemos.ELECTRIC: return ColorMapper.fromColors(COLORS.ELECTRIC, this.config.data.config.easing);
+            case GradientDemos.PASTEL: return ColorMapper.fromColors(COLORS.PASTEL, this.config.data.config.easing);
+            case GradientDemos.CAPPUCCINO: return ColorMapper.fromColors(COLORS.CAPPUCCINO, this.config.data.config.easing);
+            case GradientDemos.C64_RAINBOW: return ColorMapper.fromColors(COLORS.C64_RAINBOW, this.config.data.config.easing);
+            case GradientDemos.C64_MANDELBROT: return ColorMapper.fromColors(COLORS.C64_MANDELBROT, this.config.data.config.easing);
+            case GradientDemos.C64_ALL_COLORS: return ColorMapper.fromColors(COLORS.C64_ALL_COLORS, this.config.data.config.easing);
         }
     }
 

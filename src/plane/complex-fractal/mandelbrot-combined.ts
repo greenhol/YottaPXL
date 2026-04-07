@@ -1,16 +1,19 @@
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldFloat, UiFieldInteger } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
-import { ColorMapper } from '../../math/color-mapper/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color-mapper/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { COLOR } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
+import { UI_SCHEMA_HEADER_FRACTAL, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedConfig extends PlaneConfig {
     maxIterations: number,
     escapeValue: number,
+    gradientIterations: ColorMapperConfig,
+    gradientDistance: ColorMapperConfig,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -25,11 +28,30 @@ export class MandelbrotCombined extends Plane {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
             escapeValue: 100,
+            gradientIterations: {
+                supportPoints: '0:#00FF00, 0.5:#88FF88, 1:#00FF00',
+                easing: Easing.LINEAR,
+                scaling: 1,
+            },
+            gradientDistance: {
+                supportPoints: '0:#FFFFFF, 0.4:#FFFFFF, 0.5:#000000, 0.6:#FFFFFF, 1:#FFFFFF',
+                easing: Easing.LINEAR,
+                scaling: 0.1,
+            },
         },
         'mandelbrotCombinedConfig',
         [
-            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
-            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
+            UI_SCHEMA_HEADER_FRACTAL,
+            uiSchemaFractalMaxIterations('maxIterations'),
+            uiSchemaFractalEscapeValue('escapeValue'),
+            uiSchemaHeader('Iterations Gradient'),
+            uiSchemaGradientSupportPoints('gradientIterations.supportPoints'),
+            uiSchemaGradientEasing('gradientIterations.easing'),
+            uiSchemaGradientScaling('gradientIterations.scaling'),
+            uiSchemaHeader('Distance Gradient'),
+            uiSchemaGradientSupportPoints('gradientDistance.supportPoints'),
+            uiSchemaGradientEasing('gradientDistance.easing'),
+            uiSchemaGradientScaling('gradientDistance.scaling'),
         ],
     );
 
@@ -58,19 +80,10 @@ export class MandelbrotCombined extends Plane {
 
     private createImage(iterations: Float64Array, distances: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperIterations = new ColorMapper([
-            { pos: 0, color: { r: 0, g: 128, b: 0 } },
-            { pos: 128, color: COLOR.GREEN },
-            { pos: 256, color: { r: 0, g: 128, b: 0 } },
-        ]);
+        const colorMapperIterations = ColorMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
         let max = 0;
         distances.forEach(value => { if (value > max) max = value });
-        const colorMapperDistances = new ColorMapper([
-            { pos: 0, color: COLOR.WHITE },
-            { pos: max / 25, color: COLOR.WHITE },
-            { pos: max / 25 + max / 300, color: COLOR.BLACK },
-            { pos: max / 25 + 2 * max / 300, color: COLOR.WHITE },
-        ]);
+        const colorMapperDistances = ColorMapper.fromString(this.config.data.gradientDistance.supportPoints, this.config.data.gradientDistance.easing);
         this.config.setInfo('Iterations Gradient', colorMapperIterations.supportPointsString);
         this.config.setInfo('Distances Gradient', colorMapperDistances.supportPointsString);
 
@@ -85,8 +98,8 @@ export class MandelbrotCombined extends Plane {
                     imageData[pixelIndex + 2] = 0; // B
                     imageData[pixelIndex + 3] = 255; // A (opaque)
                 } else {
-                    const color = colorMapperIterations.map(valueIterations);
-                    const valueFactor = colorMapperDistances.map(distances[index]).r / 255;
+                    const color = colorMapperIterations.map(valueIterations, 255 * this.config.data.gradientIterations.scaling);
+                    const valueFactor = colorMapperDistances.map(distances[index], max * this.config.data.gradientDistance.scaling).r / 255;
                     imageData[pixelIndex] = Math.round(valueFactor * color.r);     // R
                     imageData[pixelIndex + 1] = Math.round(valueFactor * color.g); // G
                     imageData[pixelIndex + 2] = Math.round(valueFactor * color.b); // B

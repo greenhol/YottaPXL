@@ -1,25 +1,26 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool, UiFieldFloat, UiFieldHeader, UiFieldInteger } from '../../../shared/config';
+import { ModuleConfig, UiFieldBool } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ColorMapper } from '../../math/color-mapper/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
-import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { getNoiseScaleFactor, NoiseScaleFactor } from '../../math/noise-generator/types';
+import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
+import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { Color, COLORS, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
+import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaHeader, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotVectorConfig extends PlaneConfig {
+    useNoiseAsSource: boolean,
+    noiseConfig: NoiseConfig,
     maxIterations: number,
     escapeValue: number,
     licLength: number,
-    useNoiseAsSource: boolean,
-    noiseScaleFactor: number,
 }
 
 const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
@@ -33,22 +34,28 @@ export class MandelbrotVector extends Plane {
     override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
+            useNoiseAsSource: true,
+            noiseConfig: {
+                type: NoiseType.BERNOULLI_ISOLATED,
+                p: 0.3,
+                scaling: NoiseScaleFactor.TWO,
+            },
             maxIterations: 0,
             escapeValue: 100,
             licLength: 5,
-            useNoiseAsSource: true,
-            noiseScaleFactor: NoiseScaleFactor.TWO,
         },
         'mandelbrotVectorConfig',
         [
-            new UiFieldHeader('Source Image'),
+            uiSchemaHeader('Source Image'),
             new UiFieldBool('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
-            new UiFieldInteger('noiseScaleFactor', 'Noise Scale', 'Scaling of input noise image', 1, 10),
-            new UiFieldHeader('Fractal properties'),
-            new UiFieldInteger('maxIterations', 'Max Iterations', 'Maximum iterations (0: automatic estimation)', 0, 100000),
-            new UiFieldFloat('escapeValue', 'Escape value', 'Escape value', 2, 1000),
-            new UiFieldHeader('LIC properties'),
-            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+            uiSchemaNoiseType('noiseConfig.type'),
+            uiSchemaNoiseP('noiseConfig.p'),
+            uiSchemaNoiseScaling('noiseConfig.scaling'),
+            UI_SCHEMA_HEADER_FRACTAL,
+            uiSchemaFractalMaxIterations('maxIterations'),
+            uiSchemaFractalEscapeValue('escapeValue'),
+            UI_SCHEMA_HEADER_LIC,
+            uiSchemaLicLenth('licLength'),
         ],
     );
 
@@ -61,7 +68,7 @@ export class MandelbrotVector extends Plane {
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);
-        
+
         // Create Source Field Input
         const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
         const mandelbrotCalculator = new MandelbrotCalculator();
@@ -106,7 +113,7 @@ export class MandelbrotVector extends Plane {
 
     private async createNoise(sourceGrid: GridWithMargin): Promise<Float64Array> {
         const generator = new NoiseGenerator(sourceGrid);
-        const generator$ = generator.createBernoulliNoiseIsolated(0.3, getNoiseScaleFactor(this.config.data.noiseScaleFactor));
+        const generator$ = generator.createNoise(this.config.data.noiseConfig);
         return await extractData(generator$, 'noise');
     }
 

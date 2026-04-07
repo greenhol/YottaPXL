@@ -1,18 +1,21 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldFloat } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
-import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
+import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { PressureRegion } from '../../math/vector-field/weather-field/types';
 import { Color, COLOR, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
+import { UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 
 interface WeatherConfig extends PlaneConfig {
+    noiseConfig: NoiseConfig,
     licLength: number,
 }
 
@@ -67,11 +70,21 @@ export class Weather extends Plane {
     override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
+            noiseConfig: {
+                type: NoiseType.BERNOULLI_ISOLATED_BIG,
+                p: 0.05,
+                scaling: NoiseScaleFactor.NONE,
+            },
             licLength: 20,
         },
         'weatherConfig',
         [
-            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+            UI_SCHEMA_HEADER_NOISE,
+            uiSchemaNoiseType('noiseConfig.type'),
+            uiSchemaNoiseP('noiseConfig.p'),
+            uiSchemaNoiseScaling('noiseConfig.scaling'),
+            UI_SCHEMA_HEADER_LIC,
+            uiSchemaLicLenth('licLength'),
         ],
     );
 
@@ -91,7 +104,7 @@ export class Weather extends Plane {
 
         // Create Source Image
         const noiseGenerator = new NoiseGenerator(sourceGrid);
-        const generator$ = noiseGenerator.createBernoulliNoiseIsolatedBig(0.05);
+        const generator$ = noiseGenerator.createNoise(this.config.data.noiseConfig);
         const noise = await extractData(generator$, 'noise');
 
         // Draw Source Image

@@ -1,17 +1,19 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldFloat } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
-import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { BiasType } from '../../math/noise-generator/types';
+import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
+import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { COLOR, Color, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
+import { UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 
-interface ChargesConfig extends PlaneConfig {
+interface ChargesPlaneConfig extends PlaneConfig {
+    noiseConfig: NoiseConfig,
     licLength: number,
 }
 
@@ -20,14 +22,24 @@ const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
 @InitializeAfterConstruct()
 export class Charges extends Plane {
 
-    override config: ModuleConfig<ChargesConfig> = new ModuleConfig(
+    override config: ModuleConfig<ChargesPlaneConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
+            noiseConfig: {
+                type: NoiseType.BIASED_UPPER,
+                p: 0.5,
+                scaling: NoiseScaleFactor.NONE,
+            },
             licLength: 10,
         },
         'chargesConfig',
         [
-            new UiFieldFloat('licLength', 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200),
+            UI_SCHEMA_HEADER_NOISE,
+            uiSchemaNoiseType('noiseConfig.type'),
+            uiSchemaNoiseP('noiseConfig.p'),
+            uiSchemaNoiseScaling('noiseConfig.scaling'),
+            UI_SCHEMA_HEADER_LIC,
+            uiSchemaLicLenth('licLength'),
         ],
     );
 
@@ -51,7 +63,7 @@ export class Charges extends Plane {
 
         // Create Source Image
         const noiseGenerator = new NoiseGenerator(sourceGrid);
-        const generator$ = noiseGenerator.createBiasedNoise(BiasType.UPPER);
+        const generator$ = noiseGenerator.createNoise(this.config.data.noiseConfig);
         const noise = await extractData(generator$, 'noise');
 
         // Draw Source Image

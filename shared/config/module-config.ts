@@ -28,7 +28,7 @@ export class ModuleConfig<T> {
         this._persistable = !!storageKey;
         this._configUiSchema = configUiSchema;
         this._storageType = storageType;
-        this.setInfo('App Version', `${APP_NAME}_${APP_VERSION}`);
+        this.setInfo('App', `${APP_NAME} V${APP_VERSION}`);
         this.setInfo('Storage Key', this._storageKey);
 
         if (!this.load()) {

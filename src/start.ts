@@ -4,11 +4,12 @@ import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/confi
 import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
+import { ColorBlending } from './plane/color/color-blending';
+import { Gradient } from './plane/color/gradient';
 import { MandelbrotCombined } from './plane/complex-fractal/mandelbrot-combined';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
-import { Gradient } from './plane/gradient/gradient';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
 import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
@@ -129,6 +130,10 @@ export class Start {
             }
             case 'GRADIENT': {
                 this._plane = new Gradient(this._grid);
+                break;
+            }
+            case 'COLOR_BLEND': {
+                this._plane = new ColorBlending(this._grid);
                 break;
             }
         }

@@ -1,9 +1,8 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color-mapper/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { COLOR } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_FRACTAL, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';

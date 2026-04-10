@@ -2,7 +2,7 @@ import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color-mapper/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { COLOR } from '../../types';
 import { Plane, PlaneConfig } from '../plane';

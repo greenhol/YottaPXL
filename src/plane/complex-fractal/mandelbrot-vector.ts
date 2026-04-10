@@ -3,7 +3,7 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldBool } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ColorMapper } from '../../math/color-mapper/color-mapper';
+import { ColorMapper } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';

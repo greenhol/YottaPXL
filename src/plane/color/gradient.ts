@@ -1,7 +1,7 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldFloat, UiFieldStringEnum } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color-mapper/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { COLORS } from '../../types/colors';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_GRADIENT, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';

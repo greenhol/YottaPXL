@@ -6,7 +6,8 @@ export type PlaneId =
     'CHARGES' |
     'WEATHER' |
     'NOISE' |
-    'GRADIENT';
+    'GRADIENT' |
+    'COLOR_BLEND';
 
 export interface PlaneType {
     id: PlaneId,
@@ -23,6 +24,7 @@ export const VALID_PLANE_IDS: PlaneId[] = [
     'WEATHER',
     'NOISE',
     'GRADIENT',
+    'COLOR_BLEND',
 ];
 
 export const PLANE_TYPES: PlaneType[] = [
@@ -34,4 +36,5 @@ export const PLANE_TYPES: PlaneType[] = [
     { id: 'WEATHER', short: 'Weather patterns', description: 'A vector field visualization for for weather patterns of pressure systems' },
     { id: 'NOISE', short: 'Noise types', description: 'A set of different noise types' },
     { id: 'GRADIENT', short: 'Color Gradients', description: 'A selection of color gradients and custom for defining your own' },
+    { id: 'COLOR_BLEND', short: 'Color Blending', description: 'A selection of color blenders demonstrated on gradients' },
 ];

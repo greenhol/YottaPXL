@@ -1,11 +1,16 @@
 import { UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
-import { Easing } from '../../math/color-mapper/color-mapper';
+import { BlendingType } from '../../math/color/color-blender';
+import { Easing } from '../../math/color/color-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
+
+// ToDo: refactor to a single const export like unique.ts or color.blender.ts
 
 /** Header */
 export function uiSchemaHeader(text: string): UiFieldHeader {
     return new UiFieldHeader(text);
 }
+
+export const UI_SCHEMA_HEADER_COLORS = uiSchemaHeader('Colors');
 
 export const UI_SCHEMA_HEADER_GRADIENT = uiSchemaHeader('Gradient');
 
@@ -16,7 +21,7 @@ export const UI_SCHEMA_HEADER_FRACTAL = uiSchemaHeader('Fractal');
 export const UI_SCHEMA_HEADER_LIC = uiSchemaHeader('LIC');
 
 
-/** Gradient */
+/** Color */
 export function uiSchemaGradientSupportPoints(path: string): UiFieldString {
     return new UiFieldString(path, 'Support Points', 'Input for Gradient support points. Syntax comma separated x:color, e.g. \'0:#FF0000, 1:#0000FF\'');
 }
@@ -27,6 +32,10 @@ export function uiSchemaGradientEasing(path: string): UiFieldStringEnum<Record<s
 
 export function uiSchemaGradientScaling(path: string): UiFieldFloat {
     return new UiFieldFloat(path, 'Scaling', 'Gradient is scaled by this factor', 0.01, 10000);
+}
+
+export function uiSchemaColorBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
+    return new UiFieldStringEnum<Record<string, unknown>>(path, BlendingType, 'Blending Type', '');
 }
 
 /** Noise */

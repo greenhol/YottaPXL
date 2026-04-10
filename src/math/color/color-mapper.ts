@@ -1,4 +1,3 @@
-import { Gradient } from './../../plane/gradient/gradient';
 import { COLOR, Color } from '../../types/color';
 
 export interface SupportPoint {

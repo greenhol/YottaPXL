@@ -163,7 +163,7 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
 
     do {
         // z_new = z * z + c
-        const reZnew = reZ * reZ - imZ * imZ +reC;
+        const reZnew = reZ * reZ - imZ * imZ + reC;
         const imZnew = 2 * reZ * imZ + imC;
 
         // dz_new = 2 * z * dz + 1

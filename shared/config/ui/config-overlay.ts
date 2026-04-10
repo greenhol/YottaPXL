@@ -101,7 +101,7 @@ export class ConfigOverlay {
             // Column 1: Label
             const label = document.createElement('label');
             label.className = 'config-overlay-labels';
-            if (field.type == 'header') label.classList.add('config-overlay-headers')
+            if (field.type == 'header') label.classList.add('config-overlay-headers');
             label.textContent = field.label;
             label.title = field.fullDescription;
             if (field.type != 'header') label.htmlFor = field.id;

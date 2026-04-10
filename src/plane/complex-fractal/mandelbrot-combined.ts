@@ -65,12 +65,12 @@ export class MandelbrotCombined extends Plane {
         this.setProgress(0);
         // Iterations
         const calculationIterations$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
-        calculationIterations$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Iterations 1/2') } });
+        calculationIterations$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Iterations 1/2'); } });
         const iterationsData = await extractData(calculationIterations$, 'mandelbrot iterations');
 
         // Distances
         const calculationDistances$ = new MandelbrotCalculator().calculateDistances(this.grid, this._effectiveMaxIterations, this.config.data.escapeValue);
-        calculationDistances$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Distances 2/2') } });
+        calculationDistances$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Distances 2/2'); } });
         const distancesData = await extractData(calculationDistances$, 'mandelbrot distances');
 
         this.updateImage(this.createImage(iterationsData, distancesData));
@@ -81,7 +81,7 @@ export class MandelbrotCombined extends Plane {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapperIterations = ColorMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
         let max = 0;
-        distances.forEach(value => { if (value > max) max = value });
+        distances.forEach(value => { if (value > max) max = value; });
         const colorMapperDistances = ColorMapper.fromString(this.config.data.gradientDistance.supportPoints, this.config.data.gradientDistance.easing);
         this.config.setInfo('Iterations Gradient', colorMapperIterations.supportPointsString);
         this.config.setInfo('Distances Gradient', colorMapperDistances.supportPointsString);

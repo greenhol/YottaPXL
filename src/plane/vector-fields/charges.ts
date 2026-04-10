@@ -58,7 +58,7 @@ export class Charges extends Plane {
             { x: 5.5, y: -0.5, charge: -10 },
             { x: 7, y: 2, charge: 3 },
         ]);
-        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2') } });
+        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });
         const field = await extractData(fieldCalculation$, 'charges field');
 
         // Create Source Image
@@ -71,19 +71,19 @@ export class Charges extends Plane {
             grid: sourceGrid,
             image: noise,
             field: field,
-        }
+        };
         this.updateImage(this.createSourceImage(sourceData));
 
         // LIC
         const calculator: LicCalculator = new LicCalculator(sourceData, this.grid, true);
         const calculation$ = calculator.calculate(this.config.data.licLength);
-        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2') } });
+        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2'); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));
             this.setIdle();
         } else {
-            console.error('#calculateAndDraw - calculation did not produce data')
+            console.error('#calculateAndDraw - calculation did not produce data');
         }
     }
 

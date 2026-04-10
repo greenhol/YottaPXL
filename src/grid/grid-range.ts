@@ -32,5 +32,5 @@ export function gridRangeFromString(range: string): GridRange | null {
         return null;
     }
 
-    return { xMin, xMax, yCenter }
+    return { xMin, xMax, yCenter };
 }

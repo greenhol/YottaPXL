@@ -26,7 +26,7 @@ export class MandelbrotCalculator {
             type: calculytionType,
             maxIterations: maxIterations,
             escapeValue: escapeValue,
-        }
+        };
         return executeWorker<WorkerSetupMandelbrot, Float64Array>(worker, setup);
     }
 }

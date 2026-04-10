@@ -48,17 +48,17 @@ export class Grid extends GridWithoutRange {
         ];
     }
 
-    public get resolution(): Resolution { return this._resolution }
+    public get resolution(): Resolution { return this._resolution; }
 
-    public get range(): GridRange { return this._range }
+    public get range(): GridRange { return this._range; }
 
-    public get xDiff(): number { return this._xDiff }
+    public get xDiff(): number { return this._xDiff; }
 
     public get blueprint(): GridBlueprint {
         return {
             resolution: { width: this.width, height: this.height, description: `${this._resolution.description} (Copy)` },
             range: this._range,
-        }
+        };
     }
 
     public toString(): string {

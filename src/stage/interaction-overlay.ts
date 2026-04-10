@@ -118,23 +118,23 @@ export class InteractionOverlay {
     }
 
     private addEventListeners() {
-        this._overlay.addEventListener('mousedown', (e) => { if (!this._frozen) this.onMouseDown(e) });
-        this._overlay.addEventListener('mousemove', (e) => { if (!this._frozen) this.onMouseMove(e) });
-        this._overlay.addEventListener('mouseup', (e) => { if (!this._frozen) this.onMouseUp(e) });
-        this._overlay.addEventListener('mouseleave', () => { if (!this._frozen) this.onMouseLeave() });
-        this._overlay.addEventListener('wheel', (e) => { if (!this._frozen) this.onMouseWheel(e) });
-        this._overlay.addEventListener('touchstart', (e) => { if (!this._frozen) this.onTouchStart(e) });
-        this._overlay.addEventListener('touchmove', (e) => { if (!this._frozen) this.onTouchMove(e) });
-        this._overlay.addEventListener('touchend', (e) => { if (!this._frozen) this.onTouchEnd(e) });
-        window.addEventListener('scroll', () => { this.onWindowScroll() })
+        this._overlay.addEventListener('mousedown', (e) => { if (!this._frozen) this.onMouseDown(e); });
+        this._overlay.addEventListener('mousemove', (e) => { if (!this._frozen) this.onMouseMove(e); });
+        this._overlay.addEventListener('mouseup', (e) => { if (!this._frozen) this.onMouseUp(e); });
+        this._overlay.addEventListener('mouseleave', () => { if (!this._frozen) this.onMouseLeave(); });
+        this._overlay.addEventListener('wheel', (e) => { if (!this._frozen) this.onMouseWheel(e); });
+        this._overlay.addEventListener('touchstart', (e) => { if (!this._frozen) this.onTouchStart(e); });
+        this._overlay.addEventListener('touchmove', (e) => { if (!this._frozen) this.onTouchMove(e); });
+        this._overlay.addEventListener('touchend', (e) => { if (!this._frozen) this.onTouchEnd(e); });
+        window.addEventListener('scroll', () => { this.onWindowScroll(); });
     }
 
     private onTouchStart(e: TouchEvent) {
-        if (this.processIncomingTouchEvents(e, true)) { e.preventDefault() }
+        if (this.processIncomingTouchEvents(e, true)) { e.preventDefault(); }
     }
 
     private onTouchMove(e: TouchEvent) {
-        if (this.processIncomingTouchEvents(e, false)) { e.preventDefault() }
+        if (this.processIncomingTouchEvents(e, false)) { e.preventDefault(); }
     }
 
     private onTouchEnd(e: TouchEvent) {
@@ -158,7 +158,7 @@ export class InteractionOverlay {
             if (start) this.cancelLongPress();
             if (!this.evaluateTouchRect(e)) this.resetInteraction();
         }
-        else if (e.touches.length > 2) { this.resetInteraction() }
+        else if (e.touches.length > 2) { this.resetInteraction(); }
         return true;
     }
 
@@ -184,7 +184,7 @@ export class InteractionOverlay {
         return p.x < this._overlayRect.left ||
             p.x > this._overlayRect.right ||
             p.y < this._overlayRect.top ||
-            p.y > this._overlayRect.bottom
+            p.y > this._overlayRect.bottom;
     }
 
     private onMouseDown(e: MouseEvent) {
@@ -308,7 +308,7 @@ export class InteractionOverlay {
     }
 
     private evaluateRect(p1: Point, p2: Point) {
-        const p: Point = { x: Math.min(p1.x, p2.x), y: Math.min(p1.y, p2.y) }
+        const p: Point = { x: Math.min(p1.x, p2.x), y: Math.min(p1.y, p2.y) };
         const width = Math.abs(p1.x - p2.x);
         const height = Math.abs(p1.y - p2.y);
         if (width < MIN_RECTANGLE_WIDTH) {
@@ -338,7 +338,7 @@ export class InteractionOverlay {
         userRect.setAttribute('width', width.toString());
         userRect.setAttribute('height', height.toString());
 
-        this._invalidRect = userRect
+        this._invalidRect = userRect;
         this._overlay.appendChild(this._invalidRect);
     }
 
@@ -365,7 +365,7 @@ export class InteractionOverlay {
         normRect.setAttribute('width', normWidth.toString());
         normRect.setAttribute('height', normHeight.toString());
 
-        this._validRect = { user: userRect, norm: normRect }
+        this._validRect = { user: userRect, norm: normRect };
         this._overlay.appendChild(this._validRect.user);
         this._overlay.appendChild(this._validRect.norm);
     }
@@ -388,7 +388,7 @@ export class InteractionOverlay {
         const normP: Point = {
             x: p.x,
             y: p.y + height / 2 - normHeight / 2,
-        }
+        };
         return [normP, width, normHeight];
     }
 
@@ -433,7 +433,7 @@ export class InteractionOverlay {
             y1: pixelY,
             x2: pixelX + width,
             y2: pixelY + height,
-        }
+        };
     }
 
     private getMathCoordinatesFromRectangle(rect: SVGGElement): RectangleCoordinates {
@@ -449,7 +449,7 @@ export class InteractionOverlay {
             y1: mathY1,
             x2: mathX2,
             y2: mathY2,
-        }
+        };
     }
 
     private rectangleCoordinatesToString(coords: RectangleCoordinates, round: boolean = false): string {

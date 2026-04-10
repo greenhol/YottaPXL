@@ -53,14 +53,14 @@ export class MandelbrotIterations extends Plane {
         this.setProgress(0);
         const calculation$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
         calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress) }
+            next: (state) => { this.setProgress(state.progress); }
         });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));
             this.setIdle();
         } else {
-            console.error('#calculate - calculation did not produce data')
+            console.error('#calculate - calculation did not produce data');
         }
     }
 

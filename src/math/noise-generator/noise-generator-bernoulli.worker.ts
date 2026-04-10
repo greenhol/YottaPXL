@@ -7,7 +7,7 @@ import { upscaleNoise } from './utils';
 import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
 
 self.onmessage = (e) => {
-    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupBernoulliNoise } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupBernoulliNoise; } = e.data;
     if (type === MessageToWorker.START) {
         const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
@@ -107,13 +107,13 @@ function createIsolatedBigNoise(data: Float64Array, grid: GridReader): Float64Ar
         for (let col = 0; col < grid.width; col++) {
             if (data[grid.getIndex(col, row)] == 0) {
                 if (row > 0 && col > 0) {
-                    data[grid.getIndex(col - 1, row - 1)] = 0
+                    data[grid.getIndex(col - 1, row - 1)] = 0;
                 }
                 if (col > 0) {
-                    data[grid.getIndex(col - 1, row)] = 0
+                    data[grid.getIndex(col - 1, row)] = 0;
                 }
                 if (row > 0) {
-                    data[grid.getIndex(col, row - 1)] = 0
+                    data[grid.getIndex(col, row - 1)] = 0;
                 }
             }
         }

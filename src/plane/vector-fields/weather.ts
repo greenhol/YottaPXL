@@ -99,7 +99,7 @@ export class Weather extends Plane {
         const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createWeatherField(this._pressureRegions, 1);
-        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2') } });
+        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });
         const field = await extractData(fieldCalculation$, 'charges field');
 
         // Create Source Image
@@ -112,19 +112,19 @@ export class Weather extends Plane {
             grid: sourceGrid,
             image: noise,
             field: field,
-        }
+        };
         this.updateImage(this.createSourceImage(sourceData));
 
         // LIC
         const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
         const calculation$ = calculator.calculate(this.config.data.licLength, 5, 3.6);
-        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2') } });
+        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2'); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));
             this.setIdle();
         } else {
-            console.error('#calculateAndDraw - calculation did not produce data')
+            console.error('#calculateAndDraw - calculation did not produce data');
         }
     }
 

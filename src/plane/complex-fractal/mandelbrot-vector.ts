@@ -76,14 +76,14 @@ export class MandelbrotVector extends Plane {
             sourceGrid,
             this._effectiveMaxIterations,
             this.config.data.escapeValue,
-        )
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Input 1/4') } });
+        );
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Input 1/4'); } });
         const mandelbrotDistances = await extractData(mandelbrotCalculation$, 'mandelbrot distances');
 
         // Create Source Field
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createMatrixGradientField(mandelbrotDistances, 0, this._effectiveMaxIterations);
-        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 2/4') } });
+        fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 2/4'); } });
         const field = await extractData(fieldCalculation$, 'charges field');
 
         // Create Source Image
@@ -93,21 +93,21 @@ export class MandelbrotVector extends Plane {
                 await this.createNoise(sourceGrid) :
                 await this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations),
             field: field,
-        }
+        };
         this.updateImage(this.drawSourceImage(sourceData));
 
         // LIC
         const licCalculator = new LicCalculator(sourceData, this.grid);
         const licCalculation$ = licCalculator.calculate(this.config.data.licLength);
         licCalculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress, 'LIC 4/4') }
+            next: (state) => { this.setProgress(state.progress, 'LIC 4/4'); }
         });
         const licResult = await lastValueFrom(licCalculation$);
         if (licResult.data != null) {
             this.updateImage(this.drawImage(licResult.data));
             this.setIdle();
         } else {
-            console.error('#calculateAndDraw - calculation did not produce data')
+            console.error('#calculateAndDraw - calculation did not produce data');
         }
     }
 
@@ -121,7 +121,7 @@ export class MandelbrotVector extends Plane {
         const colorMapper = ColorMapper.fromColors(COLORS.BW);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4') } });
+        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4'); } });
         const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
 
         const data = new Float64Array(sourceGrid.size);

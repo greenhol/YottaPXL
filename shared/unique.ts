@@ -1,12 +1,12 @@
 class Unique {
-    private list: Set<string>
+    private list: Set<string>;
     private partSize: number;
     private parts: number;
     private static readonly CONSONANTS = 'BCDFGHJKLMNPQRSTVWXYZ';
     private static readonly VOWELS = 'AEIOU';
 
     constructor(partSize: number, parts: number) {
-        this.list = new Set<string>()
+        this.list = new Set<string>();
         this.partSize = partSize;
         this.parts = parts;
     }

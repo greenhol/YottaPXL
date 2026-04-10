@@ -35,7 +35,7 @@ export function uiSchemaGradientScaling(path: string): UiFieldFloat {
 }
 
 export function uiSchemaColorBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
-    return new UiFieldStringEnum<Record<string, unknown>>(path, BlendingType, 'Blending Type', '');
+    return new UiFieldStringEnum<Record<string, unknown>>(path, BlendingType, 'Blending Type', 'Combines two Colors:\n\'Manipulation\' uses only the brithtness of Color 2 to manipulate Color 1\n\'Blending\' blends all channels in different ways');
 }
 
 /** Noise */

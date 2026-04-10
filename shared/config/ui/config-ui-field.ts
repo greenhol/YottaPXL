@@ -73,7 +73,7 @@ export abstract class ConfigUiField<T> {
 
     abstract fullDescription: string;
 
-    abstract validate(v: string): T
+    abstract validate(v: string): T;
 
     private traverseToParent(data: any, path: string) {
         const parts = path.split('.');

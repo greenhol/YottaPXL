@@ -38,7 +38,7 @@ const refWhiteD65 = {
     x: 95.047,
     y: 100.000,
     z: 108.883,
-}
+};
 
 class ColorBlender {
 
@@ -66,7 +66,7 @@ class ColorBlender {
             r: Math.round(factor * color1.r),
             g: Math.round(factor * color1.g),
             b: Math.round(factor * color1.b),
-        }
+        };
     }
 
     private hueBlending(color1: Color, color2: Color): Color {
@@ -268,7 +268,7 @@ class ColorBlender {
     }
 
     private linearToGamma(channel: number): number {
-        return channel <= 0.0031308 ? 12.92 * channel : (1 + 0.055) * Math.pow(channel, 1 / 2.4) - 0.055
+        return channel <= 0.0031308 ? 12.92 * channel : (1 + 0.055) * Math.pow(channel, 1 / 2.4) - 0.055;
     }
 }
 

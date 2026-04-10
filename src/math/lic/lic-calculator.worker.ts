@@ -100,7 +100,7 @@ function calcLicPixelInDirection(
 }
 
 function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel {
-    let alphas: number[] = []
+    let alphas: number[] = [];
     let beta: number;
     const offset = 0.01;
     // Top, Bottom, Left, Right
@@ -110,7 +110,7 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
     alphas.push((1 - x) / vX);
     alphas.forEach((alpha: number, i: number) => {
         if (alpha <= 0) alphas[i] = Infinity;
-    })
+    });
     const borderIndex = alphas.indexOf(Math.min(...alphas));
     const distance = Math.sqrt(Math.pow(alphas[borderIndex] * vX, 2) + Math.pow(alphas[borderIndex] * vY, 2)) / Math.SQRT2;
 
@@ -123,7 +123,7 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
                 x: beta,
                 y: offset,
                 distance: distance
-            }
+            };
         case 1: // Bottom
             beta = vX * alphas[borderIndex] + x;
             return {
@@ -132,7 +132,7 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
                 x: beta,
                 y: 1 - offset,
                 distance: distance
-            }
+            };
         case 2: // Left
             beta = vY * alphas[borderIndex] + y;
             return {
@@ -141,7 +141,7 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
                 x: 1 - offset,
                 y: beta,
                 distance: distance
-            }
+            };
         case 3: // Right
             beta = vY * alphas[borderIndex] + y;
             return {
@@ -150,7 +150,7 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
                 x: offset,
                 y: beta,
                 distance: distance
-            }
+            };
         default:
             return {
                 rowDiff: 0,
@@ -158,6 +158,6 @@ function getNextArea(x: number, y: number, vX: number, vY: number): PointInPixel
                 x: 0.5,
                 y: 0.5,
                 distance: distance
-            }
+            };
     }
 }

@@ -24,7 +24,7 @@ export class VectorFieldGenerator {
             gridBlueprint: this._grid.withMarginBlueprint,
             data: this._data,
             charges: charges,
-        }
+        };
         return executeWorker<WorkerSetupChargeField, Float64Array>(worker, setup, [setup.data.buffer]);
     }
 
@@ -35,7 +35,7 @@ export class VectorFieldGenerator {
             data: this._data,
             regions: regions,
             coriolisForce: coriolisForce,
-        }
+        };
         return executeWorker<WorkerSetupWeatherField, Float64Array>(worker, setup, [setup.data.buffer]);
     }
 
@@ -47,7 +47,7 @@ export class VectorFieldGenerator {
             data: this._data,
             min: min,
             max: max,
-        }
+        };
         return executeWorker<WorkerSetupMatrixGradientField, Float64Array>(worker, setup, [setup.input.buffer, setup.data.buffer]);
     }
 }

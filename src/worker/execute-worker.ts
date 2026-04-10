@@ -17,7 +17,7 @@ export function executeWorker<T, U>(worker: Worker, setup: T, transferrable: Arr
                 worker.terminate();
                 break;
             }
-            default: { console.warn(`#executeWorker - unhandled message type: ${e.data.type}`) }
+            default: { console.warn(`#executeWorker - unhandled message type: ${e.data.type}`); }
         }
     };
     return calculationState$;

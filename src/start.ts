@@ -72,7 +72,7 @@ export class Start {
 
         let planeId = this.initializePlaneSelect();
 
-        window.onload = () => { this.init(planeId) }
+        window.onload = () => { this.init(planeId); };
     }
 
     private init(initialPlane: PlaneId) {
@@ -213,14 +213,14 @@ export class Start {
 
     private subscribeToRange() {
         this._grid.range$.subscribe({
-            next: (range) => { this._rangeInput.value = gridRangeToString(range) }
+            next: (range) => { this._rangeInput.value = gridRangeToString(range); }
         });
     }
 
     private subscribeToSelection() {
         this._selectionSubscription?.unsubscribe();
         this._selectionSubscription = this._interactionOverlay.selectedRange$.subscribe({
-            next: (selection) => { this._plane?.updateGridRange(selection) }
+            next: (selection) => { this._plane?.updateGridRange(selection); }
         });
     }
 
@@ -292,7 +292,7 @@ export class Start {
     }
 
     private addExportButtonClickListener() {
-        this._exportButton?.addEventListener('click', () => { this.exportImage() });
+        this._exportButton?.addEventListener('click', () => { this.exportImage(); });
     }
 
     private exportImage() {
@@ -373,11 +373,11 @@ export class Start {
     private handleKeyPress(event: string) {
         switch (event) {
             case 'e': { this.exportImage(); } break;
-            case 'o': { this._configOverlay.openOverlay() } break;
-            case 'ArrowUp': { this._interactionOverlay.shiftRange(ShiftDirection.UP) } break;
-            case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN) } break;
-            case 'ArrowLeft': { this._interactionOverlay.shiftRange(ShiftDirection.LEFT) } break;
-            case 'ArrowRight': { this._interactionOverlay.shiftRange(ShiftDirection.RIGHT) } break;
+            case 'o': { this._configOverlay.openOverlay(); } break;
+            case 'ArrowUp': { this._interactionOverlay.shiftRange(ShiftDirection.UP); } break;
+            case 'ArrowDown': { this._interactionOverlay.shiftRange(ShiftDirection.DOWN); } break;
+            case 'ArrowLeft': { this._interactionOverlay.shiftRange(ShiftDirection.LEFT); } break;
+            case 'ArrowRight': { this._interactionOverlay.shiftRange(ShiftDirection.RIGHT); } break;
         }
     }
 }

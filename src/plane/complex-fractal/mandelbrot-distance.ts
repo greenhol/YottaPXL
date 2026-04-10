@@ -57,20 +57,20 @@ export class MandelbrotDistance extends Plane {
         this.setProgress(0);
         const calculation$ = calculator.calculateDistances(this.grid, this._effectiveMaxIterations, this.config.data.escapeValue);
         calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress) }
+            next: (state) => { this.setProgress(state.progress); }
         });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));
             this.setIdle();
         } else {
-            console.error('#calculate - calculation did not produce data')
+            console.error('#calculate - calculation did not produce data');
         }
     }
 
     private createImage(data: Float64Array): ImageDataArray {
         let max = 0;
-        data.forEach(value => { if (value > max) max = value });
+        data.forEach(value => { if (value > max) max = value; });
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
         this.config.setInfo('Gradient', colorMapper.supportPointsString);

@@ -13,13 +13,13 @@ export class GridWithoutRange implements GridReader {
         return row * this._width + col;
     }
 
-    public get width(): number { return this._width }
+    public get width(): number { return this._width; }
 
-    public get height(): number { return this._height }
+    public get height(): number { return this._height; }
 
-    public get size(): number { return this._width * this._height }
+    public get size(): number { return this._width * this._height; }
 
-    public get ratio(): number { return this._width / this._height }
+    public get ratio(): number { return this._width / this._height; }
 
     public toString(): string {
         return `width: ${this.width}, height:${this.height} -> size ${this.size}`;

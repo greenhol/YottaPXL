@@ -9,7 +9,7 @@ export class GridRx extends Grid {
     public range$: Observable<GridRange> = this._range$;
 
     constructor(resolution: Resolution, range: GridRange = createDefaultGridRange()) {
-        super(resolution, range)
+        super(resolution, range);
     }
 
     public override updateRange(range: GridRange) {

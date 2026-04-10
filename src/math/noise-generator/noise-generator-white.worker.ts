@@ -7,7 +7,7 @@ import { upscaleNoise } from './utils';
 import { WorkerSetupWhiteNoise } from './worker-setup-white-noise';
 
 self.onmessage = (e) => {
-    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupWhiteNoise } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupWhiteNoise; } = e.data;
     if (type === MessageToWorker.START) {
         const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);

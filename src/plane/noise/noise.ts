@@ -64,7 +64,7 @@ export class Noise extends Plane {
         this.setProgress(0);
         const calculation$ = this._generator.createNoise(noiseConfig);
         calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress) }
+            next: (state) => { this.setProgress(state.progress); }
         });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
@@ -72,7 +72,7 @@ export class Noise extends Plane {
             this.updateImage(this.createImage());
             this.setIdle();
         } else {
-            console.error('#calculate - calculation did not produce data')
+            console.error('#calculate - calculation did not produce data');
         }
     }
 

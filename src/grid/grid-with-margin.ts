@@ -19,7 +19,7 @@ export class GridWithMargin extends Grid {
             width: resolution.width + 2 * margin,
             height: resolution.height + 2 * margin,
             description: `${resolution.description} + buffer:${margin}`,
-        }
+        };
     }
 
     public static copyWithMargin(blueprint: GridWithMarginBlueprint) {
@@ -27,7 +27,7 @@ export class GridWithMargin extends Grid {
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
-        const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin)
+        const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin);
         const newGridRangeFactor = resolution.width / baseResolution.width;
         const mathBaseWidth = rangeXdiff(baseRange);
         const cx = baseRange.xMin + rangeXdiff(baseRange) / 2;
@@ -55,6 +55,6 @@ export class GridWithMargin extends Grid {
             baseResolution: { width: this._baseResolution.width, height: this._baseResolution.height, description: `${this._baseResolution.description} (Copy)` },
             baseRange: this._baseRange,
             margin: this._margin,
-        }
+        };
     }
 }

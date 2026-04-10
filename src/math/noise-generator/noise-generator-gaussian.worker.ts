@@ -7,7 +7,7 @@ import { upscaleNoise } from './utils';
 import { WorkerSetupGaussianNoise } from './worker-setup-gaussian-noise';
 
 self.onmessage = (e) => {
-    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupGaussianNoise } = e.data;
+    const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupGaussianNoise; } = e.data;
     if (type === MessageToWorker.START) {
         const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);

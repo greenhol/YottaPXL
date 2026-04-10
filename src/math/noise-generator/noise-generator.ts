@@ -118,7 +118,7 @@ export class NoiseGenerator {
             gridBlueprint: this._grid.withMarginBlueprint,
             p: p,
             scaleFactor: scaleFactor,
-        }
+        };
         return executeWorker<WorkerSetupBernoulliNoise, Float64Array>(worker, setup);
     }
 
@@ -128,7 +128,7 @@ export class NoiseGenerator {
             type: type,
             gridBlueprint: this._grid.withMarginBlueprint,
             scaleFactor: scaleFactor,
-        }
+        };
         return executeWorker<WorkerSetupBiasedNoise, Float64Array>(worker, setup);
     }
 
@@ -145,7 +145,7 @@ export class NoiseGenerator {
             standardDeviation: standardDeviation,
             range: range,
             scaleFactor: scaleFactor,
-        }
+        };
         return executeWorker<WorkerSetupGaussianNoise, Float64Array>(worker, setup);
     }
 }

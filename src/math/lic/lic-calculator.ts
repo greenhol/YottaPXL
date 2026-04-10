@@ -38,7 +38,7 @@ export class LicCalculator {
             maxLength: maxLength,
             minLength: minLength,
             strength: strength,
-        }
-        return executeWorker<WorkerSetupLIC, Float64Array>(worker, setup, [setup.image.buffer, setup.field.buffer])
+        };
+        return executeWorker<WorkerSetupLIC, Float64Array>(worker, setup, [setup.image.buffer, setup.field.buffer]);
     }
 }

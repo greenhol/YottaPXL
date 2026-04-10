@@ -71,7 +71,7 @@ export const COLOR = {
     TAN: { r: 210, g: 180, b: 140 } as Color, // #D2B48C
     THISTLE: { r: 216, g: 191, b: 216 } as Color, // #D8BFD8
     VIOLET: { r: 238, g: 130, b: 238 } as Color, // #EE82EE
-    
+
     // Coffee
     WARM_MILK: { r: 242, g: 235, b: 220 },  // #F2EBDC
     MILKY_COFFEE: { r: 210, g: 170, b: 120 },  // #D2AA78
@@ -96,7 +96,7 @@ export const COLOR = {
     C64_LIGHT_GREEN: { r: 169, g: 255, b: 159 } as Color, // #A9FF9F
     C64_LIGHT_BLUE: { r: 112, g: 109, b: 235 } as Color, // #706DEB
     C64_LIGHT_GREY: { r: 178, g: 178, b: 178 } as Color, // #B2B2B2
-}
+};
 
 export function createGrey(intensity: number): Color {
     const value = Math.round(intensity * 255);

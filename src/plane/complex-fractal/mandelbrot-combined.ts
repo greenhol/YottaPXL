@@ -29,12 +29,12 @@ export class MandelbrotCombined extends Plane {
             escapeValue: 100,
             gradientIterations: {
                 supportPoints: '0:#00FF00, 0.5:#88FF88, 1:#00FF00',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
             gradientDistance: {
                 supportPoints: '0:#FFFFFF, 0.4:#FFFFFF, 0.5:#000000, 0.6:#FFFFFF, 1:#FFFFFF',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
             },
         },

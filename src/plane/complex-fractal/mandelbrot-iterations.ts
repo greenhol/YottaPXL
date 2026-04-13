@@ -27,7 +27,7 @@ export class MandelbrotIterations extends Plane {
             maxIterations: 0,
             gradient: {
                 supportPoints: '0:#000000, 0.5:#FFFFFF, 1:#000000',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
         },

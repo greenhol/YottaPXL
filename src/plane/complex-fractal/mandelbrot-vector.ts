@@ -9,7 +9,7 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { Color, COLORS, createGrey } from '../../types';
+import { COLORS, createGrey, RGB } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaHeader, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
@@ -23,7 +23,7 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     licLength: number,
 }
 
-const COLOR_NA: Color = { r: 0, g: 0, b: 0 };
+const COLOR_NA: RGB = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 @InitializeAfterConstruct()
@@ -166,7 +166,7 @@ export class MandelbrotVector extends Plane {
         return imageData;
     }
 
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: Color) {
+    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
         const pixelIndex = index * 4;
         imageData[pixelIndex] = color.r;     // R
         imageData[pixelIndex + 1] = color.g; // G

@@ -23,12 +23,12 @@ export class ColorBlending extends Plane {
             type: BlendingType.INTENSITY,
             gradient1: {
                 supportPoints: '0:#FF0000, 0.25:#00FF00, 0.5:#0000FF, 0.75:#00FF00, 1:#FF0000',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
             gradient2: {
                 supportPoints: '0:#FFFFFF, 0.25:#000000, 0.5:#FFFFFF, 0.5:#00FF00, 0.75:#FF0000, 1:#0000FF, 1:#FFFFFF',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
         },

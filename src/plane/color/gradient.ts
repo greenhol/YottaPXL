@@ -7,7 +7,8 @@ import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_GRADIENT, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
 
 enum GradientDemos {
-    BW = 'BlackWhite',
+    BW = 'Black White',
+    RGB = 'Red Green Blue',
     HOT_METAL = 'Hot Metal',
     RAINBOW = 'Rainbow',
     OCEAN = 'Ocean',
@@ -40,7 +41,7 @@ export class Gradient extends Plane {
             demo: GradientDemos.BW,
             config: {
                 supportPoints: '',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
             offset: 0,
@@ -90,6 +91,7 @@ export class Gradient extends Plane {
         }
         switch (this.config.data.demo) {
             case GradientDemos.BW: return ColorMapper.fromColors(COLORS.BW, this.config.data.config.easing);
+            case GradientDemos.RGB: return ColorMapper.fromColors(COLORS.RGB, this.config.data.config.easing);
             case GradientDemos.HOT_METAL: return ColorMapper.fromColors(COLORS.HOT_METAL, this.config.data.config.easing);
             case GradientDemos.RAINBOW: return ColorMapper.fromColors(COLORS.RAINBOW, this.config.data.config.easing);
             case GradientDemos.OCEAN: return ColorMapper.fromColors(COLORS.OCEAN, this.config.data.config.easing);

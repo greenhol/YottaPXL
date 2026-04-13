@@ -7,7 +7,7 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { COLOR, Color, createGrey } from '../../types';
+import { COLOR, RGB, createGrey } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
@@ -116,7 +116,7 @@ export class Charges extends Plane {
         return imageData;
     }
 
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: Color) {
+    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
         const pixelIndex = index * 4;
         imageData[pixelIndex] = color.r;     // R
         imageData[pixelIndex + 1] = color.g; // G

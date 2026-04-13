@@ -9,7 +9,7 @@ import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generat
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { PressureRegion } from '../../math/vector-field/weather-field/types';
-import { Color, COLOR, createGrey } from '../../types';
+import { COLOR, createGrey, RGB } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
@@ -157,7 +157,7 @@ export class Weather extends Plane {
         return imageData;
     }
 
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: Color) {
+    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
         const pixelIndex = index * 4;
         imageData[pixelIndex] = color.r;     // R
         imageData[pixelIndex + 1] = color.g; // G

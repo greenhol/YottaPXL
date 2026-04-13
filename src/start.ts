@@ -297,9 +297,8 @@ export class Start {
 
     private exportImage() {
         const rangeString = gridRangeToString(this._grid.range);
-        let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}`);
+        let filename = prompt('Enter a filename', `YottaPXL_Range_${rangeString}_${idGenerator.newId('file')}`);
         if (!filename) return;
-        filename += `_${idGenerator.newId('file')}`;
 
         // Export the image
         const dataURL = this._htmlCanvas.toDataURL('image/png');

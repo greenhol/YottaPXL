@@ -29,7 +29,7 @@ export class MandelbrotDistance extends Plane {
             escapeValue: 100,
             gradient: {
                 supportPoints: '0:#FFFFFF, 0.5:#000000, 1:#FFFFFF',
-                easing: Easing.LINEAR,
+                easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
             },
         },

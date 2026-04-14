@@ -1,11 +1,12 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
+import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_FRACTAL, uiSchemaColorBlending, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedConfig extends PlaneConfig {
@@ -13,6 +14,7 @@ interface MandelbrotCombinedConfig extends PlaneConfig {
     escapeValue: number,
     gradientIterations: ColorMapperConfig,
     gradientDistance: ColorMapperConfig,
+    blending: BlendingType,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -37,6 +39,7 @@ export class MandelbrotCombined extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
             },
+            blending: BlendingType.INTENSITY,
         },
         'mandelbrotCombinedConfig',
         [
@@ -51,6 +54,8 @@ export class MandelbrotCombined extends Plane {
             uiSchemaGradientSupportPoints('gradientDistance.supportPoints'),
             uiSchemaGradientEasing('gradientDistance.easing'),
             uiSchemaGradientScaling('gradientDistance.scaling'),
+            UI_SCHEMA_HEADER_BLENDING,
+            uiSchemaColorBlending('blending'),
         ],
     );
 
@@ -97,12 +102,15 @@ export class MandelbrotCombined extends Plane {
                     imageData[pixelIndex + 2] = 0; // B
                     imageData[pixelIndex + 3] = 255; // A (opaque)
                 } else {
-                    const color = colorMapperIterations.map(valueIterations, 255 * this.config.data.gradientIterations.scaling);
-                    const valueFactor = colorMapperDistances.map(distances[index], max * this.config.data.gradientDistance.scaling).r / 255;
-                    imageData[pixelIndex] = Math.round(valueFactor * color.r);     // R
-                    imageData[pixelIndex + 1] = Math.round(valueFactor * color.g); // G
-                    imageData[pixelIndex + 2] = Math.round(valueFactor * color.b); // B
-                    imageData[pixelIndex + 3] = 255;                               // A (opaque)
+                    const color = blender.blend(
+                        colorMapperIterations.map(valueIterations, 255 * this.config.data.gradientIterations.scaling),
+                        colorMapperDistances.map(distances[index], max * this.config.data.gradientDistance.scaling),
+                        this.config.data.blending,
+                    );
+                    imageData[pixelIndex] = color.r;     // R
+                    imageData[pixelIndex + 1] = color.g; // G
+                    imageData[pixelIndex + 2] = color.b; // B
+                    imageData[pixelIndex + 3] = 255;     // A (opaque)
                 }
             }
         }

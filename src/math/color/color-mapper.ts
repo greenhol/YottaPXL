@@ -11,9 +11,15 @@ export enum Easing {
     RGB_LINEAR = 'RGB Linear',
     RGB_BALANCED = 'RGB Balanced',
     RGB_QUADRATIC = 'RGB Quadratic',
+    HSL_LINEAR = 'HSL Linear',
+    HSL_BALANCED = 'HSL Balanced',
+    HSL_QUADRATIC = 'HSL Quadratic',
     LAB_LINEAR = 'LAB Linear',
     LAB_BALANCED = 'LAB Balanced',
     LAB_QUADRATIC = 'LAB Quadratic',
+    LCH_LINEAR = 'LCH Linear',
+    LCH_BALANCED = 'LCH Balanced',
+    LCH_QUADRATIC = 'LCH Quadratic',
 }
 
 export interface ColorMapperConfig {
@@ -100,19 +106,31 @@ export class ColorMapper {
             case Easing.RGB_LINEAR:
             case Easing.RGB_BALANCED:
             case Easing.RGB_QUADRATIC: this._colorCalculator = this.interpolateColorRGB; break;
+            case Easing.HSL_LINEAR:
+            case Easing.HSL_BALANCED:
+            case Easing.HSL_QUADRATIC: this._colorCalculator = this.interpolateColorHSL; break;
             case Easing.LAB_LINEAR:
             case Easing.LAB_BALANCED:
             case Easing.LAB_QUADRATIC: this._colorCalculator = this.interpolateColorLAB; break;
+            case Easing.LCH_LINEAR:
+            case Easing.LCH_BALANCED:
+            case Easing.LCH_QUADRATIC: this._colorCalculator = this.interpolateColorLCH; break;
         }
 
         switch (easing) {
             case Easing.NONE: this._getInterpolationFactor = this.getInterpolationFactorNone; break; // Never used
             case Easing.RGB_LINEAR:
-            case Easing.LAB_LINEAR: this._getInterpolationFactor = this.getInterpolationFactorLinear; break;
+            case Easing.HSL_LINEAR:
+            case Easing.LAB_LINEAR:
+            case Easing.LCH_LINEAR: this._getInterpolationFactor = this.getInterpolationFactorLinear; break;
             case Easing.RGB_BALANCED:
-            case Easing.LAB_BALANCED: this._getInterpolationFactor = this.getInterpolationFactorBalanced; break;
+            case Easing.HSL_BALANCED:
+            case Easing.LAB_BALANCED:
+            case Easing.LCH_BALANCED: this._getInterpolationFactor = this.getInterpolationFactorBalanced; break;
             case Easing.RGB_QUADRATIC:
-            case Easing.LAB_QUADRATIC: this._getInterpolationFactor = this.getInterpolationFactorQuadratic; break;
+            case Easing.HSL_QUADRATIC:
+            case Easing.LAB_QUADRATIC:
+            case Easing.LCH_QUADRATIC: this._getInterpolationFactor = this.getInterpolationFactorQuadratic; break;
         }
     }
 
@@ -158,6 +176,12 @@ export class ColorMapper {
         return { r: left.color.r, g: left.color.g, b: left.color.b };
     }
 
+    private lerpAngle(start: number, end: number, t: number): number {
+        const delta = (end - start + 360) % 360;
+        const shortestDelta = delta <= 180 ? delta : delta - 360;
+        return (start + shortestDelta * t + 360) % 360;
+    }
+
     private interpolateColorRGB(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
         const r = Math.round(left.color.r + (right.color.r - left.color.r) * easedT);
@@ -166,14 +190,34 @@ export class ColorMapper {
         return { r, g, b };
     }
 
+    private interpolateColorHSL(t: number, left: SupportPoint, right: SupportPoint): RGB {
+        const easedT = this._getInterpolationFactor(t, left, right);
+        const leftHSL = converter.rgbToHsl(left.color);
+        const rightHSL = converter.rgbToHsl(right.color);
+        const h = this.lerpAngle(leftHSL.h, rightHSL.h, easedT);
+        const s = leftHSL.s + (rightHSL.s - leftHSL.s) * easedT;
+        const l = leftHSL.l + (rightHSL.l - leftHSL.l) * easedT;
+        return converter.hslToRgb({ h, s, l });
+    }
+
     private interpolateColorLAB(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
-        const leftLAB = converter.rgbToLab(left.color);
-        const rightLAB = converter.rgbToLab(right.color);
+        const leftLAB = converter.rgbToOklab(left.color);
+        const rightLAB = converter.rgbToOklab(right.color);
         const L = leftLAB.L + (rightLAB.L - leftLAB.L) * easedT;
         const a = leftLAB.a + (rightLAB.a - leftLAB.a) * easedT;
         const b = leftLAB.b + (rightLAB.b - leftLAB.b) * easedT;
-        return converter.labToRgb({ L, a, b });
+        return converter.oklabToRgb({ L, a, b });
+    }
+
+    private interpolateColorLCH(t: number, left: SupportPoint, right: SupportPoint): RGB {
+        const easedT = this._getInterpolationFactor(t, left, right);
+        const leftLCH = converter.rgbToOklch(left.color);
+        const rightLCH = converter.rgbToOklch(right.color);
+        const L = leftLCH.L + (rightLCH.L - leftLCH.L) * easedT;
+        const c = leftLCH.c + (rightLCH.c - leftLCH.c) * easedT;
+        const h = this.lerpAngle(leftLCH.h, rightLCH.h, easedT);
+        return converter.oklchToRgb({ L, c, h });
     }
 
     private getInterpolationFactorNone(x: number, left: SupportPoint, right: SupportPoint): number {

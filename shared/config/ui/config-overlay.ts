@@ -1,4 +1,4 @@
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, timer } from 'rxjs';
 import { ModuleConfig } from '../module-config';
 import { UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
@@ -136,11 +136,14 @@ export class ConfigOverlay {
         appendButton.id = 'config-overlay-apply-button';
         appendButton.className = 'config-overlay-button';
         appendButton.textContent = 'Apply';
-        appendButton.addEventListener('click', () => {
-            this.updateConfiguration();
-            location.reload();
-        });
+        appendButton.addEventListener('click', () => { this.closeAndApply(); });
         dynamicContainer.append(appendButton);
+    }
+
+    private closeAndApply() {
+        this.updateConfiguration();
+        this.closeOverlay();
+        timer(100).subscribe(() => { location.reload(); });
     }
 
     private createHeaderLine(): HTMLDivElement {

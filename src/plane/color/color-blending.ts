@@ -4,7 +4,7 @@ import { GridRange } from '../../grid/grid-range';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_COLORS, uiSchemaColorBlending, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_BLENDING, uiSchemaColorBlending, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
 
 interface ColorBlendingPlaneConfig extends PlaneConfig {
     type: BlendingType,
@@ -34,7 +34,7 @@ export class ColorBlending extends Plane {
         },
         'colorBlendingConfig',
         [
-            UI_SCHEMA_HEADER_COLORS,
+            UI_SCHEMA_HEADER_BLENDING,
             uiSchemaColorBlending('type'),
             uiSchemaHeader('Gradient 1'),
             uiSchemaGradientSupportPoints('gradient1.supportPoints'),

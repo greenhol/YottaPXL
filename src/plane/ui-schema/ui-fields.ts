@@ -10,7 +10,7 @@ export function uiSchemaHeader(text: string): UiFieldHeader {
     return new UiFieldHeader(text);
 }
 
-export const UI_SCHEMA_HEADER_COLORS = uiSchemaHeader('Colors');
+export const UI_SCHEMA_HEADER_BLENDING = uiSchemaHeader('Blending');
 
 export const UI_SCHEMA_HEADER_GRADIENT = uiSchemaHeader('Gradient');
 
@@ -35,7 +35,14 @@ export function uiSchemaGradientScaling(path: string): UiFieldFloat {
 }
 
 export function uiSchemaColorBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
-    return new UiFieldStringEnum<Record<string, unknown>>(path, BlendingType, 'Blending Type', 'Combines two Colors:\n\'Manipulation\' uses only the brithtness of Color 2 to manipulate Color 1\n\'Blending\' blends all channels in different ways');
+    return new UiFieldStringEnum<Record<string, unknown>>(
+        path,
+        BlendingType,
+        'Blending Type',
+        'Combines two Colors:\n' +
+        '\'Manipulation\' uses the channels of Color 2 to manipulate Color 1 by properties of different color spaces\n' +
+        '\'Blending\' blends all channels in different ways directly',
+    );
 }
 
 /** Noise */

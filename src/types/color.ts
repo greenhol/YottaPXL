@@ -1,25 +1,37 @@
 export interface RGB {
-    r: number;
-    g: number;
-    b: number;
+    r: number; // 0-255
+    g: number; // 0-255
+    b: number; // 0-255
+}
+
+export interface LinearRGB {
+    r: number; // 0-1
+    g: number; // 0-1
+    b: number; // 0-1
 }
 
 export interface HSL {
-    h: number,
-    s: number,
-    l: number,
+    h: number; // 0-360
+    s: number; // 0-1
+    l: number; // 0-1
 }
 
 export interface XYZ {
-    x: number,
-    y: number,
-    z: number,
+    X: number; // 0-1
+    Y: number; // 0-1
+    Z: number; // 0-1
 }
 
-export interface LAB {
-    L: number,
-    a: number,
-    b: number,
+export interface OKLab {
+    L: number; // 0-1
+    a: number; // -0.5 to 0.5
+    b: number; // -0.5 to 0.5
+}
+
+export interface OKLCH {
+    L: number; // 0-1
+    c: number; // 0-0.5
+    h: number; // 0-360
 }
 
 export const COLOR = {

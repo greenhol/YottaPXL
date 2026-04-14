@@ -43,7 +43,7 @@ class ColorBlender {
         const factorS = color2.g / 255;
         const factorL = color2.b / 255;
         const { h, s, l } = converter.rgbToHsl(color1);
-        const newH = Math.max(0, Math.min(1, h * factorH));
+        const newH = Math.max(0, Math.min(360, h * factorH));
         const newS = Math.max(0, Math.min(1, s * factorS));
         const newL = Math.max(0, Math.min(1, l * factorL));
         return converter.hslToRgb({ h: newH, s: newS, l: newL });

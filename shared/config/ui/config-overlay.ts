@@ -132,16 +132,40 @@ export class ConfigOverlay {
             gridContainer.appendChild(row);
         });
 
-        const appendButton = document.createElement('div');
-        appendButton.id = 'config-overlay-apply-button';
-        appendButton.className = 'config-overlay-button';
-        appendButton.textContent = 'Apply';
-        appendButton.addEventListener('click', () => { this.closeAndApply(); });
-        dynamicContainer.append(appendButton);
+        const actionBar = document.createElement('div');
+        actionBar.id = 'config-overlay-action-bar';
+
+        const resetButton = document.createElement('div');
+        resetButton.id = 'config-overlay-reset-button';
+        resetButton.className = 'config-overlay-button';
+        resetButton.textContent = 'Reset';
+        resetButton.addEventListener('click', () => { this.resetConfig(); });
+        actionBar.append(resetButton);
+
+        const applyButton = document.createElement('div');
+        applyButton.id = 'config-overlay-apply-button';
+        applyButton.className = 'config-overlay-button';
+        applyButton.textContent = 'Apply';
+        applyButton.addEventListener('click', () => { this.applyConfig(); });
+        actionBar.append(applyButton);
+
+        dynamicContainer.append(actionBar);
     }
 
-    private closeAndApply() {
+    private resetConfig() {
+        const userConfirmed = window.confirm("Reset to Defaults?\n\nThis will discard all your changes. This action cannot be undone.");
+        if (userConfirmed) {
+            this._config.reset();
+            this.closeAndReload();
+        }
+    }
+
+    private applyConfig() {
         this.updateConfiguration();
+        this.closeAndReload();
+    }
+
+    private closeAndReload() {
         this.closeOverlay();
         timer(100).subscribe(() => { location.reload(); });
     }

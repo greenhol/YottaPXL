@@ -90,9 +90,9 @@ export class Start {
         this.addResulutionsDropdownEventListener();
         this.addPlaneDropdownEventListener();
         this.addExportButtonClickListener();
-        this.addSetRangeButtonClickListener();
+        this.addRangeButtonsClickListener();
+        this.addConfigurationButtonsClickListener();
         this.handlePhysicalKeyboardEvents();
-        this.addConfigurationOverlay();
         this.switchPlane(initialPlane);
     }
 
@@ -235,7 +235,8 @@ export class Start {
                     const progressStep = document.getElementById('progressStep') as HTMLDivElement;
                     const resolutionSelect = document.getElementById('resolutionSelect') as HTMLSelectElement;
                     const exportButton = document.getElementById('exportButton') as HTMLDivElement;
-                    const configButton = document.getElementById('configButton') as HTMLDivElement;
+                    const setConfigButton = document.getElementById('setConfigButton') as HTMLDivElement;
+                    const copyConfigButton = document.getElementById('copyConfigButton') as HTMLDivElement;
                     const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
                     if (progress !== null) {
                         busyIndicator.className = 'busyIndicator--busy';
@@ -244,7 +245,8 @@ export class Start {
                         progressStep.textContent = progress.step;
                         resolutionSelect.classList.add('gone');
                         exportButton.classList.add('gone');
-                        configButton.classList.add('gone');
+                        setConfigButton.classList.add('gone');
+                        copyConfigButton.classList.add('gone');
                         resetConfigButton.classList.add('gone');
                         if (this._planeSelect != null) this._planeSelect.disabled = true;
                         this._htmlSvg.classList.add('gone');
@@ -256,7 +258,8 @@ export class Start {
                         progressStep.textContent = '';
                         resolutionSelect.classList.remove('gone');
                         exportButton.classList.remove('gone');
-                        configButton.classList.remove('gone');
+                        setConfigButton.classList.remove('gone');
+                        copyConfigButton.classList.remove('gone');
                         resetConfigButton.classList.remove('gone');
                         if (this._planeSelect != null) this._planeSelect.disabled = false;
                         this._htmlSvg.classList.remove('gone');
@@ -328,8 +331,11 @@ export class Start {
         });
     }
 
-    private addSetRangeButtonClickListener() {
+    private addRangeButtonsClickListener() {
         const setRangeButton = document.getElementById('setRangeButton') as HTMLDivElement;
+        const copyRangeButton = document.getElementById('copyRangeButton') as HTMLDivElement;
+        const resetRangeButton = document.getElementById('resetRangeButton') as HTMLDivElement;
+
         setRangeButton?.addEventListener('click', (e: PointerEvent) => {
             const rangeInputText: string = this._rangeInput.value;
             const newRange = gridRangeFromString(rangeInputText);
@@ -337,20 +343,81 @@ export class Start {
                 this._interactionOverlay.selectRange(newRange);
             }
         });
+        copyRangeButton?.addEventListener('click', (e: PointerEvent) => {
+            this.triggerButtonFeedback(copyRangeButton);
+            const rangeInputText: string = this._rangeInput.value;
+            this.copyToClipboard(rangeInputText);
+        });
+        resetRangeButton?.addEventListener('click', (e: PointerEvent) => {
+            if (this._plane != null) {
+                this._plane.resetGridRange();
+            } else {
+                console.error('#addSetRangeButtonClickListener - unexpected _plane is null');
+            }
+        });
     }
 
-    private addConfigurationOverlay() {
+    private addConfigurationButtonsClickListener() {
         this._configOverlay = new ConfigOverlay('overlayContainer', ['Escape', 'o']);
-        document.getElementById('configButton')?.addEventListener('click', () => {
+        document.getElementById('setConfigButton')?.addEventListener('click', () => {
             this._configOverlay.openOverlay();
         });
 
+        const copyConfigButton = document.getElementById('copyConfigButton') as HTMLDivElement;
         const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
+
+        copyConfigButton?.addEventListener('click', (e: PointerEvent) => {
+            const planeConfig = this._plane?.config;
+            if (planeConfig != null) {
+                this.triggerButtonFeedback(copyConfigButton);
+                const metaData = planeConfig.export();
+                const metaDataJson = JSON.stringify(metaData, null, 2);
+                this.copyToClipboard(metaDataJson);
+            }
+        });
         resetConfigButton?.addEventListener('click', (e: PointerEvent) => {
             if (this._plane != null) {
                 this._plane.resetConfiguration();
             } else {
                 console.error('#subscribeToBusyState - unexpected _plane is null');
+            }
+        });
+    }
+
+    private triggerButtonFeedback(button: HTMLDivElement) {
+        button.classList.add('feedback');
+        button?.addEventListener('animationend', () => {
+            button.classList.remove('feedback');
+        }, { once: true });
+    }
+
+    private async copyToClipboard(text: string): Promise<boolean> {
+        if (navigator.clipboard) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.warn('#copyToClipboard - Modern clipboard API failed:', err);
+            }
+        }
+
+        // Fallback for mobile/older browsers
+        return new Promise((resolve) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                const success = document.execCommand('copy');
+                resolve(success);
+            } catch (err) {
+                console.error('#copyToClipboard - Fallback copy failed:', err);
+                resolve(false);
+            } finally {
+                document.body.removeChild(textarea);
             }
         });
     }

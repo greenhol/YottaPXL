@@ -8,7 +8,7 @@ interface ConfigExport {
     data: any,
 }
 
-export class ModuleConfig<T> {
+export class ModuleConfig<T extends object> {
     public data: T;
     private _initialConfig: T;
     private _storageKey: string;
@@ -83,9 +83,22 @@ export class ModuleConfig<T> {
         console.log('#print - Current configuration ${this._storageKey}:', this.data);
     }
 
-    public reset(): void {
-        this.updateData({ ...this._initialConfig });
-        console.log(`#reset - Configuration ${this._storageKey} reset ${JSON.stringify(this.data)}`);
+    public reset(path: keyof T | null = null): void {
+        if (path === null) {
+            this.updateData(structuredClone(this._initialConfig));
+            console.log(`#reset - Configuration ${this._storageKey} reset to initial state.`);
+            return;
+        }
+
+        if (!(path in this.data)) {
+            throw new Error(`Path ${String(path)} does not exist in the current object.`);
+        }
+        if (!(path in this._initialConfig)) {
+            throw new Error(`Path ${String(path)} does not exist in the initial config.`);
+        }
+
+        this.data[path] = structuredClone(this._initialConfig[path]);
+        console.log(`#reset - Configuration ${this._storageKey} part:${String(path)} reset to initial value.`);
     }
 
     public setInfo(key: string, data: string) {

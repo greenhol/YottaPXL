@@ -74,6 +74,12 @@ export class ConfigOverlay {
                     document.getElementById('config-overlay-close-button')?.addEventListener('click', () => {
                         this.closeOverlay();
                     });
+                    document.getElementById('config-overlay-reset-button')?.addEventListener('click', () => {
+                        this.resetConfig();
+                    });
+                    document.getElementById('config-overlay-apply-button')?.addEventListener('click', () => {
+                        this.applyConfig();
+                    });
                     resolve();
                 });
         });
@@ -81,11 +87,13 @@ export class ConfigOverlay {
 
     private appendFields() {
         const dynamicContainer = document.getElementById('config-overlay-dynamic-content');
-        if (!dynamicContainer) throw Error('container for config not found!');
+        const actionBar = document.getElementById('config-overlay-action-bar');
+        if (!dynamicContainer || !actionBar) throw Error('Necessary Containers for config not found!');
 
         dynamicContainer.innerHTML = '';
         if (this._config.configUiSchema.length == 0) {
             dynamicContainer.innerHTML = '&nbsp;Nothing declared for configuration';
+            actionBar.classList.add('config-overlay--gone');
             return;
         }
 
@@ -128,28 +136,9 @@ export class ConfigOverlay {
                     row.appendChild(this.createEnumField(field as UiFieldStringEnum<any>));
                     break;
             }
-
+            actionBar.classList.remove('config-overlay--gone');
             gridContainer.appendChild(row);
         });
-
-        const actionBar = document.createElement('div');
-        actionBar.id = 'config-overlay-action-bar';
-
-        const resetButton = document.createElement('div');
-        resetButton.id = 'config-overlay-reset-button';
-        resetButton.className = 'config-overlay-button';
-        resetButton.textContent = 'Reset';
-        resetButton.addEventListener('click', () => { this.resetConfig(); });
-        actionBar.append(resetButton);
-
-        const applyButton = document.createElement('div');
-        applyButton.id = 'config-overlay-apply-button';
-        applyButton.className = 'config-overlay-button';
-        applyButton.textContent = 'Apply';
-        applyButton.addEventListener('click', () => { this.applyConfig(); });
-        actionBar.append(applyButton);
-
-        dynamicContainer.append(actionBar);
     }
 
     private resetConfig() {

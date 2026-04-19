@@ -5,3 +5,9 @@ export interface PointInPixel {
     y: number;
     distance: number;
 }
+
+export interface LicConfig {
+    minLength: number,
+    maxLength: number,
+    strength: number,
+}

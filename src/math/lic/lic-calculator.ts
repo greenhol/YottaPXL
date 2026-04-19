@@ -4,6 +4,7 @@ import { GridWithMargin } from '../../grid/grid-with-margin';
 import { executeWorker } from '../../worker/execute-worker';
 import { CalculationState } from '../../worker/types';
 import { WorkerSetupLIC } from './worker-setup-lic';
+import { LicConfig } from './types';
 
 export interface SourceData {
     grid: GridWithMargin,
@@ -27,7 +28,7 @@ export class LicCalculator {
         this._targetGrid = targetGrid;
     }
 
-    public calculate(maxLength: number, minLength: number = 0, strength: number = -1): Observable<CalculationState<Float64Array>> {
+    public calculate(licConfig: LicConfig): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./lic-calculator.worker.ts', import.meta.url));
         const setup: WorkerSetupLIC = {
             sourceGridBlueprint: this._sourceGrid.withMarginBlueprint,
@@ -35,10 +36,8 @@ export class LicCalculator {
             field: this._fieldData,
             orthogonal: this._orthogonal,
             targetGridBlueprint: this._targetGrid.blueprint,
-            maxLength: maxLength,
-            minLength: minLength,
-            strength: strength,
+            licConfig: licConfig,
         };
-        return executeWorker<WorkerSetupLIC, Float64Array>(worker, setup, [setup.image.buffer, setup.field.buffer]);
+        return executeWorker<WorkerSetupLIC, Float64Array>(worker, setup, [setup.image.buffer]);
     }
 }

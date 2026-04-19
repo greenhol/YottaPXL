@@ -4,6 +4,7 @@ import { CalculationType } from './types';
 import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         let result: Float64Array;
@@ -18,6 +19,7 @@ self.onmessage = (e) => {
                 result = calculateDistances(data);
                 break;
         }
+        console.info(`#MandelbrotCalculator (worker) - calculation for ${data.type} done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -25,7 +27,6 @@ self.onmessage = (e) => {
 function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
-    let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
@@ -38,7 +39,6 @@ function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
             cnt = 0;
         }
     }
-    console.info(`#calculateIterations (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 
@@ -59,7 +59,6 @@ function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIt
 function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
-    let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
@@ -72,7 +71,6 @@ function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
             cnt = 0;
         }
     }
-    console.info(`#calculateSmoothIterations (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 
@@ -102,7 +100,6 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
-    let timeStamp = Date.now();
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
@@ -115,7 +112,6 @@ function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
             cnt = 0;
         }
     }
-    console.info(`#calculateDistances (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 

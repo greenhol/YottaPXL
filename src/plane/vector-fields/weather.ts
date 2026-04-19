@@ -4,19 +4,26 @@ import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
 import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { blender, BlendingType } from '../../math/color/color-blender';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
+import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
+import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
 import { PressureRegion } from '../../math/vector-field/weather-field/types';
-import { COLOR, createGrey, RGB } from '../../types';
+import { COLOR, RGB } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaColorBlending, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 
 interface WeatherConfig extends PlaneConfig {
     noiseConfig: NoiseConfig,
-    licLength: number,
+    licConfig: LicConfig,
+    gradientMagnitude: ColorMapperConfig,
+    gradientStreamlines: ColorMapperConfig,
+    blending: BlendingType,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -180, xMax: 180, yCenter: 0 };
@@ -75,7 +82,22 @@ export class Weather extends Plane {
                 p: 0.05,
                 scaling: NoiseScaleFactor.NONE,
             },
-            licLength: 20,
+            licConfig: {
+                minLength: 5,
+                maxLength: 20,
+                strength: 3.6,
+            },
+            gradientMagnitude: {
+                supportPoints: '0:#0000FF, 0.25:#00FF00, 0.75:#FFFF00, 1:#FF8800',
+                easing: Easing.LAB_LINEAR,
+                scaling: 28,
+            },
+            gradientStreamlines: {
+                supportPoints: '0:#FF8800, 1:#FFAAFF',
+                easing: Easing.RGB_LINEAR,
+                scaling: 1,
+            },
+            blending: BlendingType.HSL,
         },
         'weatherConfig',
         [
@@ -84,7 +106,19 @@ export class Weather extends Plane {
             uiSchemaNoiseP('noiseConfig.p'),
             uiSchemaNoiseScaling('noiseConfig.scaling'),
             UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicLenth('licLength'),
+            uiSchemaLicMinLenth('licConfig.minLength'),
+            uiSchemaLicMaxLenth('licConfig.maxLength'),
+            uiSchemaLicStrength('licConfig.strength'),
+            uiSchemaHeader('Magnitude', 'Gradient clapmed'),
+            uiSchemaGradientSupportPoints('gradientMagnitude.supportPoints'),
+            uiSchemaGradientEasing('gradientMagnitude.easing'),
+            uiSchemaGradientScaling('gradientMagnitude.scaling'),
+            uiSchemaHeader('Streamlines', 'Gradient clapmed'),
+            uiSchemaGradientSupportPoints('gradientStreamlines.supportPoints'),
+            uiSchemaGradientEasing('gradientStreamlines.easing'),
+            uiSchemaGradientScaling('gradientStreamlines.scaling'),
+            UI_SCHEMA_HEADER_BLENDING,
+            uiSchemaColorBlending('blending'),
         ],
     );
 
@@ -96,7 +130,7 @@ export class Weather extends Plane {
         this.setProgress(0);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licConfig.maxLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createWeatherField(this._pressureRegions, 1);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });
@@ -117,11 +151,11 @@ export class Weather extends Plane {
 
         // LIC
         const calculator: LicCalculator = new LicCalculator(sourceData, this.grid);
-        const calculation$ = calculator.calculate(this.config.data.licLength, 5, 3.6);
+        const calculation$ = calculator.calculate(this.config.data.licConfig);
         calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 2/2'); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
-            this.updateImage(this.createImage(result.data));
+            this.updateImage(this.createImage(result.data, new VectorFieldReader(sourceGrid, field)));
             this.setIdle();
         } else {
             console.error('#calculateAndDraw - calculation did not produce data');
@@ -145,19 +179,29 @@ export class Weather extends Plane {
         return imageData;
     }
 
-    private createImage(data: Float64Array): ImageDataArray {
+    private createImage(data: Float64Array, vectorField: VectorFieldReader): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
+        const colorMapperMagnitude = ColorMapper.fromString(this.config.data.gradientMagnitude.supportPoints, this.config.data.gradientMagnitude.easing);
+        const colorMapperStreamlines = ColorMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR.WHITE : createGrey(value));
+                const magnitude = vectorField.getMagnitude(col, row);
+                this.setPixel(
+                    imageData,
+                    index,
+                    blender.blend(
+                        (isNaN(magnitude)) ? COLOR.BLACK : colorMapperMagnitude.mapClamped(magnitude, this.config.data.gradientMagnitude.scaling),
+                        colorMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
+                        this.config.data.blending,
+                    ),
+                );
             }
         }
         return imageData;
     }
 
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
+    private setPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
         const pixelIndex = index * 4;
         imageData[pixelIndex] = color.r;     // R
         imageData[pixelIndex + 1] = color.g; // G

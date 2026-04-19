@@ -6,8 +6,8 @@ import { NoiseType } from '../../math/noise-generator/noise-generator';
 // ToDo: refactor to a single const export like unique.ts or color.blender.ts
 
 /** Header */
-export function uiSchemaHeader(text: string): UiFieldHeader {
-    return new UiFieldHeader(text);
+export function uiSchemaHeader(text: string, description: string = ''): UiFieldHeader {
+    return new UiFieldHeader(text, description);
 }
 
 export const UI_SCHEMA_HEADER_BLENDING = uiSchemaHeader('Blending');
@@ -20,6 +20,8 @@ export const UI_SCHEMA_HEADER_FRACTAL = uiSchemaHeader('Fractal');
 
 export const UI_SCHEMA_HEADER_LIC = uiSchemaHeader('LIC');
 
+export const UI_SCHEMA_HEADER_FIELD = uiSchemaHeader('Field');
+
 
 /** Color */
 export function uiSchemaGradientSupportPoints(path: string): UiFieldString {
@@ -31,7 +33,7 @@ export function uiSchemaGradientEasing(path: string): UiFieldStringEnum<Record<s
 }
 
 export function uiSchemaGradientScaling(path: string): UiFieldFloat {
-    return new UiFieldFloat(path, 'Scaling', 'Gradient is scaled by this factor', 0.01, 10000);
+    return new UiFieldFloat(path, 'Scaling', 'Gradient is scaled by this factor', 0.00001, 10000);
 }
 
 export function uiSchemaColorBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
@@ -69,5 +71,17 @@ export function uiSchemaFractalEscapeValue(path: string): UiFieldFloat {
 
 /** LIC */
 export function uiSchemaLicLenth(path: string): UiFieldFloat {
-    return new UiFieldFloat(path, 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 200);
+    return new UiFieldFloat(path, 'LIC Length', 'Length for LIC path calculation (expensive)', 1, 300);
+}
+
+export function uiSchemaLicMinLenth(path: string): UiFieldFloat {
+    return new UiFieldFloat(path, 'LIC min. Length', 'Minimum Length for LIC path calculation when dynamic', 1, 200);
+}
+
+export function uiSchemaLicMaxLenth(path: string): UiFieldFloat {
+    return new UiFieldFloat(path, 'LIC max. Length', 'Maximum Length for LIC path calculation (expensive)', 1, 300);
+}
+
+export function uiSchemaLicStrength(path: string): UiFieldFloat {
+    return new UiFieldFloat(path, 'LIC Strength Factor', 'Strength multiplicator for streamlines.\nIf set to negative value, max Lenth will be used everywhere', -1, 1000);
 }

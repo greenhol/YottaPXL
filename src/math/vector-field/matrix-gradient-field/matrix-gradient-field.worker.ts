@@ -4,9 +4,11 @@ import { ImageGradientKernel, SOBEL_KERNEL_6 } from '../../image-gradient-kernel
 import { WorkerSetupMatrixGradientField } from './worker-setup-matrix-gradient-field';
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
+        console.info(`#MatrixGradientField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };

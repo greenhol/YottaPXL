@@ -4,9 +4,11 @@ import { Charge } from './types';
 import { WorkerSetupChargeField } from './worker-setup-charge-field';
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
+        console.info(`#ChargeField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };

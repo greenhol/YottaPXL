@@ -6,7 +6,8 @@ import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { ColorBlending } from './plane/color/color-blending';
 import { Gradient } from './plane/color/gradient';
-import { MandelbrotCombined } from './plane/complex-fractal/mandelbrot-combined';
+import { MandelbrotCombinedID } from './plane/complex-fractal/mandelbrot-combined-id';
+import { MandelbrotCombinedIV } from './plane/complex-fractal/mandelbrot-combined-iv';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
@@ -120,12 +121,16 @@ export class Start {
                 this._plane = new MandelbrotDistance(this._grid);
                 break;
             }
-            case 'MANDELBROT_COMBINED': {
-                this._plane = new MandelbrotCombined(this._grid);
-                break;
-            }
             case 'MANDELBROT_VECTOR': {
                 this._plane = new MandelbrotVector(this._grid);
+                break;
+            }
+            case 'MANDELBROT_COMBINED_ID': {
+                this._plane = new MandelbrotCombinedID(this._grid);
+                break;
+            }
+            case 'MANDELBROT_COMBINED_IV': {
+                this._plane = new MandelbrotCombinedIV(this._grid);
                 break;
             }
             case 'GRADIENT': {

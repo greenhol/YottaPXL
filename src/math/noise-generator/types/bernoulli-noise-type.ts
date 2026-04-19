@@ -1,5 +1,5 @@
 export enum BernoulliNoiseType {
-    DEFAULT,
-    ISOLATED,
-    ISOLATED_BIG,
+    DEFAULT = 'DEFAULT',
+    ISOLATED = 'ISOLATED',
+    ISOLATED_BIG = 'ISOLATED_BIG',
 }

@@ -65,8 +65,8 @@ export class ColorBlending extends Plane {
                 const [x, y] = this.grid.pixelToMath(col, row);
                 const index = this.grid.getIndex(col, row);
 
-                const color1 = colorMapper1.map(x, 10);
-                const color2 = colorMapper2.map(x, 10);
+                const color1 = colorMapper1.mapLooped(x, 10);
+                const color2 = colorMapper2.mapLooped(x, 10);
                 const color = (y < -1 || y > 1) ?
                     blender.blend(color1, color2, this.config.data.type) :
                     (y > 0) ? color1 : color2;

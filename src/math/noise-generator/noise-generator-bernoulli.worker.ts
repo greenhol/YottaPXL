@@ -7,6 +7,7 @@ import { upscaleNoise } from './utils';
 import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupBernoulliNoise; } = e.data;
     if (type === MessageToWorker.START) {
         const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
@@ -24,6 +25,7 @@ self.onmessage = (e) => {
         if (scaleFactor != NoiseScaleFactor.NONE) {
             result = upscaleNoise(baseGrid, result, grid, scaleFactor);
         }
+        console.info(`#NoiseGeneratorBernoulli (worker) - calculation for ${data.type} done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };

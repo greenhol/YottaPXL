@@ -6,9 +6,11 @@ import { PointInPixel } from './types';
 import { WorkerSetupLIC } from './worker-setup-lic';
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
+        console.info(`#LicCalculator (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -19,16 +21,15 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
     const image = setup.image;
     const field = new VectorFieldReader(sourceGrid, setup.field, setup.orthogonal);
 
-    let timeStamp = Date.now();
     const targetData = new Float64Array(targetGrid.size);
     let cnt = 0;
     for (let row = 0; row < targetGrid.height; row++) {
         for (let col = 0; col < targetGrid.width; col++) {
-            let length = setup.maxLength;
-            const magnitude = field.getMagnitude(col + sourceGrid.margin, row + sourceGrid.margin);
-            if (setup.strength > 0) {
-                length = Math.min(setup.maxLength, magnitude * setup.strength);
-                length = Math.max(setup.minLength, length);
+            let length = setup.licConfig.maxLength;
+            const magnitude = field.getMagnitude(col, row);
+            if (setup.licConfig.strength > 0) {
+                length = Math.min(setup.licConfig.maxLength, magnitude * setup.licConfig.strength);
+                length = Math.max(setup.licConfig.minLength, length);
             }
             targetData[targetGrid.getIndex(col, row)] = (magnitude == 0) ?
                 Number.MIN_SAFE_INTEGER :
@@ -41,7 +42,6 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
             cnt = 0;
         }
     }
-    console.info(`#calculate (worker) - LIC calculation done in ${(Date.now() - timeStamp) / 1000}s`);
     return targetData;
 }
 
@@ -71,7 +71,7 @@ function calcLicPixelInDirection(
     field: VectorFieldReader,
 ): number {
     let restDistance = length;
-    let [vX, vY] = field.getVector(col + sourceGrid.margin, row + sourceGrid.margin);
+    let [vX, vY] = field.getVector(col, row);
     if (vX == 0 && vY == 0) return Number.MIN_SAFE_INTEGER;
     vX *= direction;
     vY *= direction;
@@ -83,7 +83,7 @@ function calcLicPixelInDirection(
     while (restDistance > 0) {
         row += nextArea.rowDiff;
         col += nextArea.colDiff;
-        [vX, vY] = field.getVector(col + sourceGrid.margin, row + sourceGrid.margin);
+        [vX, vY] = field.getVector(col, row);
         if (Number.isNaN(vX) || Number.isNaN(vY) || (vX == 0 && vY == 0)) {
             [vX, vY] = [vX0, vY0];
         } else {

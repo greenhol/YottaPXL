@@ -1,5 +1,6 @@
 import { GridBlueprint } from '../../grid/grid';
 import { GridWithMarginBlueprint } from '../../grid/grid-with-margin';
+import { LicConfig } from './types';
 
 export interface WorkerSetupLIC {
     sourceGridBlueprint: GridWithMarginBlueprint;
@@ -7,7 +8,5 @@ export interface WorkerSetupLIC {
     field: Float64Array;
     orthogonal: boolean;
     targetGridBlueprint: GridBlueprint;
-    maxLength: number;
-    minLength: number;
-    strength: number;
+    licConfig: LicConfig;
 }

@@ -82,7 +82,7 @@ export class MandelbrotDistance extends Plane {
                 if (value <= 0) {
                     value = -1;
                 }
-                const color = (value <= 0) ? COLOR.BLACK : colorMapper.map(value, max * this.config.data.gradient.scaling);
+                const color = (value <= 0) ? COLOR.BLACK : colorMapper.mapLooped(value, max * this.config.data.gradient.scaling);
                 const pixelIndex = index * 4;
                 imageData[pixelIndex] = color.r;     // R
                 imageData[pixelIndex + 1] = color.g; // G

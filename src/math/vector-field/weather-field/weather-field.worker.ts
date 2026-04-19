@@ -8,9 +8,11 @@ const NORTH = 90;
 const SOUTH = -90;
 
 self.onmessage = (e) => {
+    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
+        console.info(`#WeatherField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };

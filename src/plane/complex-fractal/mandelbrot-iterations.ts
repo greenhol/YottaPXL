@@ -73,7 +73,7 @@ export class MandelbrotIterations extends Plane {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                const color = (value === this._effectiveMaxIterations) ? COLOR.BLACK : colorMapper.map(value, 255 * this.config.data.gradient.scaling);
+                const color = (value === this._effectiveMaxIterations) ? COLOR.BLACK : colorMapper.mapLooped(value, 255 * this.config.data.gradient.scaling);
                 const pixelIndex = index * 4;
                 imageData[pixelIndex] = color.r;
                 imageData[pixelIndex + 1] = color.g;

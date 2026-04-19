@@ -94,8 +94,8 @@ export abstract class ConfigUiField<T> {
 
 export class UiFieldHeader extends ConfigUiField<void> {
 
-    constructor(label: string) {
-        super('', 'header', label, '');
+    constructor(label: string, description: string = '') {
+        super('', 'header', label, description);
     }
 
     override get fullDescription() {

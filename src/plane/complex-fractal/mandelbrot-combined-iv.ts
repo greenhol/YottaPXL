@@ -1,68 +1,87 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ColorMapper } from '../../math/color/color-mapper';
+import { blender, BlendingType } from '../../math/color/color-blender';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
+import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { COLORS, createGrey, RGB } from '../../types';
+import { COLOR, RGB } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
-import { LicConfig } from './../../math/lic/types';
+import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaColorBlending, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicLenth, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
-interface MandelbrotVectorConfig extends PlaneConfig {
-    useNoiseAsSource: boolean,
-    noiseConfig: NoiseConfig,
+interface MandelbrotCombinedIvConfig extends PlaneConfig {
     maxIterations: number,
     escapeValue: number,
+    noiseConfig: NoiseConfig,
     licConfig: LicConfig,
+    gradientIterations: ColorMapperConfig,
+    gradientStreamlines: ColorMapperConfig,
+    blending: BlendingType,
 }
 
-const COLOR_NA: RGB = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 @InitializeAfterConstruct()
-export class MandelbrotVector extends Plane {
+export class MandelbrotCombinedIV extends Plane {
 
     private _effectiveMaxIterations = 255;
 
-    override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
+    override config: ModuleConfig<MandelbrotCombinedIvConfig> = new ModuleConfig(
         {
             gridRange: INITIAL_GRID_RANGE,
-            useNoiseAsSource: true,
+            maxIterations: 0,
+            escapeValue: 100,
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
                 scaling: NoiseScaleFactor.TWO,
             },
-            maxIterations: 0,
-            escapeValue: 100,
             licConfig: {
-                minLength: 5,
+                minLength: 1,
                 maxLength: 5,
                 strength: -1,
             },
+            gradientIterations: {
+                supportPoints: '0:#FFFFFF, 0.1:#B1BCBE, 0.4:#405F26, 0.6:#2F4F20, 0.9:#B1BCBE, 1:#FFFFFF',
+                easing: Easing.RGB_BALANCED,
+                scaling: 1,
+            },
+            gradientStreamlines: {
+                supportPoints: '0:#FFFFFF, 1:#FFFFAA',
+                easing: Easing.RGB_LINEAR,
+                scaling: 1,
+            },
+            blending: BlendingType.HSL,
         },
-        'mandelbrotVectorConfig',
+        'mandelbrotCombinedIvConfig',
         [
-            uiSchemaHeader('Source Image'),
-            new UiFieldBool('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
-            uiSchemaNoiseType('noiseConfig.type'),
-            uiSchemaNoiseP('noiseConfig.p'),
-            uiSchemaNoiseScaling('noiseConfig.scaling'),
             UI_SCHEMA_HEADER_FRACTAL,
             uiSchemaFractalMaxIterations('maxIterations'),
             uiSchemaFractalEscapeValue('escapeValue'),
+            uiSchemaHeader('Source Noise'),
+            uiSchemaNoiseType('noiseConfig.type'),
+            uiSchemaNoiseP('noiseConfig.p'),
+            uiSchemaNoiseScaling('noiseConfig.scaling'),
             UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicMinLenth('licConfig.minLength'),
-            uiSchemaLicMaxLenth('licConfig.maxLength'),
-            uiSchemaLicStrength('licConfig.strength'),
+            uiSchemaLicLenth('licConfig.maxLength'),
+            uiSchemaHeader('Iterations', 'Gradient looped'),
+            uiSchemaGradientSupportPoints('gradientIterations.supportPoints'),
+            uiSchemaGradientEasing('gradientIterations.easing'),
+            uiSchemaGradientScaling('gradientIterations.scaling'),
+            uiSchemaHeader('Streamlines', 'Gradient clapmed'),
+            uiSchemaGradientSupportPoints('gradientStreamlines.supportPoints'),
+            uiSchemaGradientEasing('gradientStreamlines.easing'),
+            uiSchemaGradientScaling('gradientStreamlines.scaling'),
+            UI_SCHEMA_HEADER_BLENDING,
+            uiSchemaColorBlending('blending'),
         ],
     );
 
@@ -96,12 +115,15 @@ export class MandelbrotVector extends Plane {
         // Create Source Image
         const sourceData: SourceData = {
             grid: sourceGrid,
-            image: this.config.data.useNoiseAsSource ?
-                await this.createNoise(sourceGrid) :
-                await this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations),
+            image: await this.createNoise(sourceGrid),
             field: field,
         };
         this.updateImage(this.drawSourceImage(sourceData));
+
+        // Iterations
+        const calculationIterations$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
+        calculationIterations$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Iterations 3/4'); } });
+        const iterationsData = await extractData(calculationIterations$, 'mandelbrot iterations');
 
         // LIC
         const licCalculator = new LicCalculator(sourceData, this.grid);
@@ -111,7 +133,7 @@ export class MandelbrotVector extends Plane {
         });
         const licResult = await lastValueFrom(licCalculation$);
         if (licResult.data != null) {
-            this.updateImage(this.drawImage(licResult.data));
+            this.updateImage(this.createImage(iterationsData, licResult.data));
             this.setIdle();
         } else {
             console.error('#calculateAndDraw - calculation did not produce data');
@@ -122,26 +144,6 @@ export class MandelbrotVector extends Plane {
         const generator = new NoiseGenerator(sourceGrid);
         const generator$ = generator.createNoise(this.config.data.noiseConfig);
         return await extractData(generator$, 'noise');
-    }
-
-    private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
-        const colorMapper = ColorMapper.fromColors(COLORS.BW);
-        const mandelbrotCalculator = new MandelbrotCalculator();
-        const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4'); } });
-        const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
-
-        const data = new Float64Array(sourceGrid.size);
-        for (let row = 0; row < sourceGrid.height; row++) {
-            for (let col = 0; col < sourceGrid.width; col++) {
-                let value = mandelbrotIterations[sourceGrid.getIndex(col, row)];
-                if (value === this._effectiveMaxIterations) {
-                    value = -1;
-                }
-                data[sourceGrid.getIndex(col, row)] = colorMapper.mapLooped(value, 512).r / 255;
-            }
-        }
-        return data;
     }
 
     private drawSourceImage(source: SourceData): ImageDataArray {
@@ -161,19 +163,35 @@ export class MandelbrotVector extends Plane {
         return imageData;
     }
 
-    private drawImage(data: Float64Array): ImageDataArray {
+    private createImage(iterations: Float64Array, field: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
+        const colorMapperIterations = ColorMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
+        const colorMapperStreamlines = ColorMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
+        this.config.setInfo('Iterations Gradient', colorMapperIterations.supportPointsString);
+        this.config.setInfo('Streamlines Gradient', colorMapperStreamlines.supportPointsString);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : createGrey(value));
+                const valueIterations = iterations[index];
+                if (valueIterations === this._effectiveMaxIterations) {
+                    this.setPixel(imageData, index, COLOR.BLACK);
+                } else {
+                    this.setPixel(
+                        imageData,
+                        index,
+                        blender.blend(
+                            colorMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
+                            colorMapperStreamlines.mapClamped(field[index], this.config.data.gradientStreamlines.scaling),
+                            this.config.data.blending,
+                        )
+                    );
+                }
             }
         }
         return imageData;
     }
 
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
+    private setPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
         const pixelIndex = index * 4;
         imageData[pixelIndex] = color.r;     // R
         imageData[pixelIndex + 1] = color.g; // G

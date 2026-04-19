@@ -134,13 +134,33 @@ export class ColorMapper {
         }
     }
 
-    public map(x: number, scaling: number = 1, offset: number = 0): RGB {
+    public mapLooped(x: number, scaling: number = 1, offset: number = 0): RGB {
         const loopedX = this.getLoopingX(x / scaling - offset);
+        return this.mapInternal(loopedX);
+    }
+
+    public mapClamped(x: number, scaling: number = 1, offset: number = 0): RGB {
+        const transformedX = x / scaling - offset;
+        const firstPos = this._supportPoints[0].pos;
+        const lastPos = this._supportPoints[this._supportPoints.length - 1].pos;
+
+        if (transformedX <= firstPos) return this._supportPoints[0].color;
+        if (transformedX >= lastPos) return this._supportPoints[this._supportPoints.length - 1].color;
+        return this.mapInternal(transformedX);
+    }
+
+    public get supportPointsString(): string {
+        return this._supportPoints
+            .map(point => `${point.pos}:${this.rgbToHex(point.color)}`)
+            .join(', ');
+    }
+
+    private mapInternal(x: number): RGB {
         let left: SupportPoint | undefined;
         let right: SupportPoint | undefined;
 
         for (let i = 0; i < this._supportPoints.length - 1; i++) {
-            if (loopedX >= this._supportPoints[i].pos && loopedX <= this._supportPoints[i + 1].pos) {
+            if (x >= this._supportPoints[i].pos && x <= this._supportPoints[i + 1].pos) {
                 left = this._supportPoints[i];
                 right = this._supportPoints[i + 1];
                 break;
@@ -151,13 +171,7 @@ export class ColorMapper {
             throw new Error('Could not find a valid range for interpolation.');
         }
 
-        return this._colorCalculator(loopedX, left, right);
-    }
-
-    public get supportPointsString(): string {
-        return this._supportPoints
-            .map(point => `${point.pos}:${this.rgbToHex(point.color)}`)
-            .join(', ');
+        return this._colorCalculator(x, left, right);
     }
 
     private rgbToHex(color: RGB): string {

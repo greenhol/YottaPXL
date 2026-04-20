@@ -128,11 +128,42 @@ export const COLOR = {
     C64_LIGHT_GREY: { r: 178, g: 178, b: 178 } as RGB, // #B2B2B2
 };
 
-export function createGrey(intensity: number): RGB {
-    const value = Math.round(intensity * 255);
-    return { r: value, g: value, b: value };
+function toHex(c: number): string {
+    return c.toString(16).padStart(2, '0').toLowerCase();
 }
 
-export function createColor(r: number, g: number, b: number): RGB {
-    return { r: r, g: g, b: b };
+export function stringToRgb(color: string): RGB {
+    let hex = color.replace('#', '');
+    if (!/^[0-9a-fA-F]{3,6}$/.test(hex)) {
+        console.error('#stringToRgb - Invalid hex color string. Expected format: #rgb or #rrggbb, returning black.');
+        return { r: 0, g: 0, b: 0 };
+    }
+
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+        console.error('#stringToRgb - Invalid RGB values. Each component must be between 0 and 255, returning black.');
+    }
+    return { r, g, b };
+}
+
+export function rgbToString(color: RGB): string {
+    if (
+        color.r < 0 || color.r > 255 ||
+        color.g < 0 || color.g > 255 ||
+        color.b < 0 || color.b > 255
+    ) {
+        console.error('#rgbToString - Invalid RGB values. Each component must be between 0 and 255, returning black.');
+        return '#000000';
+    }
+    return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`;
+}
+
+/** Create a grey color by given intensity value between 0 and 1 */
+export function createGreyByIntensity(intensity: number): RGB {
+    const value = Math.round(intensity * 255);
+    return { r: value, g: value, b: value };
 }

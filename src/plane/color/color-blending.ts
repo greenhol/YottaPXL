@@ -67,15 +67,14 @@ export class ColorBlending extends Plane {
 
                 const color1 = colorMapper1.mapLooped(x, 10);
                 const color2 = colorMapper2.mapLooped(x, 10);
-                const color = (y < -1 || y > 1) ?
-                    blender.blend(color1, color2, this.config.data.type) :
-                    (y > 0) ? color1 : color2;
 
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = color.r;
-                imageData[pixelIndex + 1] = color.g;
-                imageData[pixelIndex + 2] = color.b;
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+                this.setPixel(
+                    imageData,
+                    index,
+                    (y < -1 || y > 1) ?
+                        blender.blend(color1, color2, this.config.data.type) :
+                        (y > 0) ? color1 : color2
+                );
             }
         }
         return imageData;

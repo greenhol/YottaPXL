@@ -1,6 +1,6 @@
 import { Subject, takeUntil, timer } from 'rxjs';
 import { ModuleConfig } from '../module-config';
-import { UiFieldBool, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
+import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
 export class ConfigOverlay {
 
@@ -132,6 +132,9 @@ export class ConfigOverlay {
                 case 'boolean':
                     row.appendChild(this.createBoolField(field as UiFieldBool));
                     break;
+                case 'color':
+                    row.appendChild(this.createColorField(field as UiFieldColor));
+                    break;
                 case 'enum':
                     row.appendChild(this.createEnumField(field as UiFieldStringEnum<any>));
                     break;
@@ -207,6 +210,16 @@ export class ConfigOverlay {
         return input;
     }
 
+    private createColorField(field: UiFieldColor): HTMLInputElement {
+        const input = document.createElement('input');
+        input.type = 'color';
+        input.id = field.id;
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).value;
+        });
+        return input;
+    }
+
     private createEnumField(field: UiFieldStringEnum<any>): HTMLSelectElement {
         const input = document.createElement('select');
         input.id = field.id;
@@ -244,6 +257,7 @@ export class ConfigOverlay {
                 case 'string':
                 case 'integer':
                 case 'float':
+                case 'color':
                     field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
                         const uiField = document.getElementById(field.id) as HTMLInputElement;
                         uiField.value = v;

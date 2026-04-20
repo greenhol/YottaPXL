@@ -5,13 +5,14 @@ import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
-import { COLOR } from './../../types/color';
+import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, uiSchemaFallbackColor, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
+import { stringToRgb } from './../../types/color';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
     gradient: ColorMapperConfig,
+    fallbackColor: string,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -30,6 +31,7 @@ export class MandelbrotIterations extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
+            fallbackColor: '#000000',
         },
         'mandelbrotIterationsConfig',
         [
@@ -39,6 +41,7 @@ export class MandelbrotIterations extends Plane {
             uiSchemaGradientSupportPoints('gradient.supportPoints'),
             uiSchemaGradientEasing('gradient.easing'),
             uiSchemaGradientScaling('gradient.scaling'),
+            uiSchemaFallbackColor('fallbackColor'),
         ],
     );
 
@@ -67,18 +70,18 @@ export class MandelbrotIterations extends Plane {
     private createImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
-        this.config.setInfo('Gradient', colorMapper.supportPointsString);
+        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                const color = (value === this._effectiveMaxIterations) ? COLOR.BLACK : colorMapper.mapLooped(value, 255 * this.config.data.gradient.scaling);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = color.r;
-                imageData[pixelIndex + 1] = color.g;
-                imageData[pixelIndex + 2] = color.b;
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+
+                this.setPixel(
+                    imageData,
+                    index,
+                    (value === this._effectiveMaxIterations) ? fallbackColor : colorMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                );
             }
         }
         return imageData;

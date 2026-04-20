@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
-export type UiFieldType = 'header' | 'string' | 'integer' | 'float' | 'boolean' | 'enum';
+export type UiFieldType = 'header' | 'string' | 'integer' | 'float' | 'boolean' | 'color' | 'enum';
 
 export abstract class ConfigUiField<T> {
 
@@ -25,15 +25,15 @@ export abstract class ConfigUiField<T> {
         this._description = description;
     }
 
-    public get id() {
+    public get id(): string {
         return this._id;
     }
 
-    public get path() {
+    public get path(): string {
         return this._path;
     }
 
-    public get type() {
+    public get type(): UiFieldType {
         return this._type;
     }
 
@@ -41,15 +41,15 @@ export abstract class ConfigUiField<T> {
         this._value$.next(this.validate(v));
     }
 
-    public get value$() {
+    public get value$(): BehaviorSubject<T | null> {
         return this._value$;
     }
 
-    public get label() {
+    public get label(): string {
         return this._label;
     }
 
-    public get description() {
+    public get description(): string {
         return this._description;
     }
 
@@ -199,6 +199,26 @@ export class UiFieldBool extends ConfigUiField<boolean> {
         return v === 'true';
     }
 }
+
+export class UiFieldColor extends ConfigUiField<string> {
+
+    constructor(
+        path: string,
+        label: string,
+        description: string,
+    ) {
+        super(path, 'color', label, description);
+    }
+
+    override get fullDescription() {
+        return this.description;
+    }
+
+    override validate(v: string): string {
+        return v;
+    }
+}
+
 
 export class UiFieldStringEnum<U extends Record<string, unknown>> extends ConfigUiField<U[keyof U]> {
 

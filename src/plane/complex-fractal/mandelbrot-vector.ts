@@ -3,16 +3,16 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig, UiFieldBool } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ColorMapper } from '../../math/color/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { COLORS, createGrey, RGB } from '../../types';
+import { COLORS, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, UI_SCHEMA_HEADER_LIC, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 import { LicConfig } from './../../math/lic/types';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
@@ -22,9 +22,10 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     maxIterations: number,
     escapeValue: number,
     licConfig: LicConfig,
+    gradient: ColorMapperConfig,
+    fallbackColor: string,
 }
 
-const COLOR_NA: RGB = { r: 0, g: 0, b: 0 };
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
 
 @InitializeAfterConstruct()
@@ -48,6 +49,12 @@ export class MandelbrotVector extends Plane {
                 maxLength: 5,
                 strength: -1,
             },
+            gradient: {
+                supportPoints: '0:#000000, 1:#FFFFFF',
+                easing: Easing.RGB_LINEAR,
+                scaling: 1,
+            },
+            fallbackColor: '#000000',
         },
         'mandelbrotVectorConfig',
         [
@@ -60,9 +67,11 @@ export class MandelbrotVector extends Plane {
             uiSchemaFractalMaxIterations('maxIterations'),
             uiSchemaFractalEscapeValue('escapeValue'),
             UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicMinLenth('licConfig.minLength'),
-            uiSchemaLicMaxLenth('licConfig.maxLength'),
-            uiSchemaLicStrength('licConfig.strength'),
+            uiSchemaLicLenth('licConfig.maxLength'),
+            UI_SCHEMA_HEADER_GRADIENT,
+            uiSchemaGradientSupportPoints('gradient.supportPoints'),
+            uiSchemaGradientEasing('gradient.easing'),
+            uiSchemaFallbackColor('fallbackColor'),
         ],
     );
 
@@ -151,11 +160,7 @@ export class MandelbrotVector extends Plane {
                 const sourceIndex = source.grid.getIndexForCenterArea(col, row);
                 const targetIndex = this.grid.getIndex(col, row);
                 let value = Math.round(source.image[sourceIndex] * 255);
-                const pixelIndex = targetIndex * 4;
-                imageData[pixelIndex] = value;     // R
-                imageData[pixelIndex + 1] = value; // G
-                imageData[pixelIndex + 2] = value; // B
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+                this.setPixel(imageData, targetIndex, { r: value, g: value, b: value });
             }
         }
         return imageData;
@@ -163,21 +168,19 @@ export class MandelbrotVector extends Plane {
 
     private drawImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
+        const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
+        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
+
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                this.drawPixel(imageData, index, (value == Number.MIN_SAFE_INTEGER) ? COLOR_NA : createGrey(value));
+                this.setPixel(
+                    imageData,
+                    index,
+                    (value == Number.MIN_SAFE_INTEGER) ? fallbackColor : colorMapper.mapClamped(value));
             }
         }
         return imageData;
-    }
-
-    private drawPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
-        const pixelIndex = index * 4;
-        imageData[pixelIndex] = color.r;     // R
-        imageData[pixelIndex + 1] = color.g; // G
-        imageData[pixelIndex + 2] = color.b; // B
-        imageData[pixelIndex + 3] = 255;     // A (opaque)
     }
 }

@@ -73,13 +73,11 @@ export class Gradient extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const [x, y] = this.grid.pixelToMath(col, row);
-                const index = this.grid.getIndex(col, row);
-                const color = colorMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = color.r;
-                imageData[pixelIndex + 1] = color.g;
-                imageData[pixelIndex + 2] = color.b;
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+                this.setPixel(
+                    imageData,
+                    this.grid.getIndex(col, row),
+                    colorMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset),
+                );
             }
         }
         return imageData;

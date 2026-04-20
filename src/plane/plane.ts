@@ -3,6 +3,7 @@ import { Initializable } from '../../shared';
 import { ModuleConfig } from '../../shared/config';
 import { Grid } from '../grid/grid';
 import { GridRange, gridRangeToString } from '../grid/grid-range';
+import { RGB } from '../types';
 
 export interface PlaneConfig {
     gridRange: GridRange;
@@ -60,6 +61,14 @@ export abstract class Plane implements Initializable {
 
     public updateImage(image: ImageDataArray) {
         this._image$.next(image);
+    }
+
+    public setPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
+        const pixelIndex = index * 4;
+        imageData[pixelIndex] = color.r;     // R
+        imageData[pixelIndex + 1] = color.g; // G
+        imageData[pixelIndex + 2] = color.b; // B
+        imageData[pixelIndex + 3] = 255;     // A (opaque)
     }
 
     public setIdle() {

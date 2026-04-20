@@ -6,6 +6,7 @@ import { GridRange } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
+import { createGreyByIntensity } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { UI_SCHEMA_HEADER_NOISE, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 
@@ -81,13 +82,11 @@ export class Noise extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const destinationIndex = this.grid.getIndex(col, row);
-                let value = Math.round(this._data[destinationIndex] * 255);
-                const index = this.grid.getIndex(col, row);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = value;     // R
-                imageData[pixelIndex + 1] = value; // G
-                imageData[pixelIndex + 2] = value; // B
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+                this.setPixel(
+                    imageData,
+                    this.grid.getIndex(col, row),
+                    createGreyByIntensity(this._data[destinationIndex])
+                );
             }
         }
         return imageData;

@@ -11,10 +11,10 @@ import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generat
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
-import { COLOR, RGB } from '../../types';
+import { stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaColorBlending, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaColorBlending, uiSchemaFallbackColor, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
 import { UI_SCHEMA_HEADER_FIELD } from './../ui-schema/ui-fields';
 
 interface ChargesPlaneConfig extends PlaneConfig {
@@ -23,6 +23,7 @@ interface ChargesPlaneConfig extends PlaneConfig {
     licConfig: LicConfig,
     gradientMagnitude: ColorMapperConfig,
     gradientStreamlines: ColorMapperConfig,
+    fallbackColor: string,
     blending: BlendingType,
 }
 
@@ -55,6 +56,7 @@ export class Charges extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
+            fallbackColor: '#000000',
             blending: BlendingType.HSL,
         },
         'chargesConfig',
@@ -77,6 +79,7 @@ export class Charges extends Plane {
             uiSchemaGradientSupportPoints('gradientStreamlines.supportPoints'),
             uiSchemaGradientEasing('gradientStreamlines.easing'),
             uiSchemaGradientScaling('gradientStreamlines.scaling'),
+            uiSchemaFallbackColor('fallbackColor'),
             UI_SCHEMA_HEADER_BLENDING,
             uiSchemaColorBlending('blending'),
         ],
@@ -148,6 +151,8 @@ export class Charges extends Plane {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapperMagnitude = ColorMapper.fromString(this.config.data.gradientMagnitude.supportPoints, this.config.data.gradientMagnitude.easing);
         const colorMapperStreamlines = ColorMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
+        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
+
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
@@ -156,21 +161,13 @@ export class Charges extends Plane {
                     imageData,
                     index,
                     blender.blend(
-                        (isNaN(magnitude)) ? COLOR.BLACK : colorMapperMagnitude.mapClamped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
-                        (isNaN(data[index])) ? COLOR.WHITE : colorMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
+                        (isNaN(magnitude)) ? fallbackColor : colorMapperMagnitude.mapClamped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
+                        (isNaN(data[index])) ? fallbackColor : colorMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
                         this.config.data.blending,
                     ),
                 );
             }
         }
         return imageData;
-    }
-
-    private setPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
-        const pixelIndex = index * 4;
-        imageData[pixelIndex] = color.r;     // R
-        imageData[pixelIndex + 1] = color.g; // G
-        imageData[pixelIndex + 2] = color.b; // B
-        imageData[pixelIndex + 3] = 255;     // A (opaque)
     }
 }

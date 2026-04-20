@@ -1,4 +1,4 @@
-import { UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
+import { UiFieldColor, UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
 import { BlendingType } from '../../math/color/color-blender';
 import { Easing } from '../../math/color/color-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
@@ -45,6 +45,10 @@ export function uiSchemaColorBlending(path: string): UiFieldStringEnum<Record<st
         '\'Manipulation\' uses the channels of Color 2 to manipulate Color 1 by properties of different color spaces\n' +
         '\'Blending\' blends all channels in different ways directly',
     );
+}
+
+export function uiSchemaFallbackColor(path: string): UiFieldColor {
+    return new UiFieldColor(path, 'Fallback Color', 'Fallback Color for pixels of undefined values');
 }
 
 /** Noise */

@@ -4,15 +4,16 @@ import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { COLOR } from '../../types';
+import { stringToRgb } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
+import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotDistanceConfig extends PlaneConfig {
     maxIterations: number,
     escapeValue: number,
     gradient: ColorMapperConfig,
+    fallbackColor: string,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
@@ -32,6 +33,7 @@ export class MandelbrotDistance extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
             },
+            fallbackColor: '#000000',
         },
         'mandelbrotDistanceConfig',
         [
@@ -42,6 +44,7 @@ export class MandelbrotDistance extends Plane {
             uiSchemaGradientSupportPoints('gradient.supportPoints'),
             uiSchemaGradientEasing('gradient.easing'),
             uiSchemaGradientScaling('gradient.scaling'),
+            uiSchemaFallbackColor('fallbackColor'),
         ],
     );
 
@@ -73,21 +76,18 @@ export class MandelbrotDistance extends Plane {
         data.forEach(value => { if (value > max) max = value; });
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
-        this.config.setInfo('Gradient', colorMapper.supportPointsString);
+        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
                 let value = data[index];
-                if (value <= 0) {
-                    value = -1;
-                }
-                const color = (value <= 0) ? COLOR.BLACK : colorMapper.mapLooped(value, max * this.config.data.gradient.scaling);
-                const pixelIndex = index * 4;
-                imageData[pixelIndex] = color.r;     // R
-                imageData[pixelIndex + 1] = color.g; // G
-                imageData[pixelIndex + 2] = color.b; // B
-                imageData[pixelIndex + 3] = 255; // A (opaque)
+
+                this.setPixel(
+                    imageData,
+                    index,
+                    (value <= 0) ? fallbackColor : colorMapper.mapLooped(value, max * this.config.data.gradient.scaling),
+                );
             }
         }
         return imageData;

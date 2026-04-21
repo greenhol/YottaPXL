@@ -6,7 +6,7 @@ import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-m
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { stringToRgb } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotDistanceConfig extends PlaneConfig {
@@ -37,14 +37,14 @@ export class MandelbrotDistance extends Plane {
         },
         'mandelbrotDistanceConfig',
         [
-            UI_SCHEMA_HEADER_FRACTAL,
-            uiSchemaFractalMaxIterations('maxIterations'),
-            uiSchemaFractalEscapeValue('escapeValue'),
-            UI_SCHEMA_HEADER_GRADIENT,
-            uiSchemaGradientSupportPoints('gradient.supportPoints'),
-            uiSchemaGradientEasing('gradient.easing'),
-            uiSchemaGradientScaling('gradient.scaling'),
-            uiSchemaFallbackColor('fallbackColor'),
+            CREATE.UI_FIELD_HEADER_FRACTAL,
+            CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalEscapeValue('escapeValue'),
+            CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradient.easing'),
+            CREATE.uiFieldGradientScaling('gradient.scaling'),
+            CREATE.uiFieldFallbackColor('fallbackColor'),
         ],
     );
 

@@ -1,6 +1,6 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { GridRange, rangeXdiff } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
@@ -12,7 +12,7 @@ import { VectorFieldGenerator } from '../../math/vector-field/vector-field-gener
 import { COLORS, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_GRADIENT, UI_SCHEMA_HEADER_LIC, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 import { LicConfig } from './../../math/lic/types';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
@@ -58,20 +58,20 @@ export class MandelbrotVector extends Plane {
         },
         'mandelbrotVectorConfig',
         [
-            uiSchemaHeader('Source Image'),
-            new UiFieldBool('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
-            uiSchemaNoiseType('noiseConfig.type'),
-            uiSchemaNoiseP('noiseConfig.p'),
-            uiSchemaNoiseScaling('noiseConfig.scaling'),
-            UI_SCHEMA_HEADER_FRACTAL,
-            uiSchemaFractalMaxIterations('maxIterations'),
-            uiSchemaFractalEscapeValue('escapeValue'),
-            UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicLenth('licConfig.maxLength'),
-            UI_SCHEMA_HEADER_GRADIENT,
-            uiSchemaGradientSupportPoints('gradient.supportPoints'),
-            uiSchemaGradientEasing('gradient.easing'),
-            uiSchemaFallbackColor('fallbackColor'),
+            CREATE.createHeader('Source Image'),
+            CREATE.createBoolField('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
+            CREATE.uiFieldNoiseType('noiseConfig.type'),
+            CREATE.uiFieldNoiseP('noiseConfig.p'),
+            CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
+            CREATE.UI_FIELD_HEADER_FRACTAL,
+            CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalEscapeValue('escapeValue'),
+            CREATE.UI_FIELD_HEADER_LIC,
+            CREATE.uiFieldLicLenth('licConfig.maxLength'),
+            CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradient.easing'),
+            CREATE.uiFieldFallbackColor('fallbackColor'),
         ],
     );
 

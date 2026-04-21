@@ -8,7 +8,7 @@ import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generat
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { createGreyByIntensity } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_NOISE, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 
 interface NoisePlaneConfig extends PlaneConfig {
     config: NoiseConfig,
@@ -39,10 +39,10 @@ export class Noise extends Plane {
         },
         'noise',
         [
-            UI_SCHEMA_HEADER_NOISE,
-            uiSchemaNoiseType('config.type'),
-            uiSchemaNoiseP('config.p'),
-            uiSchemaNoiseScaling('config.scaling'),
+            CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldNoiseType('config.type'),
+            CREATE.uiFieldNoiseP('config.p'),
+            CREATE.uiFieldNoiseScaling('config.scaling'),
         ]
     );
 

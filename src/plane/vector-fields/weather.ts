@@ -16,7 +16,7 @@ import { PressureRegion } from '../../math/vector-field/weather-field/types';
 import { stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_LIC, UI_SCHEMA_HEADER_NOISE, uiSchemaColorBlending, uiSchemaFallbackColor, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicMaxLenth, uiSchemaLicMinLenth, uiSchemaLicStrength, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 
 interface WeatherConfig extends PlaneConfig {
     noiseConfig: NoiseConfig,
@@ -103,25 +103,25 @@ export class Weather extends Plane {
         },
         'weatherConfig',
         [
-            UI_SCHEMA_HEADER_NOISE,
-            uiSchemaNoiseType('noiseConfig.type'),
-            uiSchemaNoiseP('noiseConfig.p'),
-            uiSchemaNoiseScaling('noiseConfig.scaling'),
-            UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicMinLenth('licConfig.minLength'),
-            uiSchemaLicMaxLenth('licConfig.maxLength'),
-            uiSchemaLicStrength('licConfig.strength'),
-            uiSchemaHeader('Magnitude', 'Gradient clapmed'),
-            uiSchemaGradientSupportPoints('gradientMagnitude.supportPoints'),
-            uiSchemaGradientEasing('gradientMagnitude.easing'),
-            uiSchemaGradientScaling('gradientMagnitude.scaling'),
-            uiSchemaHeader('Streamlines', 'Gradient clapmed'),
-            uiSchemaGradientSupportPoints('gradientStreamlines.supportPoints'),
-            uiSchemaGradientEasing('gradientStreamlines.easing'),
-            uiSchemaGradientScaling('gradientStreamlines.scaling'),
-            uiSchemaFallbackColor('fallbackColor'),
-            UI_SCHEMA_HEADER_BLENDING,
-            uiSchemaColorBlending('blending'),
+            CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldNoiseType('noiseConfig.type'),
+            CREATE.uiFieldNoiseP('noiseConfig.p'),
+            CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
+            CREATE.UI_FIELD_HEADER_LIC,
+            CREATE.uiFieldLicMinLenth('licConfig.minLength'),
+            CREATE.uiFieldLicMaxLenth('licConfig.maxLength'),
+            CREATE.uiFieldLicStrength('licConfig.strength'),
+            CREATE.createHeader('Magnitude', 'Gradient clapmed'),
+            CREATE.uiFieldGradientSupportPoints('gradientMagnitude.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientMagnitude.easing'),
+            CREATE.uiFieldGradientScaling('gradientMagnitude.scaling'),
+            CREATE.createHeader('Streamlines', 'Gradient clapmed'),
+            CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
+            CREATE.uiFieldGradientScaling('gradientStreamlines.scaling'),
+            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.UI_FIELD_HEADER_BLENDING,
+            CREATE.uiFieldColorBlending('blending'),
         ],
     );
 

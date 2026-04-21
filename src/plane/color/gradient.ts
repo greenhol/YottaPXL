@@ -1,10 +1,10 @@
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldFloat, UiFieldStringEnum } from '../../../shared/config';
+import { ModuleConfig } from '../../../shared/config';
 import { GridRange } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { COLORS } from '../../types/colors';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_GRADIENT, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 
 enum GradientDemos {
     BW = 'Black White',
@@ -48,12 +48,12 @@ export class Gradient extends Plane {
         },
         'gradientConfig',
         [
-            UI_SCHEMA_HEADER_GRADIENT,
-            new UiFieldStringEnum('demo', GradientDemos, 'Gradient Demos', 'Gradient Demos (selection of predefined definitions)'),
-            uiSchemaGradientSupportPoints('config.supportPoints'),
-            uiSchemaGradientEasing('config.easing'),
-            uiSchemaGradientScaling('config.scaling'),
-            new UiFieldFloat('offset', 'Offset', 'Gradient Offset (applied after scaling)', -10000, 10000),
+            CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.createEnumField('demo', GradientDemos, 'Gradient Demos', 'Gradient Demos (selection of predefined definitions)'),
+            CREATE.uiFieldGradientSupportPoints('config.supportPoints'),
+            CREATE.uiFieldGradientEasing('config.easing'),
+            CREATE.uiFieldGradientScaling('config.scaling'),
+            CREATE.createFloatField('offset', 'Offset', 'Gradient Offset (applied after scaling)', -10000, 10000),
         ],
     );
 

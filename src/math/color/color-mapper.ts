@@ -1,4 +1,4 @@
-import { COLOR, RGB } from '../../types/color';
+import { COLOR, RGB, stringToRgb } from '../../types/color';
 import { converter } from './color-converter';
 
 export interface SupportPoint {
@@ -48,40 +48,21 @@ export class ColorMapper {
     private static parseSupportPoints(inputString: string): SupportPoint[] {
         const errorFallback: SupportPoint[] = [{ pos: 0, color: COLOR.RED }, { pos: 1, color: COLOR.DARKRED }];
         try {
-            const points: SupportPoint[] = [];
-            const pairs = inputString.split(',').map(p => p.trim()).filter(p => p);
+            const pairs = [...inputString.matchAll(/([0-9.]+)\s*:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})\b/g)];
 
-            for (const pair of pairs) {
-                const [xStr, color] = pair.split(':').map(s => s.trim());
-                if (xStr === undefined || color === undefined) {
-                    console.error(`#parseSupportPoints - Invalid pair format: "${pair}". Expected "x:color".`);
-                    return errorFallback;
-                }
-
-                const x = parseFloat(xStr);
-                if (isNaN(x)) {
-                    console.error(`#parseSupportPoints - Invalid x value: "${xStr}". Must be a number.`);
-                    return errorFallback;
-                }
-
-                if (!/^#[0-9A-F]{6}$/i.test(color)) {
-                    console.error(`#parseSupportPoints - Invalid color format: "${color}". Expected "#RRGGBB".`);
-                    return errorFallback;
-                }
-
-                const r = parseInt(color.slice(1, 3), 16);
-                const g = parseInt(color.slice(3, 5), 16);
-                const b = parseInt(color.slice(5, 7), 16);
-
-                points.push({ pos: x, color: { r, g, b } });
-            }
-
-            if (points.length < 2) {
+            if (pairs.length < 2) {
                 console.error('#parseSupportPoints - Not enough valid support points found.');
                 return errorFallback;
             }
 
-            return points;
+            return pairs.map(([, xStr, colorStr]) => {
+                const pos = parseFloat(xStr);
+                if (isNaN(pos) || pos < 0 || pos > 1) {
+                    console.error(`#parseSupportPoints - Invalid pos value: "${xStr}". Must be a number between 0 and 1.`);
+                }
+                return { pos, color: stringToRgb(colorStr) };
+            });
+
         } catch (e) {
             console.error('#parseSupportPoints - Failed to parse support points:', e);
             return errorFallback;

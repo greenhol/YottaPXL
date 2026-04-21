@@ -133,33 +133,31 @@ function toHex(c: number): string {
 }
 
 export function stringToRgb(color: string): RGB {
-    let hex = color.replace('#', '');
-    if (!/^[0-9a-fA-F]{3,6}$/.test(hex)) {
-        console.error('#stringToRgb - Invalid hex color string. Expected format: #rgb or #rrggbb, returning black.');
-        return { r: 0, g: 0, b: 0 };
+    const hex6 = color.trim().replace(/^#/, '');
+
+    if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex6)) {
+        console.error('#stringToRgb - Invalid hex color string. Expected format: #rgb or #rrggbb, returning DARKRED.');
+        return COLOR.DARKRED;
     }
 
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
+    const hex = hex6.length === 3 ?
+        hex6.split('').map(c => c + c).join('') :
+        hex6;
 
-    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-        console.error('#stringToRgb - Invalid RGB values. Each component must be between 0 and 255, returning black.');
-    }
-    return { r, g, b };
+    return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16),
+    };
 }
 
 export function rgbToString(color: RGB): string {
-    if (
-        color.r < 0 || color.r > 255 ||
-        color.g < 0 || color.g > 255 ||
-        color.b < 0 || color.b > 255
-    ) {
-        console.error('#rgbToString - Invalid RGB values. Each component must be between 0 and 255, returning black.');
-        return '#000000';
+    const { r, g, b } = color;
+    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+        console.error('#rgbToString - Invalid RGB values. Each component must be between 0 and 255, returning DARKRED.');
+        return '#8B0000';
     }
-    return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`;
+    return `#${toHex(Math.round(r))}${toHex(Math.round(g))}${toHex(Math.round(b))}`;
 }
 
 /** Create a grey color by given intensity value between 0 and 1 */

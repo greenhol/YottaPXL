@@ -7,7 +7,7 @@ import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calc
 import { stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_FRACTAL, uiSchemaColorBlending, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedIdConfig extends PlaneConfig {
@@ -46,20 +46,20 @@ export class MandelbrotCombinedID extends Plane {
         },
         'mandelbrotCombinedIdConfig',
         [
-            UI_SCHEMA_HEADER_FRACTAL,
-            uiSchemaFractalMaxIterations('maxIterations'),
-            uiSchemaFractalEscapeValue('escapeValue'),
-            uiSchemaHeader('Iterations', 'Gradient looped'),
-            uiSchemaGradientSupportPoints('gradientIterations.supportPoints'),
-            uiSchemaGradientEasing('gradientIterations.easing'),
-            uiSchemaGradientScaling('gradientIterations.scaling'),
-            uiSchemaHeader('Distance', 'Gradient looped'),
-            uiSchemaGradientSupportPoints('gradientDistance.supportPoints'),
-            uiSchemaGradientEasing('gradientDistance.easing'),
-            uiSchemaGradientScaling('gradientDistance.scaling'),
-            uiSchemaFallbackColor('fallbackColor'),
-            UI_SCHEMA_HEADER_BLENDING,
-            uiSchemaColorBlending('blending'),
+            CREATE.UI_FIELD_HEADER_FRACTAL,
+            CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalEscapeValue('escapeValue'),
+            CREATE.createHeader('Iterations', 'Gradient looped'),
+            CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientIterations.easing'),
+            CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
+            CREATE.createHeader('Distance', 'Gradient looped'),
+            CREATE.uiFieldGradientSupportPoints('gradientDistance.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientDistance.easing'),
+            CREATE.uiFieldGradientScaling('gradientDistance.scaling'),
+            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.UI_FIELD_HEADER_BLENDING,
+            CREATE.uiFieldColorBlending('blending'),
         ],
     );
 

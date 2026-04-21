@@ -14,7 +14,7 @@ import { VectorFieldGenerator } from '../../math/vector-field/vector-field-gener
 import { stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_BLENDING, UI_SCHEMA_HEADER_FRACTAL, UI_SCHEMA_HEADER_LIC, uiSchemaColorBlending, uiSchemaFallbackColor, uiSchemaFractalEscapeValue, uiSchemaFractalMaxIterations, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader, uiSchemaLicLenth, uiSchemaNoiseP, uiSchemaNoiseScaling, uiSchemaNoiseType } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedIvConfig extends PlaneConfig {
@@ -65,26 +65,26 @@ export class MandelbrotCombinedIV extends Plane {
         },
         'mandelbrotCombinedIvConfig',
         [
-            UI_SCHEMA_HEADER_FRACTAL,
-            uiSchemaFractalMaxIterations('maxIterations'),
-            uiSchemaFractalEscapeValue('escapeValue'),
-            uiSchemaHeader('Source Noise'),
-            uiSchemaNoiseType('noiseConfig.type'),
-            uiSchemaNoiseP('noiseConfig.p'),
-            uiSchemaNoiseScaling('noiseConfig.scaling'),
-            UI_SCHEMA_HEADER_LIC,
-            uiSchemaLicLenth('licConfig.maxLength'),
-            uiSchemaHeader('Iterations', 'Gradient looped'),
-            uiSchemaGradientSupportPoints('gradientIterations.supportPoints'),
-            uiSchemaGradientEasing('gradientIterations.easing'),
-            uiSchemaGradientScaling('gradientIterations.scaling'),
-            uiSchemaHeader('Streamlines', 'Gradient clapmed'),
-            uiSchemaGradientSupportPoints('gradientStreamlines.supportPoints'),
-            uiSchemaGradientEasing('gradientStreamlines.easing'),
-            uiSchemaGradientScaling('gradientStreamlines.scaling'),
-            uiSchemaFallbackColor('fallbackColor'),
-            UI_SCHEMA_HEADER_BLENDING,
-            uiSchemaColorBlending('blending'),
+            CREATE.UI_FIELD_HEADER_FRACTAL,
+            CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalEscapeValue('escapeValue'),
+            CREATE.createHeader('Source Noise'),
+            CREATE.uiFieldNoiseType('noiseConfig.type'),
+            CREATE.uiFieldNoiseP('noiseConfig.p'),
+            CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
+            CREATE.UI_FIELD_HEADER_LIC,
+            CREATE.uiFieldLicLenth('licConfig.maxLength'),
+            CREATE.createHeader('Iterations', 'Gradient looped'),
+            CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientIterations.easing'),
+            CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
+            CREATE.createHeader('Streamlines', 'Gradient clapmed'),
+            CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
+            CREATE.uiFieldGradientScaling('gradientStreamlines.scaling'),
+            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.UI_FIELD_HEADER_BLENDING,
+            CREATE.uiFieldColorBlending('blending'),
         ],
     );
 

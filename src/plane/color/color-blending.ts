@@ -4,7 +4,7 @@ import { GridRange } from '../../grid/grid-range';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { Plane, PlaneConfig } from '../plane';
-import { UI_SCHEMA_HEADER_BLENDING, uiSchemaColorBlending, uiSchemaGradientEasing, uiSchemaGradientScaling, uiSchemaGradientSupportPoints, uiSchemaHeader } from '../ui-schema/ui-fields';
+import { CREATE } from '../ui/plane-config-field-creator';
 
 interface ColorBlendingPlaneConfig extends PlaneConfig {
     type: BlendingType,
@@ -34,16 +34,16 @@ export class ColorBlending extends Plane {
         },
         'colorBlendingConfig',
         [
-            UI_SCHEMA_HEADER_BLENDING,
-            uiSchemaColorBlending('type'),
-            uiSchemaHeader('Gradient 1'),
-            uiSchemaGradientSupportPoints('gradient1.supportPoints'),
-            uiSchemaGradientEasing('gradient1.easing'),
-            uiSchemaGradientScaling('gradient1.scaling'),
-            uiSchemaHeader('Gradient 2'),
-            uiSchemaGradientSupportPoints('gradient2.supportPoints'),
-            uiSchemaGradientEasing('gradient2.easing'),
-            uiSchemaGradientScaling('gradient2.scaling'),
+            CREATE.UI_FIELD_HEADER_BLENDING,
+            CREATE.uiFieldColorBlending('type'),
+            CREATE.createHeader('Gradient 1'),
+            CREATE.uiFieldGradientSupportPoints('gradient1.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradient1.easing'),
+            CREATE.uiFieldGradientScaling('gradient1.scaling'),
+            CREATE.createHeader('Gradient 2'),
+            CREATE.uiFieldGradientSupportPoints('gradient2.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradient2.easing'),
+            CREATE.uiFieldGradientScaling('gradient2.scaling'),
         ],
     );
 

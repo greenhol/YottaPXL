@@ -1,5 +1,4 @@
-import { UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
-import { ConfigUiFieldCreator } from '../../../shared/config/ui/config-ui-field-creator';
+import { ConfigUiFieldCreator, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
 import { BlendingType } from '../../math/color/color-blender';
 import { Easing } from '../../math/color/color-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';

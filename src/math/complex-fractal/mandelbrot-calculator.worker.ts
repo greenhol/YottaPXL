@@ -94,7 +94,7 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
         }
         iteration++;
     }
-    return 0;
+    return maxIterations;
 }
 
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {

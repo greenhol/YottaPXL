@@ -20,6 +20,7 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     useNoiseAsSource: boolean,
     noiseConfig: NoiseConfig,
     maxIterations: number,
+    interpolate: boolean,
     escapeValue: number,
     licConfig: LicConfig,
     gradient: ColorMapperConfig,
@@ -43,6 +44,7 @@ export class MandelbrotVector extends Plane {
                 scaling: NoiseScaleFactor.TWO,
             },
             maxIterations: 0,
+            interpolate: false,
             escapeValue: 100,
             licConfig: {
                 minLength: 5,
@@ -65,6 +67,7 @@ export class MandelbrotVector extends Plane {
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
             CREATE.UI_FIELD_HEADER_FRACTAL,
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.UI_FIELD_HEADER_LIC,
             CREATE.uiFieldLicLenth('licConfig.maxLength'),
@@ -136,7 +139,9 @@ export class MandelbrotVector extends Plane {
     private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
         const colorMapper = ColorMapper.fromColors(COLORS.BW);
         const mandelbrotCalculator = new MandelbrotCalculator();
-        const mandelbrotCalculation$ = mandelbrotCalculator.calculateIterations(sourceGrid, maxIterations);
+        const mandelbrotCalculation$ = this.config.data.interpolate
+            ? mandelbrotCalculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
+            : mandelbrotCalculator.calculateIterations(this.grid, this._effectiveMaxIterations);
         mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4'); } });
         const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
 

@@ -12,6 +12,7 @@ import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedIdConfig extends PlaneConfig {
     maxIterations: number,
+    interpolate: boolean,
     escapeValue: number,
     gradientIterations: ColorMapperConfig,
     gradientDistance: ColorMapperConfig,
@@ -30,6 +31,7 @@ export class MandelbrotCombinedID extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
+            interpolate: false,
             escapeValue: 100,
             gradientIterations: {
                 supportPoints: '0:#00FF00, 0.5:#88FF88, 1:#00FF00',
@@ -48,6 +50,7 @@ export class MandelbrotCombinedID extends Plane {
         [
             CREATE.UI_FIELD_HEADER_FRACTAL,
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.createHeader('Iterations', 'Gradient looped'),
             CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
@@ -73,12 +76,15 @@ export class MandelbrotCombinedID extends Plane {
 
         this.setProgress(0);
         // Iterations
-        const calculationIterations$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
+        const calculator = new MandelbrotCalculator();
+        const calculationIterations$ = this.config.data.interpolate
+            ? calculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
+            : calculator.calculateIterations(this.grid, this._effectiveMaxIterations);
         calculationIterations$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Iterations 1/2'); } });
         const iterationsData = await extractData(calculationIterations$, 'mandelbrot iterations');
 
         // Distances
-        const calculationDistances$ = new MandelbrotCalculator().calculateDistances(this.grid, this._effectiveMaxIterations, this.config.data.escapeValue);
+        const calculationDistances$ = calculator.calculateDistances(this.grid, this._effectiveMaxIterations, this.config.data.escapeValue);
         calculationDistances$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Distances 2/2'); } });
         const distancesData = await extractData(calculationDistances$, 'mandelbrot distances');
 

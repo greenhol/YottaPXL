@@ -19,6 +19,7 @@ import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotCombinedIvConfig extends PlaneConfig {
     maxIterations: number,
+    interpolate: boolean,
     escapeValue: number,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
@@ -39,6 +40,7 @@ export class MandelbrotCombinedIV extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
+            interpolate: false,
             escapeValue: 100,
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED,
@@ -67,6 +69,7 @@ export class MandelbrotCombinedIV extends Plane {
         [
             CREATE.UI_FIELD_HEADER_FRACTAL,
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.createHeader('Source Noise'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
@@ -124,7 +127,9 @@ export class MandelbrotCombinedIV extends Plane {
         this.updateImage(this.drawSourceImage(sourceData));
 
         // Iterations
-        const calculationIterations$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
+        const calculationIterations$ = this.config.data.interpolate
+            ? mandelbrotCalculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
+            : mandelbrotCalculator.calculateIterations(this.grid, this._effectiveMaxIterations);
         calculationIterations$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Iterations 3/4'); } });
         const iterationsData = await extractData(calculationIterations$, 'mandelbrot iterations');
 

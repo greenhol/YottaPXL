@@ -11,6 +11,7 @@ import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
+    interpolate: boolean,
     gradient: ColorMapperConfig,
     fallbackColor: string,
 }
@@ -26,6 +27,7 @@ export class MandelbrotIterations extends Plane {
         {
             gridRange: INITIAL_GRID_RANGE,
             maxIterations: 0,
+            interpolate: false,
             gradient: {
                 supportPoints: '0:#000000, 0.5:#FFFFFF, 1:#000000',
                 easing: Easing.RGB_LINEAR,
@@ -37,6 +39,7 @@ export class MandelbrotIterations extends Plane {
         [
             CREATE.UI_FIELD_HEADER_FRACTAL,
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
+            CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
@@ -54,10 +57,11 @@ export class MandelbrotIterations extends Plane {
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);
-        const calculation$ = new MandelbrotCalculator().calculateIterations(this.grid, this._effectiveMaxIterations);
-        calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress); }
-        });
+        const calculator = new MandelbrotCalculator();
+        const calculation$ = this.config.data.interpolate
+            ? calculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
+            : calculator.calculateIterations(this.grid, this._effectiveMaxIterations);
+        calculation$.subscribe({ next: (state) => { this.setProgress(state.progress); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
             this.updateImage(this.createImage(result.data));
@@ -80,7 +84,7 @@ export class MandelbrotIterations extends Plane {
                 this.setPixel(
                     imageData,
                     index,
-                    (value === this._effectiveMaxIterations) ? fallbackColor : colorMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                    (value >= this._effectiveMaxIterations) ? fallbackColor : colorMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
                 );
             }
         }

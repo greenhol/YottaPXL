@@ -1,4 +1,4 @@
-import { ConfigUiFieldCreator, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
+import { ConfigUiFieldCreator, UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
 import { BlendingType } from '../../math/color/color-blender';
 import { Easing } from '../../math/color/color-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
@@ -54,6 +54,9 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     }
     public uiFieldFractalEscapeValue(path: string): UiFieldFloat {
         return this.createFloatField(path, 'Escape Value', 'Escape value', 2, 1000);
+    }
+    public uiFieldFractalInterpolate(path: string): UiFieldBool {
+        return this.createBoolField(path, 'Interpolate', 'Estimate interpolated values between iterations');
     }
 
     /** LIC */

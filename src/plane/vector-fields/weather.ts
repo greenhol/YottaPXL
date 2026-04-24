@@ -2,7 +2,7 @@ import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
-import { GridRange } from '../../grid/grid-range';
+import { GridRange, gridRangeFromJson, gridRangeToJson } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
@@ -13,7 +13,7 @@ import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
 import { PressureRegion } from '../../math/vector-field/weather-field/types';
-import { stringToRgb } from '../../types';
+import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -27,7 +27,7 @@ interface WeatherConfig extends PlaneConfig {
     blending: BlendingType,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: -180, xMax: 180, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.fromNumber(-180), xMax: BigDecimal.fromNumber(180), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class Weather extends Plane {
@@ -77,7 +77,7 @@ export class Weather extends Plane {
 
     override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
         {
-            gridRange: INITIAL_GRID_RANGE,
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
@@ -133,7 +133,7 @@ export class Weather extends Plane {
         this.setProgress(0);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licConfig.maxLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, gridRangeFromJson(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createWeatherField(this._pressureRegions, 1);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });

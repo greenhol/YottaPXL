@@ -1,10 +1,10 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, rangeXdiff } from '../../grid/grid-range';
+import { GridRange, gridRangeToJson, rangeXdiff } from '../../grid/grid-range';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { stringToRgb } from '../../types';
+import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -20,7 +20,7 @@ interface MandelbrotCombinedIdConfig extends PlaneConfig {
     blending: BlendingType,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.fromNumber(-3), xMax: BigDecimal.fromNumber(1.8), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class MandelbrotCombinedID extends Plane {
@@ -29,7 +29,7 @@ export class MandelbrotCombinedID extends Plane {
 
     override config: ModuleConfig<MandelbrotCombinedIdConfig> = new ModuleConfig(
         {
-            gridRange: INITIAL_GRID_RANGE,
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             maxIterations: 0,
             interpolate: false,
             escapeValue: 100,

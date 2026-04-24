@@ -1,10 +1,10 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, rangeXdiff } from '../../grid/grid-range';
+import { GridRange, gridRangeToJson, rangeXdiff } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { stringToRgb } from '../../types';
+import { BigDecimal, stringToRgb } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
@@ -16,7 +16,7 @@ interface MandelbrotDistanceConfig extends PlaneConfig {
     fallbackColor: string,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: -3, xMax: 1.8, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.fromNumber(-3), xMax: BigDecimal.fromNumber(1.8), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class MandelbrotDistance extends Plane {
@@ -25,7 +25,7 @@ export class MandelbrotDistance extends Plane {
 
     override config: ModuleConfig<MandelbrotDistanceConfig> = new ModuleConfig(
         {
-            gridRange: INITIAL_GRID_RANGE,
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             maxIterations: 0,
             escapeValue: 100,
             gradient: {

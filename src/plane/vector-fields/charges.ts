@@ -1,7 +1,7 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
-import { ModuleConfig, UiFieldBool } from '../../../shared/config';
-import { GridRange } from '../../grid/grid-range';
+import { ModuleConfig } from '../../../shared/config';
+import { GridRange, gridRangeFromJson, gridRangeToJson } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
@@ -11,7 +11,7 @@ import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generat
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
-import { stringToRgb } from '../../types';
+import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -26,15 +26,15 @@ interface ChargesPlaneConfig extends PlaneConfig {
     blending: BlendingType,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(10), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class Charges extends Plane {
 
     override config: ModuleConfig<ChargesPlaneConfig> = new ModuleConfig(
         {
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             potential: true,
-            gridRange: INITIAL_GRID_RANGE,
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
@@ -92,7 +92,7 @@ export class Charges extends Plane {
         this.setProgress(0);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, this.config.data.gridRange, 2 * this.config.data.licConfig.maxLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, gridRangeFromJson(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createChargeField([
             { x: 3, y: -1, charge: 5 },

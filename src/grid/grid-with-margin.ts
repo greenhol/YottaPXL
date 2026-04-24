@@ -1,10 +1,11 @@
+import { BigDecimal } from '../types';
 import { Grid } from './grid';
-import { GridRange, rangeXdiff } from './grid-range';
+import { GridRange, gridRangeFromJson, GridRangeSerialized, gridRangeToJson, rangeXdiff } from './grid-range';
 import { Resolution } from './resolutions';
 
 export interface GridWithMarginBlueprint {
     baseResolution: Resolution,
-    baseRange: GridRange,
+    baseRangeSerialized: GridRangeSerialized,
     margin: number,
 }
 
@@ -23,18 +24,18 @@ export class GridWithMargin extends Grid {
     }
 
     public static copyWithMargin(blueprint: GridWithMarginBlueprint) {
-        return new GridWithMargin(blueprint.baseResolution, blueprint.baseRange, blueprint.margin);
+        return new GridWithMargin(blueprint.baseResolution, gridRangeFromJson(blueprint.baseRangeSerialized), blueprint.margin);
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
         const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin);
-        const newGridRangeFactor = resolution.width / baseResolution.width;
+        const newGridRangeFactor = BigDecimal.fromNumber(resolution.width / baseResolution.width);
         const mathBaseWidth = rangeXdiff(baseRange);
-        const cx = baseRange.xMin + rangeXdiff(baseRange) / 2;
+        const cx = baseRange.xMin.add(rangeXdiff(baseRange).div(BigDecimal.TWO));
 
         super(GridWithMargin.resolutionWithMargin(baseResolution, margin), {
-            xMin: cx - mathBaseWidth / 2 * newGridRangeFactor,
-            xMax: cx + mathBaseWidth / 2 * newGridRangeFactor,
+            xMin: cx.sub(mathBaseWidth.div(BigDecimal.TWO).mul(newGridRangeFactor)),
+            xMax: cx.add(mathBaseWidth.div(BigDecimal.TWO).mul(newGridRangeFactor)),
             yCenter: baseRange.yCenter,
         });
         this._baseResolution = baseResolution;
@@ -53,7 +54,7 @@ export class GridWithMargin extends Grid {
     public get withMarginBlueprint(): GridWithMarginBlueprint {
         return {
             baseResolution: { width: this._baseResolution.width, height: this._baseResolution.height, description: `${this._baseResolution.description} (Copy)` },
-            baseRange: this._baseRange,
+            baseRangeSerialized: gridRangeToJson(this._baseRange),
             margin: this._margin,
         };
     }

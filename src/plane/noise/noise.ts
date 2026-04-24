@@ -2,11 +2,11 @@ import { lastValueFrom, Subscription } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
-import { GridRange } from '../../grid/grid-range';
+import { GridRange, gridRangeFromJson, gridRangeToJson } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
-import { createGreyByIntensity } from '../../types';
+import { BigDecimal, createGreyByIntensity } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
@@ -14,7 +14,7 @@ interface NoisePlaneConfig extends PlaneConfig {
     config: NoiseConfig,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 1, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.ONE, yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class Noise extends Plane {
@@ -30,7 +30,7 @@ export class Noise extends Plane {
 
     override config: ModuleConfig<NoisePlaneConfig> = new ModuleConfig(
         {
-            gridRange: INITIAL_GRID_RANGE,
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             config: {
                 type: NoiseType.WHITE,
                 p: 0.5,
@@ -56,8 +56,7 @@ export class Noise extends Plane {
     }
 
     private create() {
-        const range = this.config.data.gridRange;
-        this.grid.updateRange(range);
+        this.grid.updateRange(gridRangeFromJson(this.config.data.gridRange));
         this.createAndDraw(this.config.data.config);
     }
 

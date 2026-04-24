@@ -13,6 +13,7 @@ export class BigDecimal {
 
     public static readonly ZERO = new BigDecimal(0n);
     public static readonly ONE = new BigDecimal(SCALE_FACTOR);
+    public static readonly TWO = BigDecimal.fromNumber(2);
 
     /**
      * Parse a decimal string such as "3.14", "-0.000123", or "1.5e-10".

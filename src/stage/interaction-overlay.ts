@@ -1,6 +1,7 @@
 import { BehaviorSubject, filter, Observable, Subject, takeUntil, timer } from 'rxjs';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
+import { BigDecimal } from '../types';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
 const ID_USER_RECT = 'user-rectangle';
@@ -21,11 +22,18 @@ export enum ShiftDirection {
 
 const EMPTY_DISPLAYABLE_COORDINATES: DisplayableCoordinates = { pixel: '(left, top)', math: '(x, y)' };
 
-interface RectangleCoordinates {
+interface PixelRectangleCoordinates {
     x1: number,
     y1: number,
     x2: number,
     y2: number,
+}
+
+interface MathRectangleCoordinates {
+    x1: BigDecimal,
+    y1: BigDecimal,
+    x2: BigDecimal,
+    y2: BigDecimal,
 }
 
 interface Point {
@@ -74,12 +82,13 @@ export class InteractionOverlay {
     public shiftRange(direction: ShiftDirection) {
         const currentRange = this._grid.range;
         const currentXdiff = this._grid.xDiff;
+        const swtichBackGridStrategy = this._grid.switchToBigDecimalStrategy();
         switch (direction) {
             case ShiftDirection.UP: {
                 this._selectedRange$.next({
                     xMin: currentRange.xMin,
                     xMax: currentRange.xMax,
-                    yCenter: this._grid.pixelToMath(0, -0.5 * this._grid.height)[1],
+                    yCenter: this._grid.pixelToMathBigDecimal(0, -0.5 * this._grid.height)[1],
                 });
                 break;
             }
@@ -87,26 +96,29 @@ export class InteractionOverlay {
                 this._selectedRange$.next({
                     xMin: currentRange.xMin,
                     xMax: currentRange.xMax,
-                    yCenter: this._grid.pixelToMath(0, 1.5 * this._grid.height)[1],
+                    yCenter: this._grid.pixelToMathBigDecimal(0, 1.5 * this._grid.height)[1],
                 });
                 break;
             }
             case ShiftDirection.LEFT: {
                 this._selectedRange$.next({
-                    xMin: currentRange.xMin - currentXdiff,
-                    xMax: currentRange.xMax - currentXdiff,
+                    xMin: currentRange.xMin.sub(currentXdiff),
+                    xMax: currentRange.xMin.sub(currentXdiff),
                     yCenter: currentRange.yCenter,
                 });
                 break;
             }
             case ShiftDirection.RIGHT: {
                 this._selectedRange$.next({
-                    xMin: currentRange.xMin + currentXdiff,
-                    xMax: currentRange.xMax + currentXdiff,
+                    xMin: currentRange.xMin.add(currentXdiff),
+                    xMax: currentRange.xMax.add(currentXdiff),
                     yCenter: currentRange.yCenter,
                 });
                 break;
             }
+        }
+        if (swtichBackGridStrategy) {
+            this._grid.switchToNumberStrategy();
         }
     }
 
@@ -392,24 +404,24 @@ export class InteractionOverlay {
         return [normP, width, normHeight];
     }
 
-    private emitSelection(rect: RectangleCoordinates) {
+    private emitSelection(rect: MathRectangleCoordinates) {
         this._selectedRange$.next({
             xMin: rect.x1,
             xMax: rect.x2,
-            yCenter: rect.y1 + (rect.y2 - rect.y1) / 2,
+            yCenter: rect.y1.add((rect.y2.sub(rect.y1)).div(BigDecimal.TWO)),
         });
     }
 
     private emitDisplayableCoordinates(p1: Point | null = null) {
         if (this._validRect != null) {
             this._displayableCoordinates$.next({
-                pixel: this.rectangleCoordinatesToString(this.getPixelCoordinatesFromRectangle(this._validRect.norm)),
-                math: this.rectangleCoordinatesToString(this.getMathCoordinatesFromRectangle(this._validRect.norm), true),
+                pixel: this.pixelRectangleCoordinatesToReadableString(this.getPixelCoordinatesFromRectangle(this._validRect.norm)),
+                math: this.mathRectangleCoordinatesToReadableString(this.getMathCoordinatesFromRectangle(this._validRect.norm), true),
             });
         } else if (this._invalidRect != null) {
             this._displayableCoordinates$.next({
-                pixel: this.rectangleCoordinatesToString(this.getPixelCoordinatesFromRectangle(this._invalidRect)),
-                math: this.rectangleCoordinatesToString(this.getMathCoordinatesFromRectangle(this._invalidRect), true),
+                pixel: this.pixelRectangleCoordinatesToReadableString(this.getPixelCoordinatesFromRectangle(this._invalidRect)),
+                math: this.mathRectangleCoordinatesToReadableString(this.getMathCoordinatesFromRectangle(this._invalidRect), true),
             });
         } else if (p1 != null) {
             this._displayableCoordinates$.next({
@@ -422,7 +434,7 @@ export class InteractionOverlay {
         }
     }
 
-    private getPixelCoordinatesFromRectangle(rect: SVGGElement): RectangleCoordinates {
+    private getPixelCoordinatesFromRectangle(rect: SVGGElement): PixelRectangleCoordinates {
         const pixelX = parseInt(rect.getAttribute('x') || '0');
         const pixelY = parseInt(rect.getAttribute('y') || '0');
         const width = parseInt(rect.getAttribute('width') || '0');
@@ -436,13 +448,17 @@ export class InteractionOverlay {
         };
     }
 
-    private getMathCoordinatesFromRectangle(rect: SVGGElement): RectangleCoordinates {
+    private getMathCoordinatesFromRectangle(rect: SVGGElement): MathRectangleCoordinates {
+        const swtichBackGridStrategy = this._grid.switchToBigDecimalStrategy();
         const pixelX = parseInt(rect.getAttribute('x') || '0');
         const pixelY = parseInt(rect.getAttribute('y') || '0');
         const width = parseInt(rect.getAttribute('width') || '0');
         const height = parseInt(rect.getAttribute('height') || '0');
-        const [mathX1, mathY1] = this._grid.pixelToMath(pixelX, pixelY);
-        const [mathX2, mathY2] = this._grid.pixelToMath(pixelX + width, pixelY + height);
+        const [mathX1, mathY1] = this._grid.pixelToMathBigDecimal(pixelX, pixelY);
+        const [mathX2, mathY2] = this._grid.pixelToMathBigDecimal(pixelX + width, pixelY + height);
+        if (swtichBackGridStrategy) {
+            this._grid.switchToNumberStrategy();
+        }
 
         return {
             x1: mathX1,
@@ -452,7 +468,7 @@ export class InteractionOverlay {
         };
     }
 
-    private rectangleCoordinatesToString(coords: RectangleCoordinates, round: boolean = false): string {
+    private pixelRectangleCoordinatesToReadableString(coords: PixelRectangleCoordinates, round: boolean = false): string {
         if (round) {
             const x1 = coords.x1.toFixed(8);
             const y1 = coords.y1.toFixed(8);
@@ -463,6 +479,22 @@ export class InteractionOverlay {
             return `(${coords.x1}, ${coords.y1}) => (${coords.x2}, ${coords.y2})`;
         }
     }
+
+    private mathRectangleCoordinatesToReadableString(coords: MathRectangleCoordinates, round: boolean = false): string {
+        if (round) {
+            const x1 = this.truncateString(coords.x1.toString());
+            const y1 = this.truncateString(coords.y1.toString());
+            const x2 = this.truncateString(coords.x2.toString());
+            const y2 = this.truncateString(coords.y2.toString());
+            return `(${x1}, ${y1}) => (${x2}, ${y2})`;
+        } else {
+            return `(${coords.x1}, ${coords.y1}) => (${coords.x2}, ${coords.y2})`;
+        }
+    }
+
+    private truncateString(input: string) {
+        return input.length <= 10 ? input : `${input.slice(0, 5)}\u2026${input.slice(-4)}`;
+    };
 
     private getMathCoordinatesFromPoint(p: Point): string {
         const [mathX1, mathY1] = this._grid.pixelToMath(p.x, p.y);

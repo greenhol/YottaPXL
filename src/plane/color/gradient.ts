@@ -1,7 +1,8 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange } from '../../grid/grid-range';
+import { GridRange, gridRangeToJson } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
+import { BigDecimal } from '../../types';
 import { COLORS } from '../../types/colors';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -30,14 +31,14 @@ interface GradientPlaneConfig extends PlaneConfig {
     offset: number,
 };
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: 0, xMax: 10, yCenter: 0 };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(10), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class Gradient extends Plane {
 
     override config: ModuleConfig<GradientPlaneConfig> = new ModuleConfig(
         {
-            gridRange: INITIAL_GRID_RANGE,
+            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             demo: GradientDemos.BW,
             config: {
                 supportPoints: '',

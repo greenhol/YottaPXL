@@ -35,7 +35,7 @@ export function gridRangeFromString(range: string): GridRange | null {
     const xMin = BigDecimal.fromString(parts[0]);
     const xMax = BigDecimal.fromString(parts[1]);
     const yCenter = BigDecimal.fromString(parts[2]);
-    if (xMin >= xMax) {
+    if (xMin.gte(xMax)) {
         console.warn(`#gridRangeFromString - invalid input (xMin >= xMax) instead xMin=${xMin}, xMax=${xMax}`, range);
         return null;
     }

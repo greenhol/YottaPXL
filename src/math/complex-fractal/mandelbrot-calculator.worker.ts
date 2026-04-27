@@ -24,6 +24,8 @@ self.onmessage = (e) => {
     }
 };
 
+/** ---------------------------------------------- ITERATIONS ---------------------------------------------- */
+/** -------------------------------------------------------------------------------------------------------- */
 function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
@@ -56,6 +58,8 @@ function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIt
     return iteration;
 }
 
+/** ---------------------------------------------- SMOOTH ITERATIONS ---------------------------------------------- */
+/** --------------------------------------------------------------------------------------------------------------- */
 function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
@@ -88,7 +92,7 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
 
         const absZ = Math.sqrt(reZ * reZ + imZ * imZ);
         if (absZ > escapeValue) {
-            const logZn = Math.log(absZ) / 2;
+            const logZn = Math.log(absZ);
             const logLogZn = Math.log(logZn) / Math.log(2);
             return iteration + 1 - logLogZn;
         }
@@ -97,6 +101,8 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
     return maxIterations;
 }
 
+/** ---------------------------------------------- DISTANCES ---------------------------------------------- */
+/** ------------------------------------------------------------------------------------------------------- */
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
@@ -113,39 +119,6 @@ function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
         }
     }
     return targetData;
-}
-
-function calculateDistanceForPixelOld(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
-    const [reC, imC] = grid.pixelToMath(col, row);
-
-    let reZ = 0;
-    let imZ = 0;
-    let reZdiff = 0;
-    let imZdiff = 0;
-    let iteration = 0;
-
-    while (iteration < maxIterations) {
-        // z = z^2 + c
-        const re_z_squared = reZ * reZ - imZ * imZ;
-        const im_z_squared = 2 * reZ * imZ;
-        reZ = re_z_squared + reC;
-        imZ = im_z_squared + imC;
-
-        // dz = 2 * z * dz + 1
-        const reTemp = 2 * (reZ * reZdiff - imZ * imZdiff) + 1;
-        const imTemp = 2 * (reZ * imZdiff + imZ * reZdiff);
-        reZdiff = reTemp;
-        imZdiff = imTemp;
-
-        const absZ = Math.sqrt(reZ * reZ + imZ * imZ);
-        if (absZ > escapeValue) {
-            // Distance estimation
-            const absDz = Math.sqrt(reZdiff * reZdiff + imZdiff * imZdiff);
-            return 2 * (absZ * Math.log(absZ)) / absDz;
-        }
-        iteration++;
-    }
-    return 0;
 }
 
 function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {

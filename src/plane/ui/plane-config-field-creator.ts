@@ -58,6 +58,12 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public uiFieldFractalInterpolate(path: string): UiFieldBool {
         return this.createBoolField(path, 'Interpolate', 'Estimate interpolated values between iterations');
     }
+    public uiFieldFractalPrecision(path: string): UiFieldBool {
+        return this.createBoolField(path, 'Precision', 'Compute with higher precision using Perturbation theory.\nOnly use when precision of numbers runs out (blocky image)');
+    }
+    public uiFieldFractalReferenceCoordinate(path: string): UiFieldString {
+        return this.createStringField(path, 'Coord for Precision', 'Reference point in Pixels used for Perturbation theory. Syntax: Comma separated row, col (e.g. 200, 350)\nIf empty, a grid scan will try to find a suitable point.');
+    }
 
     /** LIC */
     public uiFieldLicLenth(path: string): UiFieldFloat {

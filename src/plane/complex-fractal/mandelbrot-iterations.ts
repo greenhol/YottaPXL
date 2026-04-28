@@ -13,6 +13,8 @@ import { BigDecimal } from '../../types';
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
+    precision: boolean,
+    referenceCoordinate: string,
     gradient: ColorMapperConfig,
     fallbackColor: string,
 }
@@ -29,6 +31,8 @@ export class MandelbrotIterations extends Plane {
             gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
             maxIterations: 0,
             interpolate: false,
+            precision: false,
+            referenceCoordinate: '',
             gradient: {
                 supportPoints: '0:#000000, 0.5:#FFFFFF, 1:#000000',
                 easing: Easing.RGB_LINEAR,
@@ -41,6 +45,8 @@ export class MandelbrotIterations extends Plane {
             CREATE.UI_FIELD_HEADER_FRACTAL,
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
             CREATE.uiFieldFractalInterpolate('interpolate'),
+            CREATE.uiFieldFractalPrecision('precision'),
+            CREATE.uiFieldFractalReferenceCoordinate('referenceCoordinate'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
@@ -60,8 +66,8 @@ export class MandelbrotIterations extends Plane {
         this.setProgress(0);
         const calculator = new MandelbrotCalculator();
         const calculation$ = this.config.data.interpolate
-            ? calculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
-            : calculator.calculateIterations(this.grid, this._effectiveMaxIterations);
+            ? calculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations, this.config.data.precision, this.config.data.referenceCoordinate)
+            : calculator.calculateIterations(this.grid, this._effectiveMaxIterations, this.config.data.precision, this.config.data.referenceCoordinate);
         calculation$.subscribe({ next: (state) => { this.setProgress(state.progress); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {

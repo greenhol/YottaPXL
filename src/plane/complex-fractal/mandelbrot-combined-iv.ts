@@ -1,7 +1,7 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, gridRangeFromJson, gridRangeToJson, rangeXdiff } from '../../grid/grid-range';
+import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
@@ -38,7 +38,7 @@ export class MandelbrotCombinedIV extends Plane {
 
     override config: ModuleConfig<MandelbrotCombinedIvConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             maxIterations: 0,
             interpolate: false,
             escapeValue: 100,
@@ -96,13 +96,13 @@ export class MandelbrotCombinedIV extends Plane {
     }
 
     private async calculate() {
-        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
+        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, GridRange.rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);
 
         // Create Source Field Input
-        const sourceGrid = new GridWithMargin(this.grid.resolution, gridRangeFromJson(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
         const mandelbrotCalculator = new MandelbrotCalculator();
         const mandelbrotCalculation$ = mandelbrotCalculator.calculateDistances(
             sourceGrid,

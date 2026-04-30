@@ -1,7 +1,6 @@
 import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, gridRangeToJson, rangeXdiff } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { Plane, PlaneConfig } from '../plane';
@@ -9,6 +8,7 @@ import { CREATE } from '../ui/plane-config-field-creator';
 import { stringToRgb } from './../../types/color';
 import { estimateMaxIterations } from './estimate-max-iterations';
 import { BigDecimal } from '../../types';
+import { GridRange } from '../../grid/grid-range';
 
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
@@ -28,7 +28,7 @@ export class MandelbrotIterations extends Plane {
 
     override config: ModuleConfig<MandelbrotIterationsConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             maxIterations: 0,
             interpolate: false,
             precision: false,
@@ -60,7 +60,7 @@ export class MandelbrotIterations extends Plane {
     }
 
     private async calculate() {
-        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
+        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, GridRange.rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);

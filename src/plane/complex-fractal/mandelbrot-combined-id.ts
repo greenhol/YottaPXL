@@ -1,6 +1,6 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, gridRangeToJson, rangeXdiff } from '../../grid/grid-range';
+import { GridRange } from '../../grid/grid-range';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
@@ -29,7 +29,7 @@ export class MandelbrotCombinedID extends Plane {
 
     override config: ModuleConfig<MandelbrotCombinedIdConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             maxIterations: 0,
             interpolate: false,
             escapeValue: 100,
@@ -71,7 +71,7 @@ export class MandelbrotCombinedID extends Plane {
     }
 
     private async calculate() {
-        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
+        this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, GridRange.rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
         this.setProgress(0);

@@ -1,6 +1,6 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, gridRangeToJson } from '../../grid/grid-range';
+import { GridRange } from '../../grid/grid-range';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { BigDecimal } from '../../types';
@@ -20,7 +20,7 @@ export class ColorBlending extends Plane {
 
     override config: ModuleConfig<ColorBlendingPlaneConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             type: BlendingType.INTENSITY,
             gradient1: {
                 supportPoints: '0:#FF0000, 0.25:#00FF00, 0.5:#0000FF, 0.75:#00FF00, 1:#FF0000',

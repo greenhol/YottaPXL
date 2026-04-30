@@ -1,6 +1,6 @@
 import { BigDecimal } from '../types';
 import { Grid } from './grid';
-import { GridRange, gridRangeFromJson, GridRangeSerialized, gridRangeToJson, rangeXdiff } from './grid-range';
+import { GridRange, GridRangeSerialized } from './grid-range';
 import { Resolution } from './resolutions';
 
 export interface GridWithMarginBlueprint {
@@ -24,14 +24,14 @@ export class GridWithMargin extends Grid {
     }
 
     public static copyWithMargin(blueprint: GridWithMarginBlueprint) {
-        return new GridWithMargin(blueprint.baseResolution, gridRangeFromJson(blueprint.baseRangeSerialized), blueprint.margin);
+        return new GridWithMargin(blueprint.baseResolution, GridRangeSerialized.deserialize(blueprint.baseRangeSerialized), blueprint.margin);
     }
 
     constructor(baseResolution: Resolution, baseRange: GridRange, margin: number) {
         const resolution = GridWithMargin.resolutionWithMargin(baseResolution, margin);
         const newGridRangeFactor = BigDecimal.fromNumber(resolution.width / baseResolution.width);
-        const mathBaseWidth = rangeXdiff(baseRange);
-        const cx = baseRange.xMin.add(rangeXdiff(baseRange).div(BigDecimal.TWO));
+        const mathBaseWidth = GridRange.rangeXdiff(baseRange);
+        const cx = baseRange.xMin.add(GridRange.rangeXdiff(baseRange).div(BigDecimal.TWO));
 
         super(GridWithMargin.resolutionWithMargin(baseResolution, margin), {
             xMin: cx.sub(mathBaseWidth.div(BigDecimal.TWO).mul(newGridRangeFactor)),
@@ -54,7 +54,7 @@ export class GridWithMargin extends Grid {
     public get withMarginBlueprint(): GridWithMarginBlueprint {
         return {
             baseResolution: { width: this._baseResolution.width, height: this._baseResolution.height, description: `${this._baseResolution.description} (Copy)` },
-            baseRangeSerialized: gridRangeToJson(this._baseRange),
+            baseRangeSerialized: GridRange.serialize(this._baseRange),
             margin: this._margin,
         };
     }

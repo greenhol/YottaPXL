@@ -6,9 +6,7 @@ import { GridRange } from './grid-range';
  *
  * Receives a GridRange (BigDecimal) on construction and on every updateRange
  * call, converts the fields to number once at that point, then stores plain
- * number fields for use in the render loop. The conversion happens once per
- * range update — never once per pixel — so performance in the hot path is
- * identical to the original Grid implementation.
+ * number fields.
  *
  * Use this strategy until Grid.viewportPrecisionSufficient returns false.
  */
@@ -60,18 +58,13 @@ export class NumberCoordinateStrategy {
     public get range(): GridRange { return this._range; }
 }
 
-// =============================================================================
-// BigDecimal strategy
-// =============================================================================
-
 /**
  * Coordinate strategy backed by BigDecimal.
  *
  * All derived values (_xDiff, _yDiff, _yMin, _yMax) are kept as BigDecimal
- * throughout. pixelToMath returns [BigDecimal, BigDecimal] so the Mandelbrot
- * iteration layer can consume full-precision coordinates directly.
- * mathToPixel accepts [BigDecimal, BigDecimal] for the same reason and only
- * converts to number at the very last step for the pixel return value.
+ * throughout. pixelToMath returns [BigDecimal, BigDecimal].
+ * mathToPixel accepts [BigDecimal, BigDecimal] and only converts to number
+ * at the very last step for the pixel return value.
  *
  * Use this strategy when the user has zoomed deep enough that double precision
  * is insufficient — i.e. when Grid.viewportPrecisionSufficient returns false.

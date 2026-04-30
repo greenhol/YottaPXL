@@ -1,6 +1,6 @@
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
-import { GridRange, gridRangeToJson } from '../../grid/grid-range';
+import { GridRange } from '../../grid/grid-range';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { BigDecimal } from '../../types';
 import { COLORS } from '../../types/colors';
@@ -38,7 +38,7 @@ export class Gradient extends Plane {
 
     override config: ModuleConfig<GradientPlaneConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             demo: GradientDemos.BW,
             config: {
                 supportPoints: '',

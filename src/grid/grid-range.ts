@@ -14,76 +14,53 @@ export interface GridRangeSerialized {
     yCenter: string;
 }
 
-export function createDefaultGridRange(): GridRange {
-    return { xMin: BigDecimal.ZERO, xMax: BigDecimal.ONE, yCenter: BigDecimal.ZERO };
-}
+export namespace GridRange {
 
-export function rangeXdiff(range: GridRange): BigDecimal {
-    return range.xMax.sub(range.xMin);
-}
-
-export function gridRangeToString(range: GridRange): string {
-    return `${range.xMin}_${range.xMax}${GRID_RANGE_SEPARATOR}${range.yCenter}`;
-}
-
-export function gridRangeFromString(range: string): GridRange | null {
-    const parts: string[] = range.split(GRID_RANGE_SEPARATOR);
-    if (parts.length != 3) {
-        console.warn(`#gridRangeFromString - invalid input (parts.length != 3) instead ${parts.length}`, range);
-        return null;
-    }
-    const xMin = BigDecimal.fromString(parts[0]);
-    const xMax = BigDecimal.fromString(parts[1]);
-    const yCenter = BigDecimal.fromString(parts[2]);
-    if (xMin.gte(xMax)) {
-        console.warn(`#gridRangeFromString - invalid input (xMin >= xMax) instead xMin=${xMin}, xMax=${xMax}`, range);
-        return null;
+    export function createDefaultGridRange(): GridRange {
+        return { xMin: BigDecimal.ZERO, xMax: BigDecimal.ONE, yCenter: BigDecimal.ZERO };
     }
 
-    return { xMin, xMax, yCenter };
+    export function rangeXdiff(range: GridRange): BigDecimal {
+        return range.xMax.sub(range.xMin);
+    }
+
+    export function toString(range: GridRange): string {
+        return `${range.xMin}${GRID_RANGE_SEPARATOR}${range.xMax}${GRID_RANGE_SEPARATOR}${range.yCenter}`;
+    }
+
+    export function fromString(range: string): GridRange | null {
+        const parts: string[] = range.split(GRID_RANGE_SEPARATOR);
+        if (parts.length != 3) {
+            console.warn(`#GridRange.fromString - invalid input (parts.length != 3) instead ${parts.length}`, range);
+            return null;
+        }
+        const xMin = BigDecimal.fromString(parts[0]);
+        const xMax = BigDecimal.fromString(parts[1]);
+        const yCenter = BigDecimal.fromString(parts[2]);
+        if (xMin.gte(xMax)) {
+            console.warn(`#GridRange.fromString - invalid input (xMin >= xMax) instead xMin=${xMin}, xMax=${xMax}`, range);
+            return null;
+        }
+
+        return { xMin, xMax, yCenter };
+    }
+
+    export function serialize(range: GridRange): GridRangeSerialized {
+        return {
+            xMin: range.xMin.toString(),
+            xMax: range.xMax.toString(),
+            yCenter: range.yCenter.toString(),
+        };
+    }
 }
 
-/**
- * Convenience constructor — build a GridRange from plain strings.
- * This is the natural entry point for copy-pasted high-precision coordinates
- * as well as for hardcoded initial values in source code.
- */
-export function gridRangeFromStrings(xMin: string, xMax: string, yCenter: string): GridRange {
-    return {
-        xMin: BigDecimal.fromString(xMin),
-        xMax: BigDecimal.fromString(xMax),
-        yCenter: BigDecimal.fromString(yCenter),
-    };
-}
+export namespace GridRangeSerialized {
 
-/**
- * Convenience constructor — build a GridRange from plain JS numbers.
- * Use this when constructing a range from existing number values such as
- * zoom calculations or pan offsets computed at normal precision.
- */
-export function gridRangeFromNumbers(xMin: number, xMax: number, yCenter: number): GridRange {
-    return {
-        xMin: BigDecimal.fromNumber(xMin),
-        xMax: BigDecimal.fromNumber(xMax),
-        yCenter: BigDecimal.fromNumber(yCenter),
-    };
-}
-
-/**
- * Serialise a GridRange to a plain JSON-compatible object for localStorage.
- * The BigDecimal values are stored as strings to preserve full precision.
- */
-export function gridRangeToJson(range: GridRange): { xMin: string; xMax: string; yCenter: string; } {
-    return {
-        xMin: range.xMin.toString(),
-        xMax: range.xMax.toString(),
-        yCenter: range.yCenter.toString(),
-    };
-}
-
-/**
- * Deserialise a GridRange from a plain JSON-compatible object from localStorage.
- */
-export function gridRangeFromJson(json: GridRangeSerialized): GridRange {
-    return gridRangeFromStrings(json.xMin, json.xMax, json.yCenter);
+    export function deserialize(range: GridRangeSerialized): GridRange {
+        return {
+            xMin: BigDecimal.fromString(range.xMin),
+            xMax: BigDecimal.fromString(range.xMax),
+            yCenter: BigDecimal.fromString(range.yCenter),
+        };
+    }
 }

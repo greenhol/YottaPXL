@@ -1,7 +1,7 @@
 import { Subscription, timer } from 'rxjs';
 import { idGenerator } from '../shared';
 import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/config';
-import { gridRangeFromString, gridRangeToString } from './grid/grid-range';
+import { GridRange } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
 import { ColorBlending } from './plane/color/color-blending';
@@ -218,7 +218,7 @@ export class Start {
 
     private subscribeToRange() {
         this._grid.range$.subscribe({
-            next: (range) => { this._rangeInput.value = gridRangeToString(range); }
+            next: (range) => { this._rangeInput.value = GridRange.toString(range); }
         });
     }
 
@@ -304,7 +304,7 @@ export class Start {
     }
 
     private exportImage() {
-        const rangeString = gridRangeToString(this._grid.range);
+        const rangeString = GridRange.toString(this._grid.range);
         let filename = prompt('Enter a filename', `YottaPXL_${rangeString}${idGenerator.newId('')}`);
         if (!filename) return;
 
@@ -343,7 +343,7 @@ export class Start {
 
         setRangeButton?.addEventListener('click', (e: PointerEvent) => {
             const rangeInputText: string = this._rangeInput.value;
-            const newRange = gridRangeFromString(rangeInputText);
+            const newRange = GridRange.fromString(rangeInputText);
             if (newRange !== null) {
                 this._interactionOverlay.selectRange(newRange);
             }

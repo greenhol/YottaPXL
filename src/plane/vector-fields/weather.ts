@@ -2,7 +2,7 @@ import { lastValueFrom } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
-import { GridRange, gridRangeFromJson, gridRangeToJson } from '../../grid/grid-range';
+import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { blender, BlendingType } from '../../math/color/color-blender';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
@@ -77,7 +77,7 @@ export class Weather extends Plane {
 
     override config: ModuleConfig<WeatherConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
@@ -133,7 +133,7 @@ export class Weather extends Plane {
         this.setProgress(0);
 
         // Create Source Field
-        const sourceGrid = new GridWithMargin(this.grid.resolution, gridRangeFromJson(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
+        const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
         const fieldCalculation$ = fieldGenerator.createWeatherField(this._pressureRegions, 1);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });

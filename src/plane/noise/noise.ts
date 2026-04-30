@@ -2,7 +2,7 @@ import { lastValueFrom, Subscription } from 'rxjs';
 import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { Grid } from '../../grid/grid';
-import { GridRange, gridRangeFromJson, gridRangeToJson } from '../../grid/grid-range';
+import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
@@ -30,7 +30,7 @@ export class Noise extends Plane {
 
     override config: ModuleConfig<NoisePlaneConfig> = new ModuleConfig(
         {
-            gridRange: gridRangeToJson(INITIAL_GRID_RANGE),
+            gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             config: {
                 type: NoiseType.WHITE,
                 p: 0.5,
@@ -56,7 +56,7 @@ export class Noise extends Plane {
     }
 
     private create() {
-        this.grid.updateRange(gridRangeFromJson(this.config.data.gridRange));
+        this.grid.updateRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
         this.createAndDraw(this.config.data.config);
     }
 

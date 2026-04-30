@@ -2,7 +2,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Initializable } from '../../shared';
 import { ModuleConfig } from '../../shared/config';
 import { Grid } from '../grid/grid';
-import { GridRange, gridRangeFromJson, GridRangeSerialized, gridRangeToJson, gridRangeToString } from '../grid/grid-range';
+import { GridRange, GridRangeSerialized } from '../grid/grid-range';
 import { RGB } from '../types';
 
 export interface PlaneConfig {
@@ -32,27 +32,27 @@ export abstract class Plane implements Initializable {
 
     public init(): void {
         console.log(this.config.data);
-        this.updateGridRange(gridRangeFromJson(this.config.data.gridRange));
+        this.updateGridRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
     }
 
     public abstract refresh(): void;
 
     public updateGridRange(range: GridRange) {
-        this.config.data.gridRange = gridRangeToJson(range);
-        this.config.setInfo('Grid Range as String', gridRangeToString(range));
-        this.grid.updateRange(gridRangeFromJson(this.config.data.gridRange));
+        this.config.data.gridRange = GridRange.serialize(range);
+        this.config.setInfo('Grid Range as String', GridRange.toString(range));
+        this.grid.updateRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
         this.refresh();
     }
 
     public resetGridRange() {
         this.config.reset('gridRange');
-        this.grid.updateRange(gridRangeFromJson(this.config.data.gridRange));
+        this.grid.updateRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
         this.refresh();
     }
 
     public resetConfiguration() {
         this.config.reset();
-        this.grid.updateRange(gridRangeFromJson(this.config.data.gridRange));
+        this.grid.updateRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
         this.refresh();
     }
 

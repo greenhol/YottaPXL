@@ -37,30 +37,24 @@ self.onmessage = (e) => {
 /** ---------------------------------------------- REFERENCE ORBIT ---------------------------------------------- */
 /** ------------------------------------------------------------------------------------------------------------- */
 interface ReferenceOrbit {
-    /** Z_ref_n at each iteration step n, in plain float64 (lossy but sufficient for delta arithmetic) */
     reZ: Float64Array;
     imZ: Float64Array;
-    /** Always maxIterations — orbit is computed for all steps regardless of escape */
     length: number;
-    /** Grid column of the chosen reference pixel */
     colRef: number;
-    /** Grid row of the chosen reference pixel */
     rowRef: number;
-    /** Pixel step size in math-space as a plain number, used to compute delta offsets per pixel */
     pixelStep: number;
 }
 
 /**
- * Selects the best reference point from a sparse candidate grid and computes its orbit.
+ * Selects the best reference point for perturbation theory and computes its full orbit.
  *
- * A 5x5 grid of candidate pixels is evaluated in BigDecimal. The candidate with the
- * highest iteration count is chosen as the reference point — this maximises the orbit
- * length available to surrounding pixels and minimises black regions caused by the
- * orbit running out before a pixel escapes.
- *
- * Interior points are penalised (scored at 50% of maxIterations) to prefer
- * boundary-hugging exterior points, which have healthier |Z_ref| values and
- * lower glitch risk.
+ * Reference point selection priority:
+ * 1. User-defined coordinate via setup.referenceCoordinate if valid
+ * 2. Best candidate from a sparse GRID_SIZE x GRID_SIZE pixel grid, scored by iteration
+ *    count — the highest scorer maximises orbit length available to surrounding pixels,
+ *    minimising black regions caused by the orbit running out before a pixel escapes.
+ *    Interior points are penalised to 50% of maxIterations to prefer boundary-hugging
+ *    exterior points, which have healthier |Z_ref| values and lower glitch risk.
  */
 function computeReferenceOrbit(setup: WorkerSetupMandelbrot, grid: Grid): ReferenceOrbit {
     grid.switchToBigDecimalStrategy();
@@ -72,65 +66,85 @@ function computeReferenceOrbit(setup: WorkerSetupMandelbrot, grid: Grid): Refere
     const xRange = grid.range.xMax.sub(grid.range.xMin);
     const pixelStep = xRange.div(BigDecimal.fromNumber(grid.width)).toNumber();
 
-    // Try user-defined reference coordinate first
-    let bestCol = -1;
-    let bestRow = -1;
+    // Determine reference point — user-defined takes priority over grid scan
+    const userCoord = setup.referenceCoordinate
+        ? parseReferenceCoordinate(setup.referenceCoordinate, grid.width, grid.height)
+        : null;
 
-    if (setup.referenceCoordinate.trim() !== '') {
-        const parts = setup.referenceCoordinate.split(',');
-        if (parts.length === 2) {
-            const parsedCol = parseInt(parts[0].trim(), 10);
-            const parsedRow = parseInt(parts[1].trim(), 10);
-            if (
-                !isNaN(parsedCol) && !isNaN(parsedRow) &&
-                parsedCol >= 0 && parsedCol < grid.width &&
-                parsedRow >= 0 && parsedRow < grid.height
-            ) {
-                bestCol = parsedCol;
-                bestRow = parsedRow;
-                console.info(`#MandelbrotCalculator - using user-defined reference point at (${bestCol}, ${bestRow})`);
-            } else {
-                console.log(`#MandelbrotCalculator - referenceCoordinate '${setup.referenceCoordinate}' is out of bounds (image is ${grid.width}x${grid.height}), falling back to grid scan`);
-            }
-        } else {
-            console.log(`#MandelbrotCalculator - referenceCoordinate '${setup.referenceCoordinate}' is not a valid 'col, row' format, falling back to grid scan`);
-        }
+    let colRef: number;
+    let rowRef: number;
+
+    if (userCoord !== null) {
+        [colRef, rowRef] = userCoord;
+        console.info(`#MandelbrotCalculator - using user-defined reference point at (${colRef}, ${rowRef})`);
+    } else {
+        [colRef, rowRef] = selectBestCandidateFromGrid(grid, maxIter, escapeValue);
     }
 
-    // Fall back to 5x5 candidate grid scan if no valid user coordinate was provided
-    if (bestCol === -1) {
-        const GRID_SIZE = 5;
-        bestCol = Math.floor(grid.width / 2);
-        bestRow = Math.floor(grid.height / 2);
-        let bestScore = -1;
-
-        for (let gi = 0; gi < GRID_SIZE; gi++) {
-            for (let gj = 0; gj < GRID_SIZE; gj++) {
-                const col = Math.floor((gi + 0.5) * grid.width / GRID_SIZE);
-                const row = Math.floor((gj + 0.5) * grid.height / GRID_SIZE);
-                const score = evaluateCandidate(col, row, grid, maxIter, escapeValue);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestCol = col;
-                    bestRow = row;
-                }
-            }
-        }
-
-        console.info(`#MandelbrotCalculator - reference point selected via grid scan at (${bestCol}, ${bestRow}) with score ${bestScore}`);
-    }
-
-    // Compute full orbit for the winning candidate
-    const { reZArr, imZArr } = computeOrbitForCandidate(bestCol, bestRow, grid, maxIter, escapeValue);
+    // Compute full orbit for the selected reference point
+    const { reZArr, imZArr } = computeOrbitForCandidate(colRef, rowRef, grid, maxIter, escapeValue);
 
     return {
         reZ: reZArr,
         imZ: imZArr,
         length: maxIter,
-        colRef: bestCol,
-        rowRef: bestRow,
+        colRef: colRef,
+        rowRef: rowRef,
         pixelStep: pixelStep,
     };
+}
+
+/**
+ * Parses and validates a user-defined reference coordinate string of the format 'col, row'.
+ * Returns the pixel coordinate as [col, row] if valid, or null if the format is incorrect
+ * or the coordinate falls outside the image bounds.
+ */
+function parseReferenceCoordinate(input: string, width: number, height: number): [number, number] | null {
+    if (input.trim() === '') return null;
+
+    const parts = input.split(',');
+    if (parts.length !== 2) {
+        console.log(`#MandelbrotCalculator - referenceCoordinate '${input}' is not a valid 'col, row' format, falling back to grid scan`);
+        return null;
+    }
+
+    const col = parseInt(parts[0].trim(), 10);
+    const row = parseInt(parts[1].trim(), 10);
+
+    if (isNaN(col) || isNaN(row) || col < 0 || col >= width || row < 0 || row >= height) {
+        console.log(`#MandelbrotCalculator - referenceCoordinate '${input}' is out of bounds (image is ${width}x${height}), falling back to grid scan`);
+        return null;
+    }
+
+    return [col, row];
+}
+
+/**
+ * Scans a sparse GRID_SIZE x GRID_SIZE grid of candidate pixels and returns the
+ * coordinates of the one with the highest iteration score.
+ * Falls back to the image center as default if no candidate scores above -1.
+ */
+function selectBestCandidateFromGrid(grid: Grid, maxIter: number, escapeValue: number): [number, number] {
+    const GRID_SIZE = 5;
+    let bestCol = Math.floor(grid.width / 2);
+    let bestRow = Math.floor(grid.height / 2);
+    let bestScore = -1;
+
+    for (let gi = 0; gi < GRID_SIZE; gi++) {
+        for (let gj = 0; gj < GRID_SIZE; gj++) {
+            const col = Math.floor((gi + 0.5) * grid.width / GRID_SIZE);
+            const row = Math.floor((gj + 0.5) * grid.height / GRID_SIZE);
+            const score = evaluateCandidate(col, row, grid, maxIter, escapeValue);
+            if (score > bestScore) {
+                bestScore = score;
+                bestCol = col;
+                bestRow = row;
+            }
+        }
+    }
+
+    console.info(`#MandelbrotCalculator - reference point selected via grid scan at (${bestCol}, ${bestRow}) with score ${bestScore}`);
+    return [bestCol, bestRow];
 }
 
 /**
@@ -141,9 +155,11 @@ function computeReferenceOrbit(setup: WorkerSetupMandelbrot, grid: Grid): Refere
  * points, which carry higher glitch risk due to |Z_ref| staying near zero.
  */
 function evaluateCandidate(
-    col: number, row: number,
+    col: number,
+    row: number,
     grid: Grid,
-    maxIterations: number, escapeValue: number
+    maxIterations: number,
+    escapeValue: number,
 ): number {
     const [reC, imC] = grid.pixelToMathBigDecimal(col, row);
 
@@ -159,11 +175,10 @@ function evaluateCandidate(
         const reN = reZ.toNumber();
         const imN = imZ.toNumber();
         if (reN * reN + imN * imN >= escapeValue) {
-            return n + 1; // escaped at iteration n+1
+            return n + 1;
         }
     }
 
-    // Inside the set — valid long orbit but higher glitch risk
     return maxIterations * 0.5;
 }
 
@@ -177,13 +192,14 @@ function evaluateCandidate(
  * which is always <= the reference escape step for a well-chosen reference.
  *
  * pixelStep = (xMax - xMin) / width, computed in BigDecimal then converted to float64.
- * The rounding error is a uniform scale factor across all pixels and visually
- * undetectable — see discussion in project notes.
+ * The rounding error is a uniform scale factor across all pixels and visually undetectable.
  */
 function computeOrbitForCandidate(
-    col: number, row: number,
+    col: number,
+    row: number,
     grid: Grid,
-    maxIterations: number, escapeValue: number
+    maxIterations: number,
+    escapeValue: number,
 ): { reZArr: Float64Array, imZArr: Float64Array; } {
     const [reC, imC] = grid.pixelToMathBigDecimal(col, row);
 
@@ -244,27 +260,9 @@ function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     return targetData;
 }
 
-function calculateIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
-    const grid = Grid.copy(setup.gridBlueprint);
-    const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
-    const targetData = new Float64Array(grid.size);
-    for (let row = 0; row < grid.height; row++) {
-        for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = calculateIterationsPTForPixel(
-                col, row, orbit, setup.maxIterations, setup.escapeValue
-            );
-        }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
-    }
-    return targetData;
-}
-
+/**
+ * Default iteration count for a single pixel via plain JS numbers.
+ */
 function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
     const [reC, imC] = grid.pixelToMath(col, row);
     let reZ = 0;
@@ -280,6 +278,11 @@ function calculateIterationsForPixel(col: number, row: number, grid: Grid, maxIt
     return iteration;
 }
 
+/**
+ * Iteration count for a single pixel using BigDecimal.
+ * 
+ * Very slow - only meant for testing.
+ */
 function calculateIterationsForPixelBigDecimal(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
     const [reC, imC] = grid.pixelToMathBigDecimal(col, row);
     let reZ = BigDecimal.ZERO;
@@ -295,17 +298,31 @@ function calculateIterationsForPixelBigDecimal(col: number, row: number, grid: G
     return iteration;
 }
 
+function calculateIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
+    const orbit = computeReferenceOrbit(setup, grid);
+    let cnt = 0;
+    const targetData = new Float64Array(grid.size);
+    for (let row = 0; row < grid.height; row++) {
+        for (let col = 0; col < grid.width; col++) {
+            targetData[grid.getIndex(col, row)] = calculateIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
+        }
+        cnt += grid.width;
+        if (cnt > 50000) {
+            const progress = Math.round(100 * (row * grid.width) / grid.size);
+            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
+            cnt = 0;
+        }
+    }
+    return targetData;
+}
+
 /**
  * Perturbation theory iteration count for a single pixel.
  *
  * δc = (col - refCol, row - refRow) * pixelStep  — the offset of this pixel from the reference
  * δz recurrence: δz_{n+1} = 2·Z_ref_n·δz_n + δz_n² + δc
  * Full orbit: Z_n = Z_ref_n + δz_n, used to test escape.
- *
- * Glitch detection: if |δz_n| > 1e-3 · |Z_ref_n|, the perturbation has grown too large
- * relative to the reference and the result would be wrong. We fall back to the plain
- * iteration for this pixel. A more sophisticated implementation would re-render glitched
- * pixels with a local reference point.
  */
 function calculateIterationsPTForPixel(
     col: number,
@@ -364,28 +381,9 @@ function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
     return targetData;
 }
 
-function calculateSmoothIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
-    const grid = Grid.copy(setup.gridBlueprint);
-    const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
-    const targetData = new Float64Array(grid.size);
-    for (let row = 0; row < grid.height; row++) {
-        for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = calculateSmoothIterationsPTForPixel(
-                col, row, orbit, setup.maxIterations, setup.escapeValue
-            );
-        }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
-    }
-
-    return targetData;
-}
-
+/**
+ * Default smooth iteration count for a single pixel via plain JS numbers.
+ */
 function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
     const [reC, imC] = grid.pixelToMath(col, row);
     let reZ = 0;
@@ -407,6 +405,26 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
     }
 
     return maxIterations;
+}
+
+function calculateSmoothIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
+    const orbit = computeReferenceOrbit(setup, grid);
+    let cnt = 0;
+    const targetData = new Float64Array(grid.size);
+    for (let row = 0; row < grid.height; row++) {
+        for (let col = 0; col < grid.width; col++) {
+            targetData[grid.getIndex(col, row)] = calculateSmoothIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
+        }
+        cnt += grid.width;
+        if (cnt > 50000) {
+            const progress = Math.round(100 * (row * grid.width) / grid.size);
+            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
+            cnt = 0;
+        }
+    }
+
+    return targetData;
 }
 
 /**
@@ -451,7 +469,6 @@ function calculateSmoothIterationsPTForPixel(
 
 /** ---------------------------------------------- DISTANCES ---------------------------------------------- */
 /** ------------------------------------------------------------------------------------------------------- */
-
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     let cnt = 0;
@@ -471,28 +488,9 @@ function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     return targetData;
 }
 
-function calculateDistancesPT(setup: WorkerSetupMandelbrot): Float64Array {
-    const grid = Grid.copy(setup.gridBlueprint);
-    const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
-    const targetData = new Float64Array(grid.size);
-    for (let row = 0; row < grid.height; row++) {
-        for (let col = 0; col < grid.width; col++) {
-            targetData[grid.getIndex(col, row)] = calculateDistancePTForPixel(
-                col, row, orbit, setup.maxIterations, setup.escapeValue
-            );
-        }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
-    }
-
-    return targetData;
-}
-
+/**
+ * Default distance estimation for a single pixel via plain JS numbers.
+ */
 function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIterations: number, escapeValue: number): number {
     const [reC, imC] = grid.pixelToMath(col, row);
 
@@ -520,6 +518,26 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
     return (iteration >= maxIterations) ? 0 : (modulus(reZ, imZ) * Math.log(modulus(reZ, imZ))) / modulus(reZdiff, imZdiff);
 }
 
+function calculateDistancesPT(setup: WorkerSetupMandelbrot): Float64Array {
+    const grid = Grid.copy(setup.gridBlueprint);
+    const orbit = computeReferenceOrbit(setup, grid);
+    let cnt = 0;
+    const targetData = new Float64Array(grid.size);
+    for (let row = 0; row < grid.height; row++) {
+        for (let col = 0; col < grid.width; col++) {
+            targetData[grid.getIndex(col, row)] = calculateDistancePTForPixel(col, row, orbit, setup.maxIterations);
+        }
+        cnt += grid.width;
+        if (cnt > 50000) {
+            const progress = Math.round(100 * (row * grid.width) / grid.size);
+            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
+            cnt = 0;
+        }
+    }
+
+    return targetData;
+}
+
 /**
  * Distance estimation via perturbation theory.
  *
@@ -533,7 +551,6 @@ function calculateDistancePTForPixel(
     col: number,
     row: number,
     orbit: ReferenceOrbit,
-    maxIterations: number,
     escapeValue: number,
 ): number {
     const reDc = (col - orbit.colRef) * orbit.pixelStep;

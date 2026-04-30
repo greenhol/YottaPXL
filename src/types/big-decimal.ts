@@ -1,12 +1,10 @@
-/**
- * BigDecimal — arbitrary-precision decimal arithmetic backed by BigInt.
- * Representation:  value = mantissa × 10^(-SCALE)
- * All instances share a fixed scale of 60 decimal digits
- */
-
 const SCALE = 60n;
 const SCALE_FACTOR = 10n ** SCALE;
 
+/**
+ * BigDecimal — arbitrary-precision decimal arithmetic backed by BigInt.
+ * Representation:  value = mantissa × 10^(-SCALE)
+ */
 export class BigDecimal {
 
     private readonly _mantissa: bigint;
@@ -17,7 +15,7 @@ export class BigDecimal {
 
     /**
      * Parse a decimal string such as "3.14", "-0.000123", or "1.5e-10".
-     * This is the primary constructor and the most precise entry point.
+     * Primary constructor and the most precise entry point.
      */
     public static fromString(source: string): BigDecimal {
         source = source.trim();
@@ -34,7 +32,7 @@ export class BigDecimal {
         if (exponentIndex !== -1) {
             const base = source.slice(0, exponentIndex);
             const exponent = parseInt(source.slice(exponentIndex + 1), 10);
-            source = BigDecimal._shiftDecimalPoint(base, exponent);
+            source = BigDecimal.shiftDecimalPoint(base, exponent);
         }
 
         // --- Split on decimal point --------------------------------------------
@@ -66,7 +64,7 @@ export class BigDecimal {
         }
 
         // --- Combine into mantissa --------------------------------------------
-        // e.g. integer "3" + fractional "14000...0" (60 digits) → BigInt("314000...0")
+        // e.g. integer "3" + fractional "14000...0" (SCALE digits) → BigInt("314000...0")
         const combinedDigits = integerPart + fractionalPart;
         let mantissa = BigInt(combinedDigits);
         if (negative && mantissa !== 0n) mantissa = -mantissa;
@@ -74,13 +72,45 @@ export class BigDecimal {
         return new BigDecimal(mantissa);
     }
 
-    /**
-     * Convert a JS number to BigDecimal.
-     * Delegates to fromString so we never pass a float through imprecise arithmetic.
-     */
     public static fromNumber(value: number): BigDecimal {
         if (!isFinite(value)) throw new RangeError(`Cannot convert non-finite number ${value} to BigDecimal`);
         return BigDecimal.fromString(value.toString());
+    }
+
+    /**
+     * Shift the decimal point of a plain decimal string (no exponent) by
+     * `exponent` places. A positive exponent shifts right (×10^exponent),
+     * a negative exponent shifts left (÷10^|exponent|).
+     *
+     * Used to normalise scientific notation inside fromString.
+     *
+     * Examples:
+     *   shiftDecimalPoint("1.5",  -10) → "0.00000000015"
+     *   shiftDecimalPoint("3.0",    2) → "300.0"
+     */
+    private static shiftDecimalPoint(source: string, exponent: number): string {
+        // Ensure there is a decimal point to work with
+        let decimalPointIndex = source.indexOf(".");
+        if (decimalPointIndex === -1) {
+            source += ".";
+            decimalPointIndex = source.length - 1;
+        }
+
+        // Remove the decimal point; remember its position from the left
+        const digits = source.replace(".", "");
+
+        // New decimal point position (0-indexed, counts digits to its left)
+        const newDecimalPointPosition = decimalPointIndex + exponent;
+
+        if (newDecimalPointPosition <= 0) {
+            // Result is 0.000...digits
+            return "0." + "0".repeat(-newDecimalPointPosition) + digits;
+        } else if (newDecimalPointPosition >= digits.length) {
+            // Result is digits followed by zeros, no fractional part
+            return digits + "0".repeat(newDecimalPointPosition - digits.length);
+        } else {
+            return digits.slice(0, newDecimalPointPosition) + "." + digits.slice(newDecimalPointPosition);
+        }
     }
 
     private constructor(mantissa: bigint) {
@@ -97,8 +127,8 @@ export class BigDecimal {
 
     /**
      * Multiply: (a × 10^-S) × (b × 10^-S) = (a×b) × 10^-2S
-     * We divide by SCALE_FACTOR to bring the result back to scale S.
-     * Division truncates toward zero — acceptable for our use case.
+     * Division by SCALE_FACTOR to bring the result back to scale S.
+     * Division truncates toward zero.
      */
     public mul(other: BigDecimal): BigDecimal {
         return new BigDecimal((this._mantissa * other._mantissa) / SCALE_FACTOR);
@@ -106,7 +136,7 @@ export class BigDecimal {
 
     /**
      * Divide: (a × 10^-S) / (b × 10^-S) = a / b   (dimensionless)
-     * We pre-multiply the numerator by SCALE_FACTOR so the result is at scale S.
+     * Pre-multiplication of the numerator by SCALE_FACTOR so the result is at scale S.
      */
     public div(other: BigDecimal): BigDecimal {
         if (other._mantissa === 0n) throw new RangeError("BigDecimal division by zero");
@@ -137,7 +167,7 @@ export class BigDecimal {
      * Convert to JS number — intentionally lossy.
      * Only call this at render time when converting to double is acceptable.
      * 
-     * Throws if the result would be non-finite (value out of double range).
+     * Throws RangeError if the result would be non-finite (value out of double range).
      */
     public toNumber(): number {
         const result = Number(this._mantissa) / Number(SCALE_FACTOR);
@@ -148,33 +178,10 @@ export class BigDecimal {
     }
 
     /**
-     * Convert to JS number
-     * returns NaN if result would have been lossy
-     */
-    public toSafeNumber(): number {
-        try {
-            const asNumber = this.toNumber();
-            const roundTripped = BigDecimal.fromNumber(asNumber);
-            return (roundTripped._mantissa === this._mantissa) ? asNumber : Number.NaN;
-        } catch {
-            return Number.NaN;
-        }
-    }
-
-    /**
-     * Returns true if this value can be round-tripped through a JS number
-     * without any loss of precision.
+     * Returns true if this value can be round-tripped through a JS number without any loss of precision.
      */
     public noPrecisionLost(): boolean {
         return !Number.isNaN(this.toSafeNumber());
-    }
-
-    /**
-     * Returns true if the distance to another BigDecimal can be converted to a JS number
-     * without any loss of precision.
-     */
-    public noRangePrecisionLost(other: BigDecimal): boolean {
-        return this.sub(other).noPrecisionLost();
     }
 
     /**
@@ -202,55 +209,17 @@ export class BigDecimal {
         return isNegative ? `-${body}` : body;
     }
 
-    public toStringInternals(): string {
-        const scaleAsNumber = Number(SCALE);
-        const isNegative = this._mantissa < 0n;
-        const absoluteValue = isNegative ? -this._mantissa : this._mantissa;
-
-        // Pad to at least scaleAsNumber + 1 characters so we can always split off
-        // exactly scaleAsNumber digits as the fractional part.
-        const allDigits = absoluteValue.toString().padStart(scaleAsNumber + 1, "0");
-
-        const integerPart = allDigits.slice(0, allDigits.length - scaleAsNumber) || "0";
-        const fractionalFull = allDigits.slice(allDigits.length - scaleAsNumber);
-        const fractionalTrimmed = fractionalFull.replace(/0+$/, "");
-
-        return `mantissa=${this._mantissa} absoluteValue=${absoluteValue} allDigits=${allDigits} integerPart=${integerPart} fractionalFull=${fractionalFull} fractionalTrimmed=${fractionalTrimmed}`;
-    }
-
     /**
-     * Shift the decimal point of a plain decimal string (no exponent) by
-     * `exponent` places. A positive exponent shifts right (×10^exponent),
-     * a negative exponent shifts left (÷10^|exponent|).
-     *
-     * Used to normalise scientific notation inside fromString.
-     *
-     * Examples:
-     *   _shiftDecimalPoint("1.5",  -10) → "0.00000000015"
-     *   _shiftDecimalPoint("3.0",    2) → "300.0"
+     * Convert to JS number
+     * returns NaN if result would have been lossy
      */
-    private static _shiftDecimalPoint(source: string, exponent: number): string {
-        // Ensure there is a decimal point to work with
-        let decimalPointIndex = source.indexOf(".");
-        if (decimalPointIndex === -1) {
-            source += ".";
-            decimalPointIndex = source.length - 1;
-        }
-
-        // Remove the decimal point; remember its position from the left
-        const digits = source.replace(".", "");
-
-        // New decimal point position (0-indexed, counts digits to its left)
-        const newDecimalPointPosition = decimalPointIndex + exponent;
-
-        if (newDecimalPointPosition <= 0) {
-            // Result is 0.000...digits
-            return "0." + "0".repeat(-newDecimalPointPosition) + digits;
-        } else if (newDecimalPointPosition >= digits.length) {
-            // Result is digits followed by zeros, no fractional part
-            return digits + "0".repeat(newDecimalPointPosition - digits.length);
-        } else {
-            return digits.slice(0, newDecimalPointPosition) + "." + digits.slice(newDecimalPointPosition);
+    private toSafeNumber(): number {
+        try {
+            const asNumber = this.toNumber();
+            const roundTripped = BigDecimal.fromNumber(asNumber);
+            return (roundTripped._mantissa === this._mantissa) ? asNumber : Number.NaN;
+        } catch {
+            return Number.NaN;
         }
     }
 }

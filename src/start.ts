@@ -19,6 +19,7 @@ import { Weather } from './plane/vector-fields/weather';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
+import { PerlinNoise } from './plane/noise/perlin-noise';
 
 declare const APP_NAME: string;
 declare const APP_VERSION: string;
@@ -103,6 +104,10 @@ export class Start {
         switch (planeId) {
             case 'NOISE': {
                 this._plane = new Noise(this._grid);
+                break;
+            }
+            case 'PERLIN_NOISE': {
+                this._plane = new PerlinNoise(this._grid);
                 break;
             }
             case 'CHARGES': {
@@ -219,6 +224,12 @@ export class Start {
     private subscribeToRange() {
         this._grid.range$.subscribe({
             next: (range) => { this._rangeInput.value = GridRange.toString(range); }
+        });
+        this._grid.precisionCritical$.subscribe({
+            next: (critical) => {
+                this._rangeInput.title = critical ? 'Beware: Default numbers do not have sufficient precision anyore at the currently selected range' : '';
+                this._rangeInput.classList.toggle("rangeInputWarning", critical);
+            }
         });
     }
 

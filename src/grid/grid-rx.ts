@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { Grid } from './grid';
 import { GridRange } from './grid-range';
 import { Resolution } from './resolutions';
@@ -7,6 +7,8 @@ export class GridRx extends Grid {
 
     private _range$ = new BehaviorSubject<GridRange>(GridRange.createDefaultGridRange());
     public range$: Observable<GridRange> = this._range$;
+
+    public precisionCritical$: Observable<boolean> = this._range$.pipe(map((_) => !this.viewportPrecisionSufficient));
 
     constructor(resolution: Resolution, range: GridRange = GridRange.createDefaultGridRange()) {
         super(resolution, range);

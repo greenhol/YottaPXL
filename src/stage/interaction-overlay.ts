@@ -103,7 +103,7 @@ export class InteractionOverlay {
             case ShiftDirection.LEFT: {
                 this._selectedRange$.next({
                     xMin: currentRange.xMin.sub(currentXdiff),
-                    xMax: currentRange.xMin.sub(currentXdiff),
+                    xMax: currentRange.xMax.sub(currentXdiff),
                     yCenter: currentRange.yCenter,
                 });
                 break;

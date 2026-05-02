@@ -6,6 +6,7 @@ import { BernoulliNoiseType, BiasType, getNoiseScaleFactor, NoiseScaleFactor } f
 import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
 import { WorkerSetupBiasedNoise } from './worker-setup-biased-noise';
 import { WorkerSetupGaussianNoise } from './worker-setup-gaussian-noise';
+import { WorkerSetupPerlinNoise } from './worker-setup-perlin-noise';
 import { WorkerSetupWhiteNoise } from './worker-setup-white-noise';
 
 export enum NoiseType {
@@ -91,6 +92,12 @@ export class NoiseGenerator {
                 return this.createBiasedNoise(BiasType.BOUNDS_BY_TRIG, scaling);
             }
         }
+    }
+
+    public createPerlinNoise(scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+        const worker = new Worker(new URL('./noise-generator-perlin.worker.ts', import.meta.url));
+        const setup: WorkerSetupPerlinNoise = { gridBlueprint: this._grid.withMarginBlueprint, scaleFactor: scaleFactor };
+        return executeWorker<WorkerSetupPerlinNoise, Float64Array>(worker, setup);
     }
 
     private createWhiteNoise(scaleFactor: NoiseScaleFactor = NoiseScaleFactor.NONE): Observable<CalculationState<Float64Array>> {

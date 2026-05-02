@@ -7,6 +7,7 @@ export type PlaneId =
     'CHARGES' |
     'WEATHER' |
     'NOISE' |
+    'PERLIN_NOISE' |
     'GRADIENT' |
     'COLOR_BLEND';
 
@@ -25,6 +26,7 @@ export const VALID_PLANE_IDS: PlaneId[] = [
     'CHARGES',
     'WEATHER',
     'NOISE',
+    'PERLIN_NOISE',
     'GRADIENT',
     'COLOR_BLEND',
 ];
@@ -38,6 +40,7 @@ export const PLANE_TYPES: PlaneType[] = [
     { id: 'CHARGES', short: 'Charge Field', description: 'A vector field visualization for a charge field using an LIC algorithm' },
     { id: 'WEATHER', short: 'Weather patterns', description: 'A vector field visualization for for weather patterns of pressure systems' },
     { id: 'NOISE', short: 'Noise types', description: 'A set of different noise types' },
+    { id: 'PERLIN_NOISE', short: 'Perlin Noise', description: 'Perlin Noise' },
     { id: 'GRADIENT', short: 'Color Gradients', description: 'A selection of color gradients and custom for defining your own' },
     { id: 'COLOR_BLEND', short: 'Color Blending', description: 'A selection of color blenders demonstrated on gradients' },
 ];

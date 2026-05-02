@@ -178,13 +178,6 @@ export class BigDecimal {
     }
 
     /**
-     * Returns true if this value can be round-tripped through a JS number without any loss of precision.
-     */
-    public noPrecisionLost(): boolean {
-        return !Number.isNaN(this.toSafeNumber());
-    }
-
-    /**
      * Render as a human-readable decimal string, e.g. "-3.14000..." → "-3.14".
      * Trailing zeros after the decimal point are stripped.
      * If the value is an integer the decimal point is omitted.
@@ -207,19 +200,5 @@ export class BigDecimal {
             : integerPart;
 
         return isNegative ? `-${body}` : body;
-    }
-
-    /**
-     * Convert to JS number
-     * returns NaN if result would have been lossy
-     */
-    private toSafeNumber(): number {
-        try {
-            const asNumber = this.toNumber();
-            const roundTripped = BigDecimal.fromNumber(asNumber);
-            return (roundTripped._mantissa === this._mantissa) ? asNumber : Number.NaN;
-        } catch {
-            return Number.NaN;
-        }
     }
 }

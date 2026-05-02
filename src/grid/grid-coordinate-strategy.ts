@@ -54,6 +54,8 @@ export class NumberCoordinateStrategy {
         ];
     }
 
+    public get yMin(): number { return this._yMin; }
+    public get yMax(): number { return this._yMax; }
     public get xDiff(): number { return this._xDiff; }
     public get range(): GridRange { return this._range; }
 }
@@ -123,6 +125,8 @@ export class BigDecimalCoordinateStrategy {
         return [Math.round(pixelX.toNumber()), Math.round(pixelY.toNumber())];
     }
 
+    public get yMin(): BigDecimal { return this._yMin; }
+    public get yMax(): BigDecimal { return this._yMax; }
     public get xDiff(): BigDecimal { return this._xDiff; }
     public get range(): GridRange { return this._range; }
 }

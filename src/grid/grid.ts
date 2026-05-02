@@ -82,14 +82,28 @@ export class Grid extends GridWithoutRange {
      * number without precision loss.
      */
     public get viewportPrecisionSufficient(): boolean {
-        return this._strategy.range.xMax
-            .sub(this._strategy.range.xMin)
-            .noPrecisionLost();
+        const viewportWidth = this._strategy.range.xMax.sub(this._strategy.range.xMin);
+        const pixelStep = viewportWidth.div(BigDecimal.fromNumber(this.width));
+        return pixelStep.gt(BigDecimal.fromNumber(Number.EPSILON));
     }
 
     public get resolution(): Resolution { return this._resolution; }
 
     public get range(): GridRange { return this._strategy.range; }
+
+    public get yMin(): BigDecimal {
+        if (this._strategy instanceof BigDecimalCoordinateStrategy) {
+            return this._strategy.yMin;
+        }
+        return BigDecimal.fromNumber(this._strategy.yMin);
+    }
+
+    public get yMax(): BigDecimal {
+        if (this._strategy instanceof BigDecimalCoordinateStrategy) {
+            return this._strategy.yMax;
+        }
+        return BigDecimal.fromNumber(this._strategy.yMax);
+    }
 
     public get xDiff(): BigDecimal {
         if (this._strategy instanceof BigDecimalCoordinateStrategy) {

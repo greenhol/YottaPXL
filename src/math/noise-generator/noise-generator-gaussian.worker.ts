@@ -2,7 +2,6 @@ import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { getNoiseScaleFactor, NoiseScaleFactor } from './types';
 import { upscaleNoise } from './utils';
 import { WorkerSetupGaussianNoise } from './worker-setup-gaussian-noise';
 
@@ -10,13 +9,10 @@ self.onmessage = (e) => {
     let timeStamp = Date.now();
     const { type, data }: { type: MessageFromWorker | MessageToWorker, data: WorkerSetupGaussianNoise; } = e.data;
     if (type === MessageToWorker.START) {
-        const scaleFactor = getNoiseScaleFactor(data.scaleFactor);
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
-        const baseGrid = (scaleFactor == NoiseScaleFactor.NONE) ? grid : new GridWithoutRange(grid.width, grid.height);
+        const baseGrid = (data.scaleFactor == 1) ? grid : new GridWithoutRange(grid.width, grid.height);
         let result: Float64Array = calculate(baseGrid, data.mean, data.range, data.standardDeviation);
-        if (scaleFactor != NoiseScaleFactor.NONE) {
-            result = upscaleNoise(baseGrid, result, grid, scaleFactor);
-        }
+        result = upscaleNoise(baseGrid, result, grid, data.scaleFactor);
         console.info(`#NoiseGeneratorGaussian (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }

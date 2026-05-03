@@ -5,7 +5,6 @@ import { Grid } from '../../grid/grid';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { BigDecimal, createGreyByIntensity } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -33,7 +32,7 @@ export class Noise extends Plane {
             config: {
                 type: NoiseType.WHITE,
                 p: 0.5,
-                scaling: NoiseScaleFactor.NONE,
+                scaling: 1,
             }
         },
         'noise',

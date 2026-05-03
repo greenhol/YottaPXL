@@ -9,7 +9,6 @@ import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calc
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
@@ -45,7 +44,7 @@ export class MandelbrotCombinedIV extends Plane {
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
-                scaling: NoiseScaleFactor.TWO,
+                scaling: 2,
             },
             licConfig: {
                 minLength: 1,

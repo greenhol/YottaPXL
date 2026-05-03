@@ -7,7 +7,6 @@ import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-m
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
@@ -39,7 +38,7 @@ export class MandelbrotVector extends Plane {
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
-                scaling: NoiseScaleFactor.TWO,
+                scaling: 2,
             },
             maxIterations: 0,
             interpolate: false,

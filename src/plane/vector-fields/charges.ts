@@ -8,7 +8,6 @@ import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-m
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
 import { BigDecimal, stringToRgb } from '../../types';
@@ -38,7 +37,7 @@ export class Charges extends Plane {
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
-                scaling: NoiseScaleFactor.NONE,
+                scaling: 1,
             },
             licConfig: {
                 minLength: 7.5,

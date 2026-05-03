@@ -10,9 +10,11 @@ import { CREATE } from '../ui/plane-config-field-creator';
 
 interface PerlinNoisePlaneConfig extends PlaneConfig {
     scaleFactor: number,
+    octaveCount: number,
+    octaveAmplitudeFactor: number,
 }
 
-const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(10), yCenter: BigDecimal.ZERO };
+const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(50), yCenter: BigDecimal.ZERO };
 
 @InitializeAfterConstruct()
 export class PerlinNoise extends Plane {
@@ -21,10 +23,14 @@ export class PerlinNoise extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             scaleFactor: 1,
+            octaveCount: 0,
+            octaveAmplitudeFactor: 1,
         },
         'perlinNoise',
         [
             CREATE.createFloatField('scaleFactor', 'Scale Factor', 'Scale Factor for Perlin Noise', 0.001, 1000),
+            CREATE.createIntegerField('octaveCount', 'Octave Count', 'Number of additional octaves', 0, 5),
+            CREATE.createFloatField('octaveAmplitudeFactor', 'Octave Amp. Factor', 'Factor of the octaves amplitudes', 0.1, 10),
         ]
     );
 
@@ -40,7 +46,11 @@ export class PerlinNoise extends Plane {
     private async createAndDraw() {
         this.setProgress(0);
         const generator = new NoiseGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
-        const calculation$ = generator.createPerlinNoise(this.config.data.scaleFactor);
+        const calculation$ = generator.createPerlinNoise(
+            this.config.data.scaleFactor,
+            this.config.data.octaveCount,
+            this.config.data.octaveAmplitudeFactor,
+        );
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress); }
         });

@@ -9,7 +9,7 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { NoiseScaleFactor } from '../../math/noise-generator/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { BigDecimal, COLORS, stringToRgb } from '../../types';
+import { BigDecimal, stringToRgb } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -17,7 +17,6 @@ import { LicConfig } from './../../math/lic/types';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
 interface MandelbrotVectorConfig extends PlaneConfig {
-    useNoiseAsSource: boolean,
     noiseConfig: NoiseConfig,
     maxIterations: number,
     interpolate: boolean,
@@ -37,7 +36,6 @@ export class MandelbrotVector extends Plane {
     override config: ModuleConfig<MandelbrotVectorConfig> = new ModuleConfig(
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
-            useNoiseAsSource: true,
             noiseConfig: {
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
@@ -61,7 +59,6 @@ export class MandelbrotVector extends Plane {
         'mandelbrotVectorConfig',
         [
             CREATE.createHeader('Source Image'),
-            CREATE.createBoolField('useNoiseAsSource', 'Noise Input', 'Use noise as input (Mandelbrot iteration image otherwise)'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
@@ -108,9 +105,7 @@ export class MandelbrotVector extends Plane {
         // Create Source Image
         const sourceData: SourceData = {
             grid: sourceGrid,
-            image: this.config.data.useNoiseAsSource ?
-                await this.createNoise(sourceGrid) :
-                await this.createMandelbrotData(sourceGrid, this._effectiveMaxIterations),
+            image: await this.createNoise(sourceGrid),
             field: field,
         };
         this.updateImage(this.drawSourceImage(sourceData));
@@ -134,28 +129,6 @@ export class MandelbrotVector extends Plane {
         const generator = new NoiseGenerator(sourceGrid);
         const generator$ = generator.createNoise(this.config.data.noiseConfig);
         return await extractData(generator$, 'noise');
-    }
-
-    private async createMandelbrotData(sourceGrid: GridWithMargin, maxIterations: number): Promise<Float64Array> {
-        const colorMapper = ColorMapper.fromColors(COLORS.BW);
-        const mandelbrotCalculator = new MandelbrotCalculator();
-        const mandelbrotCalculation$ = this.config.data.interpolate
-            ? mandelbrotCalculator.calculateSmoothIterations(this.grid, this._effectiveMaxIterations)
-            : mandelbrotCalculator.calculateIterations(this.grid, this._effectiveMaxIterations);
-        mandelbrotCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Image 3/4'); } });
-        const mandelbrotIterations = await extractData(mandelbrotCalculation$, 'mandelbrot iterations');
-
-        const data = new Float64Array(sourceGrid.size);
-        for (let row = 0; row < sourceGrid.height; row++) {
-            for (let col = 0; col < sourceGrid.width; col++) {
-                let value = mandelbrotIterations[sourceGrid.getIndex(col, row)];
-                if (value === this._effectiveMaxIterations) {
-                    value = -1;
-                }
-                data[sourceGrid.getIndex(col, row)] = colorMapper.mapLooped(value, 512).r / 255;
-            }
-        }
-        return data;
     }
 
     private drawSourceImage(source: SourceData): ImageDataArray {

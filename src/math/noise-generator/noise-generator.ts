@@ -94,9 +94,14 @@ export class NoiseGenerator {
         }
     }
 
-    public createPerlinNoise(scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    public createPerlinNoise(scaleFactor: number = 1, octaveCount: number = 0, octaveAmplitudeFactor: number = 1): Observable<CalculationState<Float64Array>> {
         const worker = new Worker(new URL('./noise-generator-perlin.worker.ts', import.meta.url));
-        const setup: WorkerSetupPerlinNoise = { gridBlueprint: this._grid.withMarginBlueprint, scaleFactor: scaleFactor };
+        const setup: WorkerSetupPerlinNoise = {
+            gridBlueprint: this._grid.withMarginBlueprint,
+            scaleFactor: scaleFactor,
+            octaveCount: octaveCount,
+            octaveAmplitudeFactor: octaveAmplitudeFactor,
+        };
         return executeWorker<WorkerSetupPerlinNoise, Float64Array>(worker, setup);
     }
 

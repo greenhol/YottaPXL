@@ -13,7 +13,7 @@ import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterati
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Noise } from './plane/noise/noise';
 import { Plane } from './plane/plane';
-import { PLANE_TYPES, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
+import { PLANE_SELECTOR, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
 import { Charges } from './plane/vector-fields/charges';
 import { Weather } from './plane/vector-fields/weather';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
@@ -160,16 +160,20 @@ export class Start {
     private initializeResolution(width: number, height: number): Resolution | null {
         this._resolutionSelect.innerHTML = '';
         let selectedResolution: Resolution | null = null;
-
-        for (const resolution of RESOLUTIONS) {
-            const option = document.createElement('option');
-            option.label = `${resolution.description} - ${resolution.width}x${resolution.height}`;
-            option.value = resolutionAsString(resolution);
-            if (resolution.width == width && resolution.height == height) {
-                selectedResolution = resolution;
-                option.selected = true;
-            }
-            this._resolutionSelect.appendChild(option);
+        for (const group of RESOLUTIONS) {
+            const optionGroup = document.createElement('optgroup') as HTMLOptGroupElement;
+            optionGroup.label = group.name;
+            for (const resolution of group.resolutions) {
+                const option = document.createElement('option');
+                option.label = `${resolution.description} (${group.name}) - ${resolution.width}x${resolution.height}`;
+                option.value = resolutionAsString(resolution);
+                if (resolution.width == width && resolution.height == height) {
+                    selectedResolution = resolution;
+                    option.selected = true;
+                }
+                optionGroup.appendChild(option);
+            };
+            this._resolutionSelect.appendChild(optionGroup);
         };
         return selectedResolution;
     }
@@ -177,15 +181,19 @@ export class Start {
     private initializePlaneSelect(): PlaneId {
         this._planeSelect.innerHTML = '';
         let selectedPlaneId = this._config.data.currentPlaneId;
-
-        for (const plane of PLANE_TYPES) {
-            const option = document.createElement('option');
-            option.label = plane.short;
-            option.value = plane.id;
-            if (plane.id == selectedPlaneId) {
-                option.selected = true;
-            }
-            this._planeSelect.appendChild(option);
+        for (const group of PLANE_SELECTOR) {
+            const optionGroup = document.createElement('optgroup') as HTMLOptGroupElement;
+            optionGroup.label = group.name;
+            for (const plane of group.planes) {
+                const option = document.createElement('option');
+                option.label = plane.short;
+                option.value = plane.id;
+                if (plane.id == selectedPlaneId) {
+                    option.selected = true;
+                }
+                optionGroup.appendChild(option);
+            };
+            this._planeSelect.appendChild(optionGroup);
         };
         return selectedPlaneId;
     }

@@ -10,34 +10,51 @@ self.onmessage = (e) => {
     const { type, data }: { type: MessageToWorker, data: WorkerSetupPerlinNoise; } = e.data;
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
-        let result: Float32Array = calculate(grid, data.scaleFactor);
+        let result: Float32Array = calculate(grid, data.scaleFactor, data.octaveCount, data.octaveAmplitudeFactor);
         console.info(`#NoiseGeneratorPerlin (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(grid: GridWithMargin, scaleFactor: number): Float32Array {
-    const data = new Float32Array(grid.size);
+function calculate(
+    grid: GridWithMargin,
+    scaleFactor: number,
+    octaveCount: number,
+    octaveAmplitudeFactor: number,
+): Float32Array {
+    const xMin = grid.range.xMin.toNumber();
+    const xMax = grid.range.xMax.toNumber();
+    const yMin = grid.yMin.toNumber();
+    const yMax = grid.yMax.toNumber();
+
     const clampedScaleFactor = clampScaleFactor(scaleFactor, grid);
-    const { gradients, gridCols, gridRows, x0, y0 } = buildGradientGrid(
-        grid.range.xMin.toNumber(),
-        grid.range.xMax.toNumber(),
-        grid.yMin.toNumber(),
-        grid.yMax.toNumber(),
-        clampedScaleFactor,
-    );
+
+    // Build one gradient grid per layer (base + octaves).
+    // Each successive octave doubles the scaleFactor (lower frequency, broader shapes).
+    const totalLayers = 1 + octaveCount;
+    const layers = Array.from({ length: totalLayers }, (_, i) => ({
+        gradientGrid: buildGradientGrid(xMin, xMax, yMin, yMax, clampedScaleFactor * Math.pow(2, i)),
+        amplitude: i === 0 ? 1.0 : Math.pow(octaveAmplitudeFactor, i),
+    }));
+
+    const data = new Float32Array(grid.size);
 
     // Track raw min/max for normalisation to [0, 1]
     let rawMin = Infinity;
     let rawMax = -Infinity;
 
-    // --- Pass 1: compute raw Perlin values ---
+    // --- Pass 1: accumulate all layers per pixel ---
     let nextProgressThreshold = PROGRESS_INTERVAL;
 
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [mx, my] = grid.pixelToMath(col, row);
-            const value = perlinSample(mx, my, gradients, gridCols, gridRows, x0, y0, clampedScaleFactor);
+
+            let value = 0;
+            for (let l = 0; l < layers.length; l++) {
+                const { gradientGrid: g, amplitude } = layers[l];
+                value += amplitude * perlinSample(mx, my, g.gradients, g.gridCols, g.gridRows, g.x0, g.y0, clampedScaleFactor * Math.pow(2, l));
+            }
 
             const idx = grid.getIndex(col, row);
             data[idx] = value;
@@ -60,10 +77,7 @@ function calculate(grid: GridWithMargin, scaleFactor: number): Float32Array {
         data[i] = (data[i] - rawMin) / range;
     }
 
-    // Final progress update — posted here after both passes are complete,
-    // just before handing back to the caller who will post RESULT
     self.postMessage({ type: MessageFromWorker.UPDATE, progress: 100 });
-
     return data;
 }
 

@@ -3,8 +3,9 @@ import { InitializeAfterConstruct } from '../../../shared';
 import { ModuleConfig } from '../../../shared/config';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
-import { BigDecimal, createGreyByIntensity } from '../../types';
+import { BigDecimal } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
@@ -12,6 +13,7 @@ interface PerlinNoisePlaneConfig extends PlaneConfig {
     scaleFactor: number,
     octaveCount: number,
     octaveAmplitudeFactor: number,
+    gradient: ColorMapperConfig,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(50), yCenter: BigDecimal.ZERO };
@@ -23,14 +25,23 @@ export class PerlinNoise extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             scaleFactor: 1,
-            octaveCount: 0,
-            octaveAmplitudeFactor: 1,
+            octaveCount: 4,
+            octaveAmplitudeFactor: 2,
+            gradient: {
+                supportPoints: '0:#FFFFFF, 1:#2222FF',
+                easing: Easing.LAB_LINEAR,
+                scaling: 1,
+            },
         },
         'perlinNoise',
         [
+            CREATE.createHeader('Perlin Noise'),
             CREATE.createFloatField('scaleFactor', 'Scale Factor', 'Scale Factor for Perlin Noise', 0.001, 1000),
-            CREATE.createIntegerField('octaveCount', 'Octave Count', 'Number of additional octaves', 0, 5),
+            CREATE.createIntegerField('octaveCount', 'Octave Count', 'Number of additional octaves', 0, 8),
             CREATE.createFloatField('octaveAmplitudeFactor', 'Octave Amp. Factor', 'Factor of the octaves amplitudes', 0.1, 10),
+            CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
+            CREATE.uiFieldGradientEasing('gradient.easing'),
         ]
     );
 
@@ -65,13 +76,14 @@ export class PerlinNoise extends Plane {
 
     private createImage(data: Float32Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
+        const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const destinationIndex = this.grid.getIndex(col, row);
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    createGreyByIntensity(data[destinationIndex])
+                    colorMapper.mapClamped(data[destinationIndex]),
                 );
             }
         }

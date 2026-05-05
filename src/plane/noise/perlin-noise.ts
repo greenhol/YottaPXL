@@ -63,7 +63,7 @@ export class PerlinNoise extends Plane {
         }
     }
 
-    private createImage(data: Float64Array): ImageDataArray {
+    private createImage(data: Float32Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {

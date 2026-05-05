@@ -39,7 +39,7 @@ export class NoiseGenerator {
         this._grid = grid;
     }
 
-    public createNoise(config: NoiseConfig): Observable<CalculationState<Float64Array>> {
+    public createNoise(config: NoiseConfig): Observable<CalculationState<Float32Array>> {
         console.info(`#createNoise - type=${config.type}, scaling=${config.scaling}, (p=${config.p})`);
         switch (config.type) {
             case NoiseType.WHITE: {
@@ -93,7 +93,7 @@ export class NoiseGenerator {
         }
     }
 
-    public createPerlinNoise(scaleFactor: number = 1, octaveCount: number = 0, octaveAmplitudeFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    public createPerlinNoise(scaleFactor: number = 1, octaveCount: number = 0, octaveAmplitudeFactor: number = 1): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./noise-generator-perlin.worker.ts', import.meta.url));
         const setup: WorkerSetupPerlinNoise = {
             gridBlueprint: this._grid.withMarginBlueprint,
@@ -101,28 +101,28 @@ export class NoiseGenerator {
             octaveCount: octaveCount,
             octaveAmplitudeFactor: octaveAmplitudeFactor,
         };
-        return executeWorker<WorkerSetupPerlinNoise, Float64Array>(worker, setup);
+        return executeWorker<WorkerSetupPerlinNoise, Float32Array>(worker, setup);
     }
 
-    private createWhiteNoise(scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createWhiteNoise(scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./noise-generator-white.worker.ts', import.meta.url));
         const setup: WorkerSetupWhiteNoise = { gridBlueprint: this._grid.withMarginBlueprint, scaleFactor: scaleFactor };
-        return executeWorker<WorkerSetupWhiteNoise, Float64Array>(worker, setup);
+        return executeWorker<WorkerSetupWhiteNoise, Float32Array>(worker, setup);
     }
 
-    private createBernoulliNoise(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createBernoulliNoise(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         return this.createBernoulliNoiseOfType(BernoulliNoiseType.DEFAULT, p, scaleFactor);
     }
 
-    private createBernoulliNoiseIsolated(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createBernoulliNoiseIsolated(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         return this.createBernoulliNoiseOfType(BernoulliNoiseType.ISOLATED, p, scaleFactor);
     }
 
-    private createBernoulliNoiseIsolatedBig(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createBernoulliNoiseIsolatedBig(p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         return this.createBernoulliNoiseOfType(BernoulliNoiseType.ISOLATED_BIG, p, scaleFactor);
     }
 
-    private createBernoulliNoiseOfType(type: BernoulliNoiseType, p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createBernoulliNoiseOfType(type: BernoulliNoiseType, p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./noise-generator-bernoulli.worker.ts', import.meta.url));
         const setup: WorkerSetupBernoulliNoise = {
             type: type,
@@ -130,17 +130,17 @@ export class NoiseGenerator {
             p: p,
             scaleFactor: scaleFactor,
         };
-        return executeWorker<WorkerSetupBernoulliNoise, Float64Array>(worker, setup);
+        return executeWorker<WorkerSetupBernoulliNoise, Float32Array>(worker, setup);
     }
 
-    private createBiasedNoise(type: BiasType, scaleFactor: number = 1): Observable<CalculationState<Float64Array>> {
+    private createBiasedNoise(type: BiasType, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./noise-generator-biased.worker.ts', import.meta.url));
         const setup: WorkerSetupBiasedNoise = {
             type: type,
             gridBlueprint: this._grid.withMarginBlueprint,
             scaleFactor: scaleFactor,
         };
-        return executeWorker<WorkerSetupBiasedNoise, Float64Array>(worker, setup);
+        return executeWorker<WorkerSetupBiasedNoise, Float32Array>(worker, setup);
     }
 
     private createGaussianNoise(
@@ -148,7 +148,7 @@ export class NoiseGenerator {
         mean: number = 0,
         standardDeviation: number = 1,
         range: number = 6,
-    ): Observable<CalculationState<Float64Array>> {
+    ): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./noise-generator-gaussian.worker.ts', import.meta.url));
         const setup: WorkerSetupGaussianNoise = {
             gridBlueprint: this._grid.withMarginBlueprint,
@@ -157,6 +157,6 @@ export class NoiseGenerator {
             range: range,
             scaleFactor: scaleFactor,
         };
-        return executeWorker<WorkerSetupGaussianNoise, Float64Array>(worker, setup);
+        return executeWorker<WorkerSetupGaussianNoise, Float32Array>(worker, setup);
     }
 }

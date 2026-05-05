@@ -12,15 +12,15 @@ self.onmessage = (e) => {
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const baseGrid = (data.scaleFactor == 1) ? grid : new GridWithoutRange(grid.width, grid.height);
-        let result: Float64Array = calculate(baseGrid, data.type);
+        let result: Float32Array = calculate(baseGrid, data.type);
         result = upscaleNoise(baseGrid, result, grid, data.scaleFactor);
         console.info(`#NoiseGeneratorBiased (worker) - calculation for ${data.type} done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(grid: GridReader, type: BiasType): Float64Array {
-    const data = new Float64Array(grid.size);
+function calculate(grid: GridReader, type: BiasType): Float32Array {
+    const data = new Float32Array(grid.size);
     let biasFunction: () => number;
     switch (type) {
         case BiasType.LOWER: biasFunction = randomBiasedToLower; break;

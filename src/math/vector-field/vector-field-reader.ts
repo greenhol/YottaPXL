@@ -3,10 +3,10 @@ import { GridWithMargin } from './../../grid/grid-with-margin';
 export class VectorFieldReader {
 
     private _grid: GridWithMargin;
-    private _data: Float64Array;
+    private _data: Float32Array;
     private _reader: (col: number, row: number) => [number, number];
 
-    constructor(grid: GridWithMargin, data: Float64Array, orthogonal: boolean = false) {
+    constructor(grid: GridWithMargin, data: Float32Array, orthogonal: boolean = false) {
         if (data.length !== grid.size * 3) {
             throw Error(`grid (size=${grid.size}) and data (data.length=${data.length}) do not match. (data.length !== grid.size * 3)`);
         }

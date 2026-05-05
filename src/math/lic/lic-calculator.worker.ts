@@ -50,7 +50,7 @@ function calcLicPixel(
     row: number,
     length: number,
     sourceGrid: GridWithMargin,
-    image: Float64Array,
+    image: Float32Array,
     field: VectorFieldReader,
 ): number {
     let brightness = calcLicPixelInDirection(col, row, length, 1, sourceGrid, image, field);
@@ -67,7 +67,7 @@ function calcLicPixelInDirection(
     length: number,
     direction: number,
     sourceGrid: GridWithMargin,
-    image: Float64Array,
+    image: Float32Array,
     field: VectorFieldReader,
 ): number {
     let restDistance = length;

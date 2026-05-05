@@ -1,8 +1,8 @@
 import { GridReader } from '../../../grid/grid-reader';
 
-export function upscaleNoise(sourceGrid: GridReader, sourceData: Float64Array, targetGrid: GridReader, scale: number): Float64Array {
+export function upscaleNoise(sourceGrid: GridReader, sourceData: Float32Array, targetGrid: GridReader, scale: number): Float32Array {
     if (scale == 1) return sourceData;
-    const data = new Float64Array(targetGrid.size);
+    const data = new Float32Array(targetGrid.size);
     for (let baseRow = 0; baseRow < sourceGrid.height; baseRow++) {
         for (let baseCol = 0; baseCol < sourceGrid.width; baseCol++) {
             const value = sourceData[sourceGrid.getIndex(baseCol, baseRow)];

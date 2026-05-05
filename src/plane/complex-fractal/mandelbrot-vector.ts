@@ -124,7 +124,7 @@ export class MandelbrotVector extends Plane {
         }
     }
 
-    private async createNoise(sourceGrid: GridWithMargin): Promise<Float64Array> {
+    private async createNoise(sourceGrid: GridWithMargin): Promise<Float32Array> {
         const generator = new NoiseGenerator(sourceGrid);
         const generator$ = generator.createNoise(this.config.data.noiseConfig);
         return await extractData(generator$, 'noise');

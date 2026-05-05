@@ -17,9 +17,9 @@ self.onmessage = (e) => {
     }
 };
 
-function calculate(setup: WorkerSetupWeatherField): Float64Array {
+function calculate(setup: WorkerSetupWeatherField): Float32Array {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
-    const data = setup.data;
+    const data = new Float32Array(grid.size * 3);
     let cnt = 0;
 
     for (let row = 0; row < grid.height; row++) {

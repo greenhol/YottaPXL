@@ -8,14 +8,14 @@ import { LicConfig } from './types';
 
 export interface SourceData {
     grid: GridWithMargin,
-    image: Float64Array,
-    field: Float64Array,
+    image: Float32Array,
+    field: Float32Array,
 }
 
 export class LicCalculator {
 
-    private _image: Float64Array;
-    private _fieldData: Float64Array;
+    private _image: Float32Array;
+    private _fieldData: Float32Array;
     private _orthogonal: boolean;
     private _sourceGrid: GridWithMargin;
     private _targetGrid: Grid;

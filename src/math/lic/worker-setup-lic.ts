@@ -4,8 +4,8 @@ import { LicConfig } from './types';
 
 export interface WorkerSetupLIC {
     sourceGridBlueprint: GridWithMarginBlueprint;
-    image: Float64Array,
-    field: Float64Array;
+    image: Float32Array,
+    field: Float32Array;
     orthogonal: boolean;
     targetGridBlueprint: GridBlueprint;
     licConfig: LicConfig;

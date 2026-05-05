@@ -19,7 +19,6 @@ const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.
 export class Noise extends Plane {
 
     private _generator: NoiseGenerator;
-    private _data: Float64Array;
 
     constructor(grid: Grid) {
         super(grid);
@@ -61,15 +60,15 @@ export class Noise extends Plane {
         });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
-            this._data = result.data;
-            this.updateImage(this.createImage());
+            const data = result.data;
+            this.updateImage(this.createImage(data));
             this.setIdle();
         } else {
             console.error('#calculate - calculation did not produce data');
         }
     }
 
-    private createImage(): ImageDataArray {
+    private createImage(data: Float32Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -77,7 +76,7 @@ export class Noise extends Plane {
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    createGreyByIntensity(this._data[destinationIndex])
+                    createGreyByIntensity(data[destinationIndex])
                 );
             }
         }

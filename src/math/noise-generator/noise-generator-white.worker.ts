@@ -11,15 +11,15 @@ self.onmessage = (e) => {
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const baseGrid = (data.scaleFactor == 1) ? grid : new GridWithoutRange(grid.width, grid.height);
-        let result: Float64Array = calculate(baseGrid);
+        let result: Float32Array = calculate(baseGrid);
         result = upscaleNoise(baseGrid, result, grid, data.scaleFactor);
         console.info(`#NoiseGeneratorWhite (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(grid: GridReader): Float64Array {
-    const data = new Float64Array(grid.size);
+function calculate(grid: GridReader): Float32Array {
+    const data = new Float32Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             data[grid.getIndex(col, row)] = Math.random();

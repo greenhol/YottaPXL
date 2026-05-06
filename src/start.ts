@@ -12,14 +12,15 @@ import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance'
 import { MandelbrotIterations } from './plane/complex-fractal/mandelbrot-iterations';
 import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Noise } from './plane/noise/noise';
+import { PerlinNoise } from './plane/noise/perlin-noise';
 import { Plane } from './plane/plane';
 import { PLANE_SELECTOR, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
 import { Charges } from './plane/vector-fields/charges';
+import { PerlinField } from './plane/vector-fields/perlin-field';
 import { Weather } from './plane/vector-fields/weather';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
-import { PerlinNoise } from './plane/noise/perlin-noise';
 
 declare const APP_NAME: string;
 declare const APP_VERSION: string;
@@ -116,6 +117,10 @@ export class Start {
             }
             case 'WEATHER': {
                 this._plane = new Weather(this._grid);
+                break;
+            }
+            case 'PERLIN_FIELD': {
+                this._plane = new PerlinField(this._grid);
                 break;
             }
             case 'MANDELBROT_ITERATIONS': {

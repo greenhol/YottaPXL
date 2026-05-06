@@ -4,7 +4,7 @@ import { ModuleConfig } from '../../../shared/config';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
-import { NoiseGenerator } from '../../math/noise-generator/noise-generator';
+import { PerlinGenerator } from '../../math/perlin/perlin-generator';
 import { BigDecimal } from '../../types';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -56,8 +56,8 @@ export class PerlinNoise extends Plane {
 
     private async createAndDraw() {
         this.setProgress(0);
-        const generator = new NoiseGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
-        const calculation$ = generator.createPerlinNoise(
+        const generator = new PerlinGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
+        const calculation$ = generator.createNoise(
             this.config.data.scaleFactor,
             this.config.data.octaveCount,
             this.config.data.octaveAmplitudeFactor,

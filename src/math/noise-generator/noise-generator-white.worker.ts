@@ -2,7 +2,7 @@ import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { upscaleNoise } from './utils';
+import { upscaleNoise } from './upscale-noise';
 import { WorkerSetupWhiteNoise } from './worker-setup-white-noise';
 
 self.onmessage = (e) => {

@@ -1,4 +1,4 @@
-import { GridReader } from '../../../grid/grid-reader';
+import { GridReader } from '../../grid/grid-reader';
 
 export function upscaleNoise(sourceGrid: GridReader, sourceData: Float32Array, targetGrid: GridReader, scale: number): Float32Array {
     if (scale == 1) return sourceData;

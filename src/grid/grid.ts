@@ -112,6 +112,10 @@ export class Grid extends GridWithoutRange {
         return BigDecimal.fromNumber(this._strategy.xDiff);
     }
 
+    public get pixelsPerMathUnit(): number {
+        return this.width / (this.range.xMax.toNumber() - this.range.xMin.toNumber());
+    }
+
     public get blueprint(): GridBlueprint {
         return {
             resolution: { width: this.width, height: this.height, description: `${this._resolution.description} (Copy)` },

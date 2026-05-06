@@ -1,6 +1,6 @@
 import { GridWithMarginBlueprint } from '../../grid/grid-with-margin';
 
-export interface WorkerSetupPerlinNoise {
+export interface WorkerSetupPerlin {
     gridBlueprint: GridWithMarginBlueprint;
     scaleFactor: number;
     octaveCount: number;

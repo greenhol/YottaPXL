@@ -78,9 +78,6 @@ export class ColorMapper {
             console.warn('#ctor - The first support point is always 0');
             supportPoints[0].pos = 0;
         }
-        this._colorCalculator = (easing == Easing.NONE) ?
-            this.leftColor :
-            this.interpolateColorRGB;
 
         switch (easing) {
             case Easing.NONE: this._colorCalculator = this.leftColor; break;

@@ -51,9 +51,9 @@ export class PerlinField extends Plane {
                 strength: -1,
             },
             gradientMagnitude: {
-                supportPoints: '0:#FFFFFF, 1:#FFFFFF',
-                easing: Easing.LAB_LINEAR,
-                scaling: 1,
+                supportPoints: '0:#FFFFFF, 0.5:#888888, 1:#FFFFFF',
+                easing: Easing.RGB_LINEAR,
+                scaling: 5,
             },
             gradientStreamlines: {
                 supportPoints: '0:#FFFF00, 1:#FFFFFF',
@@ -77,9 +77,10 @@ export class PerlinField extends Plane {
             CREATE.uiFieldLicMinLenth('licConfig.minLength'),
             CREATE.uiFieldLicMaxLenth('licConfig.maxLength'),
             CREATE.uiFieldLicStrength('licConfig.strength'),
-            CREATE.createHeader('Magnitude', 'Gradient clamped'),
+            CREATE.createHeader('Magnitude', 'Gradient looped'),
             CREATE.uiFieldGradientSupportPoints('gradientMagnitude.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientMagnitude.easing'),
+            CREATE.uiFieldGradientScaling('gradientMagnitude.scaling'),
             CREATE.createHeader('Streamlines', 'Gradient clapmed'),
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
@@ -188,7 +189,7 @@ export class PerlinField extends Plane {
                     imageData,
                     index,
                     blender.blend(
-                        (isNaN(magnitude)) ? fallbackColor : colorMapperMagnitude.mapClamped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
+                        (isNaN(magnitude)) ? fallbackColor : colorMapperMagnitude.mapLooped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
                         (isNaN(data[index])) ? fallbackColor : colorMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
                         this.config.data.blending,
                     ),

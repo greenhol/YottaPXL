@@ -63,7 +63,7 @@ function calculate(
             const idx = grid.getIndex(col, row) * 3;
             data[idx] = accX * invMag; // vx
             data[idx + 1] = accY * invMag; // vy
-            data[idx + 2] = rawAmplitude;  // rawAmplitude (normalisedAmplitude filled in pass 2)
+            data[idx + 2] = rawAmplitude;  // rawAmplitude (normalised in pass 2)
 
             if (rawAmplitude < rawAmpMin) rawAmpMin = rawAmplitude;
             if (rawAmplitude > rawAmpMax) rawAmpMax = rawAmplitude;
@@ -77,7 +77,7 @@ function calculate(
         }
     }
 
-    // --- Pass 2: fill normalisedAmplitude into component 3 ---
+    // --- Pass 2: normalised Amplitude ---
     const ampRange = rawAmpMax - rawAmpMin || 1; // guard against flat field
     for (let i = 0; i < grid.size; i++) {
         const idx = i * 3;

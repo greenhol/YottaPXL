@@ -35,7 +35,7 @@ export class VectorFieldGenerator {
         return executeWorker<WorkerSetupWeatherField, Float32Array>(worker, setup);
     }
 
-    public createMatrixGradientField(input: Float32Array | Float64Array, min: number, max: number, kernelOrder: number = 6): Observable<CalculationState<Float32Array>> {
+    public createMatrixGradientField(input: Float32Array | Float64Array, min: number, max: number, kernelOrder: number = 2): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./matrix-gradient-field/matrix-gradient-field.worker.ts', import.meta.url));
         const setup: WorkerSetupMatrixGradientField = {
             gridBlueprint: this._grid.withMarginBlueprint,

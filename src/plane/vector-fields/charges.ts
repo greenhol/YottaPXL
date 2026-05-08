@@ -35,6 +35,7 @@ export class Charges extends Plane {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             potential: true,
             noiseConfig: {
+                seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
                 scaling: 1,
@@ -62,6 +63,7 @@ export class Charges extends Plane {
             CREATE.UI_FIELD_HEADER_FIELD,
             CREATE.createBoolField('potential', 'Potential', 'true: show pptential of electric field.\nfalse: standard electric field.'),
             CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldSeed('noiseConfig.seed'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),

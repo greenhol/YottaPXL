@@ -1,3 +1,4 @@
+import { XoRng } from '../../../shared/xo-rng';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { buildLayers, clampScaleFactor, perlinScalarSample } from './perlin-utils';
@@ -10,7 +11,7 @@ self.onmessage = (e) => {
     const { type, data }: { type: MessageToWorker, data: WorkerSetupPerlin; } = e.data;
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
-        const result: Float32Array = calculate(grid, data.scaleFactor, data.octaveCount, data.octaveAmplitudeFactor);
+        const result: Float32Array = calculate(grid, new XoRng(data.seed), data.scaleFactor, data.octaveCount, data.octaveAmplitudeFactor);
         console.info(`#NoiseGeneratorPerlin (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
@@ -18,6 +19,7 @@ self.onmessage = (e) => {
 
 function calculate(
     grid: GridWithMargin,
+    rng: XoRng,
     scaleFactor: number,
     octaveCount: number,
     octaveAmplitudeFactor: number,
@@ -28,7 +30,7 @@ function calculate(
     const yMax = grid.yMax.toNumber();
 
     const clampedScaleFactor = clampScaleFactor(scaleFactor, grid);
-    const layers = buildLayers(xMin, xMax, yMin, yMax, clampedScaleFactor, octaveCount, octaveAmplitudeFactor);
+    const layers = buildLayers(rng, xMin, xMax, yMin, yMax, clampedScaleFactor, octaveCount, octaveAmplitudeFactor);
 
     const data = new Float32Array(grid.size);
 

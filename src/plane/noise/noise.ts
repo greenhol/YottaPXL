@@ -29,6 +29,7 @@ export class Noise extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             config: {
+                seed: null,
                 type: NoiseType.WHITE,
                 p: 0.5,
                 scaling: 1,
@@ -37,6 +38,7 @@ export class Noise extends Plane {
         'noise',
         [
             CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldSeed('config.seed'),
             CREATE.uiFieldNoiseType('config.type'),
             CREATE.uiFieldNoiseP('config.p'),
             CREATE.uiFieldNoiseScaling('config.scaling'),

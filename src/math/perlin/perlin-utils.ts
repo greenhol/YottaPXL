@@ -1,3 +1,4 @@
+import { XoRng } from '../../../shared/xo-rng';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 
 export const MIN_PIXELS_PER_CELL = 2;
@@ -58,6 +59,7 @@ export function clampScaleFactor(scaleFactor: number, grid: GridWithMargin): num
  * apart in both axes, then extended to cover [xMin, xMax] × [yMin, yMax].
  */
 function buildGradientGrid(
+    rng: XoRng,
     xMin: number,
     xMax: number,
     yMin: number,
@@ -75,7 +77,7 @@ function buildGradientGrid(
 
     for (let r = 0; r < gridRows; r++) {
         for (let c = 0; c < gridCols; c++) {
-            const angle = Math.random() * 2 * Math.PI;
+            const angle = rng.next() * 2 * Math.PI;
             const i = (r * gridCols + c) * 2;
             gradients[i] = Math.cos(angle); // x
             gradients[i + 1] = Math.sin(angle); // y
@@ -90,6 +92,7 @@ function buildGradientGrid(
  * Each successive octave doubles the scaleFactor (lower frequency, broader shapes).
  */
 export function buildLayers(
+    rng: XoRng,
     xMin: number,
     xMax: number,
     yMin: number,
@@ -102,7 +105,7 @@ export function buildLayers(
     return Array.from({ length: totalLayers }, (_, i) => {
         const layerScaleFactor = clampedScaleFactor * Math.pow(2, i);
         return {
-            grid: buildGradientGrid(xMin, xMax, yMin, yMax, layerScaleFactor),
+            grid: buildGradientGrid(rng, xMin, xMax, yMin, yMax, layerScaleFactor),
             amplitude: i === 0 ? 1.0 : Math.pow(octaveAmplitudeFactor, i),
             scaleFactor: layerScaleFactor,
         };

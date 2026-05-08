@@ -42,6 +42,7 @@ export class MandelbrotCombinedIV extends Plane {
             interpolate: false,
             escapeValue: 100,
             noiseConfig: {
+                seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
                 scaling: 2,
@@ -71,6 +72,7 @@ export class MandelbrotCombinedIV extends Plane {
             CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.createHeader('Source Noise'),
+            CREATE.uiFieldSeed('noiseConfig.seed'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),

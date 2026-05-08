@@ -1,4 +1,4 @@
-import { ConfigUiFieldCreator, UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
+import { ConfigUiFieldCreator, UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
 import { BlendingType } from '../../math/color/color-blender';
 import { Easing } from '../../math/color/color-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
@@ -9,9 +9,15 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public readonly UI_FIELD_HEADER_BLENDING = this.createHeader('Blending');
     public readonly UI_FIELD_HEADER_GRADIENT = this.createHeader('Gradient');
     public readonly UI_FIELD_HEADER_NOISE = this.createHeader('Noise');
+    public readonly UI_FIELD_HEADER_PERLIN = this.createHeader('Perlin');
     public readonly UI_FIELD_HEADER_FRACTAL = this.createHeader('Fractal');
     public readonly UI_FIELD_HEADER_LIC = this.createHeader('LIC');
     public readonly UI_FIELD_HEADER_FIELD = this.createHeader('Field');
+
+    /** General */
+    public uiFieldSeed(path: string): UiFieldIntegerOptional {
+        return this.createIntegerOptionalField(path, 'Seed', 'Seed for RNG. If empty, RNG is simply unseeded', 0, 2147483647);
+    }
 
     /** Color */
     public uiFieldGradientSupportPoints(path: string): UiFieldString {
@@ -46,6 +52,20 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     }
     public uiFieldNoiseScaling(path: string): UiFieldInteger {
         return this.createIntegerField(path, 'Scaling', 'Noise Image is scaled by this factor', 1, 10);
+    }
+
+    /** Perlin Noise */
+    public uiFieldPerlinOctaveCount(path: string): UiFieldInteger {
+        return this.createIntegerField(path, 'Octave Count', 'Number of additional octaves', 0, 8);
+    }
+    public uiFieldPerlinOctaveAmplitude(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Octave Amp. Factor', 'Factor of the octaves amplitudes', 0.1, 10);
+    }
+    public uiFieldPerlinScaling(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Scale Factor', 'Scale Factor for Perlin Noise', 0.001, 1000);
+    }
+    public uiFieldPerlinIsohypse(path: string): UiFieldBool {
+        return this.createBoolField(path, 'Isohypse', 'Compute Isohypse from noise data');
     }
 
     /** Fractal */

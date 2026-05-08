@@ -17,6 +17,7 @@ import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
 interface PerlinFieldPlaneConfig extends PlaneConfig {
+    seed: number | null,
     scaleFactor: number,
     octaveCount: number,
     octaveAmplitudeFactor: number,
@@ -36,11 +37,13 @@ export class PerlinField extends Plane {
     override config: ModuleConfig<PerlinFieldPlaneConfig> = new ModuleConfig(
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
+            seed: null,
             scaleFactor: 1,
             octaveCount: 4,
             octaveAmplitudeFactor: 2,
             isohypse: true,
             noiseConfig: {
+                seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.1,
                 scaling: 1,
@@ -64,12 +67,14 @@ export class PerlinField extends Plane {
         },
         'perlinField',
         [
-            CREATE.createHeader('Perlin Noise'),
-            CREATE.createFloatField('scaleFactor', 'Scale Factor', 'Scale Factor for Perlin Noise', 0.001, 1000),
-            CREATE.createIntegerField('octaveCount', 'Octave Count', 'Number of additional octaves', 0, 8),
-            CREATE.createFloatField('octaveAmplitudeFactor', 'Octave Amp. Factor', 'Factor of the octaves amplitudes', 0.1, 10),
-            CREATE.createBoolField('isohypse', 'Isohypse', 'Compute Isohypse from noise data'),
+            CREATE.UI_FIELD_HEADER_PERLIN,
+            CREATE.uiFieldSeed('seed'),
+            CREATE.uiFieldPerlinOctaveCount('octaveCount'),
+            CREATE.uiFieldPerlinOctaveAmplitude('octaveAmplitudeFactor'),
+            CREATE.uiFieldPerlinScaling('scaleFactor'),
+            CREATE.uiFieldPerlinIsohypse('isohypse'),
             CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldSeed('noiseConfig.seed'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),
@@ -134,9 +139,10 @@ export class PerlinField extends Plane {
 
     private async calculateVectorField(generator: PerlinGenerator): Promise<Float32Array> {
         const fieldCalculation$ = generator.createField(
-            this.config.data.scaleFactor,
+            this.config.data.seed,
             this.config.data.octaveCount,
             this.config.data.octaveAmplitudeFactor,
+            this.config.data.scaleFactor,
         );
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Perlin 1/2'); } });
         return await extractData(fieldCalculation$, 'perlin field');
@@ -144,6 +150,7 @@ export class PerlinField extends Plane {
 
     private async calculateIsohypseVectorField(generator: PerlinGenerator, grid: GridWithMargin): Promise<Float32Array> {
         const noiseCalculation$ = generator.createNoise(
+            this.config.data.seed,
             this.config.data.scaleFactor,
             this.config.data.octaveCount,
             this.config.data.octaveAmplitudeFactor,

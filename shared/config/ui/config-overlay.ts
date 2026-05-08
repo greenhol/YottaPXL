@@ -1,6 +1,6 @@
 import { Subject, takeUntil, timer } from 'rxjs';
 import { ModuleConfig } from '../module-config';
-import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
+import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
 export class ConfigOverlay {
 
@@ -126,6 +126,9 @@ export class ConfigOverlay {
                 case 'integer':
                     row.appendChild(this.createIntegerField(field as UiFieldInteger));
                     break;
+                case 'integer?':
+                    row.appendChild(this.createIntegerOptionalField(field as UiFieldIntegerOptional));
+                    break;
                 case 'float':
                     row.appendChild(this.createFloatField(field as UiFieldFloat));
                     break;
@@ -179,6 +182,17 @@ export class ConfigOverlay {
     }
 
     private createIntegerField(field: UiFieldInteger): HTMLInputElement {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = field.id;
+        input.step = '1';
+        input.addEventListener('change', (event) => {
+            field.value = (event.target as HTMLInputElement).value;
+        });
+        return input;
+    }
+
+    private createIntegerOptionalField(field: UiFieldIntegerOptional): HTMLInputElement {
         const input = document.createElement('input');
         input.type = 'number';
         input.id = field.id;
@@ -261,6 +275,12 @@ export class ConfigOverlay {
                     field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
                         const uiField = document.getElementById(field.id) as HTMLInputElement;
                         uiField.value = v;
+                    });
+                    break;
+                case 'integer?':
+                    field.value$.pipe(takeUntil(this._abortFieldSubscriptions$)).subscribe((v) => {
+                        const uiField = document.getElementById(field.id) as HTMLInputElement;
+                        uiField.value = (v === null) ? '' : v;
                     });
                     break;
                 case 'boolean':

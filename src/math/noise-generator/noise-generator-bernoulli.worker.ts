@@ -1,3 +1,4 @@
+import { XoRng } from '../../../shared/xo-rng';
 import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
@@ -12,7 +13,7 @@ self.onmessage = (e) => {
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const baseGrid = (data.scaleFactor == 1) ? grid : new GridWithoutRange(grid.width, grid.height);
-        let result: Float32Array = createBernoulliNoise(baseGrid, data.p);
+        let result: Float32Array = createBernoulliNoise(baseGrid, new XoRng(data.seed), data.p);
         switch (data.type) {
             case BernoulliNoiseType.ISOLATED:
                 result = createIsolatedNoise(result, baseGrid);
@@ -27,11 +28,11 @@ self.onmessage = (e) => {
     }
 };
 
-function createBernoulliNoise(grid: GridReader, p: number): Float32Array {
+function createBernoulliNoise(grid: GridReader, rng: XoRng, p: number): Float32Array {
     const data = new Float32Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            data[grid.getIndex(col, row)] = (Math.random() < p) ? 0 : 1;
+            data[grid.getIndex(col, row)] = (rng.next() < p) ? 0 : 1;
         }
     }
     return data;

@@ -1,3 +1,4 @@
+import { XoRng } from '../../../shared/xo-rng';
 import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
@@ -11,20 +12,20 @@ self.onmessage = (e) => {
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const baseGrid = (data.scaleFactor == 1) ? grid : new GridWithoutRange(grid.width, grid.height);
-        let result: Float32Array = calculate(baseGrid, data.mean, data.range, data.standardDeviation);
+        let result: Float32Array = calculate(baseGrid, new XoRng(data.seed), data.mean, data.range, data.standardDeviation);
         result = upscaleNoise(baseGrid, result, grid, data.scaleFactor);
         console.info(`#NoiseGeneratorGaussian (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(grid: GridReader, mean: number, range: number, standardDeviation: number): Float32Array {
+function calculate(grid: GridReader, rng: XoRng, mean: number, range: number, standardDeviation: number): Float32Array {
     const min = mean - range / 2 * standardDeviation;
     const max = mean + range / 2 * standardDeviation;
     const data = new Float32Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            let [z0, z1] = boxMullerTransform();
+            let [z0, z1] = boxMullerTransform(rng);
             z0 = z0 * standardDeviation + mean;
             z0 = Math.max(min, Math.min(max, z0));
             z1 = z1 * standardDeviation + mean;
@@ -38,11 +39,11 @@ function calculate(grid: GridReader, mean: number, range: number, standardDeviat
     return data;
 }
 
-function boxMullerTransform(): [number, number] {
+function boxMullerTransform(rng: XoRng): [number, number] {
     let u1 = 0, u2 = 0;
     // Ensure u1 is not 0 to avoid log(0)
-    while (u1 === 0) u1 = Math.random();
-    while (u2 === 0) u2 = Math.random();
+    while (u1 === 0) u1 = rng.next();
+    while (u2 === 0) u2 = rng.next();
     const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
     const z1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
     return [z0, z1];

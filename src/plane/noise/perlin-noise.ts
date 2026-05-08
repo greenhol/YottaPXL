@@ -10,9 +10,10 @@ import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
 interface PerlinNoisePlaneConfig extends PlaneConfig {
-    scaleFactor: number,
+    seed: number | null,
     octaveCount: number,
     octaveAmplitudeFactor: number,
+    scaleFactor: number,
     gradient: ColorMapperConfig,
 }
 
@@ -24,9 +25,10 @@ export class PerlinNoise extends Plane {
     override config: ModuleConfig<PerlinNoisePlaneConfig> = new ModuleConfig(
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
-            scaleFactor: 1,
+            seed: null,
             octaveCount: 4,
             octaveAmplitudeFactor: 2,
+            scaleFactor: 1,
             gradient: {
                 supportPoints: '0:#FFFFFF, 1:#2222FF',
                 easing: Easing.LAB_LINEAR,
@@ -35,10 +37,11 @@ export class PerlinNoise extends Plane {
         },
         'perlinNoise',
         [
-            CREATE.createHeader('Perlin Noise'),
-            CREATE.createFloatField('scaleFactor', 'Scale Factor', 'Scale Factor for Perlin Noise', 0.001, 1000),
-            CREATE.createIntegerField('octaveCount', 'Octave Count', 'Number of additional octaves', 0, 8),
-            CREATE.createFloatField('octaveAmplitudeFactor', 'Octave Amp. Factor', 'Factor of the octaves amplitudes', 0.1, 10),
+            CREATE.UI_FIELD_HEADER_PERLIN,
+            CREATE.uiFieldSeed('seed'),
+            CREATE.uiFieldPerlinOctaveCount('octaveCount'),
+            CREATE.uiFieldPerlinOctaveAmplitude('octaveAmplitudeFactor'),
+            CREATE.uiFieldPerlinScaling('scaleFactor'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
@@ -58,9 +61,10 @@ export class PerlinNoise extends Plane {
         this.setProgress(0);
         const generator = new PerlinGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
         const calculation$ = generator.createNoise(
-            this.config.data.scaleFactor,
+            this.config.data.seed,
             this.config.data.octaveCount,
             this.config.data.octaveAmplitudeFactor,
+            this.config.data.scaleFactor,
         );
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress); }

@@ -36,6 +36,7 @@ export class MandelbrotVector extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             noiseConfig: {
+                seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED,
                 p: 0.3,
                 scaling: 2,
@@ -57,7 +58,8 @@ export class MandelbrotVector extends Plane {
         },
         'mandelbrotVectorConfig',
         [
-            CREATE.createHeader('Source Image'),
+            CREATE.createHeader('Source Noise'),
+            CREATE.uiFieldSeed('noiseConfig.seed'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),

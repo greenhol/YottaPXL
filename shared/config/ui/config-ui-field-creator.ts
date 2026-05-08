@@ -1,4 +1,4 @@
-import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldString, UiFieldStringEnum } from './config-ui-field';
+import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
 export abstract class ConfigUiFieldCreator {
 
@@ -25,6 +25,16 @@ export abstract class ConfigUiFieldCreator {
         max: number = Number.MAX_SAFE_INTEGER,
     ): UiFieldInteger {
         return new UiFieldInteger(path, label, description, min, max);
+    }
+
+    public createIntegerOptionalField(
+        path: string,
+        label: string,
+        description: string = '',
+        min: number = Number.MIN_SAFE_INTEGER,
+        max: number = Number.MAX_SAFE_INTEGER,
+    ): UiFieldIntegerOptional {
+        return new UiFieldIntegerOptional(path, label, description, min, max);
     }
 
     public createFloatField(

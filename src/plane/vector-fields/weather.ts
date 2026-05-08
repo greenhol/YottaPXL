@@ -78,6 +78,7 @@ export class Weather extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             noiseConfig: {
+                seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
                 p: 0.05,
                 scaling: 1,
@@ -103,6 +104,7 @@ export class Weather extends Plane {
         'weatherConfig',
         [
             CREATE.UI_FIELD_HEADER_NOISE,
+            CREATE.uiFieldSeed('noiseConfig.seed'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
             CREATE.uiFieldNoiseP('noiseConfig.p'),
             CREATE.uiFieldNoiseScaling('noiseConfig.scaling'),

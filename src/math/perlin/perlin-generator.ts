@@ -12,24 +12,26 @@ export class PerlinGenerator {
         this._grid = grid;
     }
 
-    public createNoise(scaleFactor: number = 1, octaveCount: number = 0, octaveAmplitudeFactor: number = 1): Observable<CalculationState<Float32Array>> {
+    public createNoise(seed: number | null, octaveCount: number, octaveAmplitudeFactor: number, scaleFactor: number): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./perlin-generator-scalar.worker.ts', import.meta.url));
         const setup: WorkerSetupPerlin = {
             gridBlueprint: this._grid.withMarginBlueprint,
-            scaleFactor: scaleFactor,
+            seed: seed,
             octaveCount: octaveCount,
             octaveAmplitudeFactor: octaveAmplitudeFactor,
+            scaleFactor: scaleFactor,
         };
         return executeWorker<WorkerSetupPerlin, Float32Array>(worker, setup);
     }
 
-    public createField(scaleFactor: number = 1, octaveCount: number = 0, octaveAmplitudeFactor: number = 1): Observable<CalculationState<Float32Array>> {
+    public createField(seed: number | null, octaveCount: number, octaveAmplitudeFactor: number, scaleFactor: number): Observable<CalculationState<Float32Array>> {
         const worker = new Worker(new URL('./perlin-generator-vector.worker.ts', import.meta.url));
         const setup: WorkerSetupPerlin = {
             gridBlueprint: this._grid.withMarginBlueprint,
-            scaleFactor: scaleFactor,
+            seed: seed,
             octaveCount: octaveCount,
             octaveAmplitudeFactor: octaveAmplitudeFactor,
+            scaleFactor: scaleFactor,
         };
         return executeWorker<WorkerSetupPerlin, Float32Array>(worker, setup);
     }

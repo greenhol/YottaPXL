@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
-export type UiFieldType = 'header' | 'string' | 'integer' | 'float' | 'boolean' | 'color' | 'enum';
+export type UiFieldType = 'header' | 'string' | 'integer' | 'integer?' | 'float' | 'boolean' | 'color' | 'enum';
 
 export abstract class ConfigUiField<T> {
 
@@ -59,7 +59,7 @@ export abstract class ConfigUiField<T> {
         if (parent[key] === undefined) {
             throw new Error(`Property ${key} does not exist in the object.`);
         }
-        this.value = parent[key].toString();
+        this.value = (parent[key] == null) ? 'null' : parent[key].toString();
     }
 
     public saveToData(data: any) {
@@ -149,6 +149,35 @@ export class UiFieldInteger extends ConfigUiField<number> {
     }
 
     override validate(v: string): number {
+        const asInteger = parseInt(v);
+        return Math.min(Math.max(asInteger, this._min), this._max);
+    }
+}
+
+export class UiFieldIntegerOptional extends ConfigUiField<number | null> {
+
+    private _min: number;
+    private _max: number;
+
+    constructor(
+        path: string,
+        label: string,
+        description: string,
+        min: number = Number.MIN_SAFE_INTEGER,
+        max: number = Number.MAX_SAFE_INTEGER,
+    ) {
+        super(path, 'integer?', label, description);
+        this._min = min;
+        this._max = max;
+        if (this._max <= this._min) throw Error(`min and max values invalid: min=${min}, max=${max}`);
+    }
+
+    override get fullDescription() {
+        return `Int? ${this._min}..${this._max}: ${this.description}`;
+    }
+
+    override validate(v: string): number | null {
+        if (v === '') return null;
         const asInteger = parseInt(v);
         return Math.min(Math.max(asInteger, this._min), this._max);
     }

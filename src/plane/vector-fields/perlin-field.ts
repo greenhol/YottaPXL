@@ -151,9 +151,9 @@ export class PerlinField extends Plane {
     private async calculateIsohypseVectorField(generator: PerlinGenerator, grid: GridWithMargin): Promise<Float32Array> {
         const noiseCalculation$ = generator.createNoise(
             this.config.data.seed,
-            this.config.data.scaleFactor,
             this.config.data.octaveCount,
             this.config.data.octaveAmplitudeFactor,
+            this.config.data.scaleFactor,
         );
         noiseCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Perlin 1/2'); } });
         const perlinNoise = await extractData(noiseCalculation$, 'perlin field 1/2');

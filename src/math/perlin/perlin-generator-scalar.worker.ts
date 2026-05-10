@@ -1,7 +1,7 @@
 import { XoRng } from '../../../shared/xo-rng';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { buildLayers, clampScaleFactor, perlinScalarSample } from './perlin-utils';
+import { buildLayers, clampScaleFactor, perlinScalarSampleForLayer } from './perlin-utils';
 import { WorkerSetupPerlin } from './worker-setup-perlin';
 
 const PROGRESS_INTERVAL = 0.05; // report every 5 %
@@ -46,8 +46,7 @@ function calculate(
 
             let value = 0;
             for (let l = 0; l < layers.length; l++) {
-                const { grid: g, amplitude, scaleFactor: sf } = layers[l];
-                value += amplitude * perlinScalarSample(mx, my, g, sf);
+                value += perlinScalarSampleForLayer(mx, my, layers[l]);
             }
 
             const idx = grid.getIndex(col, row);

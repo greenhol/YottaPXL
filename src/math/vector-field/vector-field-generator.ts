@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { executeWorker } from '../../worker/execute-worker';
 import { CalculationState } from '../../worker/types';
+import { WorkerSetupAtmosphereField } from './atmosphere-field/worker-setup-atmosphere-field';
 import { Charge } from './charge-field/types';
 import { WorkerSetupChargeField } from './charge-field/worker-setup-charge-field';
 import { WorkerSetupMatrixGradientField } from './matrix-gradient-field/worker-setup-matrix-gradient-field';
@@ -33,6 +34,14 @@ export class VectorFieldGenerator {
             coriolisForce: coriolisForce,
         };
         return executeWorker<WorkerSetupWeatherField, Float32Array>(worker, setup);
+    }
+
+    public createAtmosphereField(): Observable<CalculationState<Float32Array>> {
+        const worker = new Worker(new URL('./atmosphere-field/atmosphere-field.worker.ts', import.meta.url));
+        const setup: WorkerSetupAtmosphereField = {
+            gridBlueprint: this._grid.withMarginBlueprint,
+        };
+        return executeWorker<WorkerSetupAtmosphereField, Float32Array>(worker, setup);
     }
 
     public createMatrixGradientField(input: Float32Array | Float64Array, min: number, max: number, kernelOrder: number = 2): Observable<CalculationState<Float32Array>> {

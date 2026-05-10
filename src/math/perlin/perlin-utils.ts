@@ -191,6 +191,18 @@ export function perlinScalarSample(
 }
 
 /**
+ * Returns a raw Perlin noise scalar value in approximately [-1, 1]
+ * for the math-space point (mx, my) for a single layer.
+ */
+export function perlinScalarSampleForLayer(
+    mx: number,
+    my: number,
+    layer: PerlinLayer,
+): number {
+    return layer.amplitude * perlinScalarSample(mx, my, layer.grid, layer.scaleFactor);
+}
+
+/**
  * Returns the bilinearly interpolated gradient vector at math-space point
  * (mx, my) as [gx, gy]. The result is NOT normalised — its magnitude encodes
  * directional coherence among the four surrounding grid gradients.

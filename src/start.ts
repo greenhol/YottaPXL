@@ -15,6 +15,7 @@ import { Noise } from './plane/noise/noise';
 import { PerlinNoise } from './plane/noise/perlin-noise';
 import { Plane } from './plane/plane';
 import { PLANE_SELECTOR, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
+import { Atmosphere } from './plane/vector-fields/atmosphere';
 import { Charges } from './plane/vector-fields/charges';
 import { PerlinField } from './plane/vector-fields/perlin-field';
 import { Weather } from './plane/vector-fields/weather';
@@ -103,54 +104,19 @@ export class Start {
         this._plane?.onDestroy();
         this._config.data.currentPlaneId = planeId;
         switch (planeId) {
-            case 'NOISE': {
-                this._plane = new Noise(this._grid);
-                break;
-            }
-            case 'PERLIN_NOISE': {
-                this._plane = new PerlinNoise(this._grid);
-                break;
-            }
-            case 'CHARGES': {
-                this._plane = new Charges(this._grid);
-                break;
-            }
-            case 'WEATHER': {
-                this._plane = new Weather(this._grid);
-                break;
-            }
-            case 'PERLIN_FIELD': {
-                this._plane = new PerlinField(this._grid);
-                break;
-            }
-            case 'MANDELBROT_ITERATIONS': {
-                this._plane = new MandelbrotIterations(this._grid);
-                break;
-            }
-            case 'MANDELBROT_DISTANCE': {
-                this._plane = new MandelbrotDistance(this._grid);
-                break;
-            }
-            case 'MANDELBROT_VECTOR': {
-                this._plane = new MandelbrotVector(this._grid);
-                break;
-            }
-            case 'MANDELBROT_COMBINED_ID': {
-                this._plane = new MandelbrotCombinedID(this._grid);
-                break;
-            }
-            case 'MANDELBROT_COMBINED_IV': {
-                this._plane = new MandelbrotCombinedIV(this._grid);
-                break;
-            }
-            case 'GRADIENT': {
-                this._plane = new Gradient(this._grid);
-                break;
-            }
-            case 'COLOR_BLEND': {
-                this._plane = new ColorBlending(this._grid);
-                break;
-            }
+            case 'NOISE': this._plane = new Noise(this._grid); break;
+            case 'PERLIN_NOISE': this._plane = new PerlinNoise(this._grid); break;
+            case 'CHARGES': this._plane = new Charges(this._grid); break;
+            case 'WEATHER': this._plane = new Weather(this._grid); break;
+            case 'ATMOSPHERE': this._plane = new Atmosphere(this._grid); break;
+            case 'PERLIN_FIELD': this._plane = new PerlinField(this._grid); break;
+            case 'MANDELBROT_ITERATIONS': this._plane = new MandelbrotIterations(this._grid); break;
+            case 'MANDELBROT_DISTANCE': this._plane = new MandelbrotDistance(this._grid); break;
+            case 'MANDELBROT_VECTOR': this._plane = new MandelbrotVector(this._grid); break;
+            case 'MANDELBROT_COMBINED_ID': this._plane = new MandelbrotCombinedID(this._grid); break;
+            case 'MANDELBROT_COMBINED_IV': this._plane = new MandelbrotCombinedIV(this._grid); break;
+            case 'GRADIENT': this._plane = new Gradient(this._grid); break;
+            case 'COLOR_BLEND': this._plane = new ColorBlending(this._grid); break;
         }
         this.subscribeToBusyState();
         this.subscribeToSelection();

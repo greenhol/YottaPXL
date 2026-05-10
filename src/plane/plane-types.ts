@@ -6,6 +6,7 @@ export type PlaneId =
     'MANDELBROT_COMBINED_IV' |
     'CHARGES' |
     'WEATHER' |
+    'ATMOSPHERE' |
     'PERLIN_FIELD' |
     'NOISE' |
     'PERLIN_NOISE' |
@@ -31,6 +32,7 @@ export const VALID_PLANE_IDS: PlaneId[] = [
     'MANDELBROT_COMBINED_IV',
     'CHARGES',
     'WEATHER',
+    'ATMOSPHERE',
     'PERLIN_FIELD',
     'NOISE',
     'PERLIN_NOISE',
@@ -52,7 +54,8 @@ export const PLANE_SELECTOR: PlaneGroup[] = [
         name: 'Vector Fields',
         planes: [
             { id: 'CHARGES', short: 'Charge Field', description: 'A vector field visualization for a charge field using an LIC algorithm' },
-            { id: 'WEATHER', short: 'Weather patterns', description: 'A vector field visualization for for weather patterns of pressure systems' },
+            { id: 'WEATHER', short: 'Weather patterns', description: 'A vector field visualization for weather patterns of pressure systems' },
+            { id: 'ATMOSPHERE', short: 'Atmosphere', description: 'A vector field visualization for a simulated gas planet atmosphere' },
             { id: 'PERLIN_FIELD', short: 'Perlin Field', description: 'A vector field visualization for perlin gradient fields' },
         ],
     }, {

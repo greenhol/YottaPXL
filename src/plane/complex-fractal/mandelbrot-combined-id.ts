@@ -74,7 +74,7 @@ export class MandelbrotCombinedID extends Plane {
         this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, GridRange.rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
-        this.setProgress(0);
+        this.resetProgress();
         // Iterations
         const calculator = new MandelbrotCalculator();
         const calculationIterations$ = this.config.data.interpolate

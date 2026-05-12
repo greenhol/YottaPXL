@@ -57,7 +57,7 @@ export class MandelbrotDistance extends Plane {
         this._effectiveMaxIterations = estimateMaxIterations(this.config.data.maxIterations, GridRange.rangeXdiff(INITIAL_GRID_RANGE), this.grid.xDiff);
         console.log(`#calculate - with max iterations ${this._effectiveMaxIterations}`);
 
-        this.setProgress(0);
+        this.resetProgress();
         const calculation$ = calculator.calculateDistances(this.grid, this._effectiveMaxIterations, this.config.data.escapeValue);
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress); }

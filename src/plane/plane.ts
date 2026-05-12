@@ -4,13 +4,15 @@ import { ModuleConfig } from '../../shared/config';
 import { Grid } from '../grid/grid';
 import { GridRange, GridRangeSerialized } from '../grid/grid-range';
 import { RGB } from '../types';
+import { PROGRESS_INIT, ProgressUpdate } from '../worker/progress';
 
 export interface PlaneConfig {
     gridRange: GridRangeSerialized;
 }
 
-export interface Progress {
+export interface ProgressDisplay {
     percentage: number;
+    estimate: number;
     step: string;
 }
 
@@ -21,8 +23,8 @@ export abstract class Plane implements Initializable {
     private _image$ = new BehaviorSubject<ImageDataArray>(new Uint8ClampedArray(0));
     public image$: Observable<ImageDataArray> = this._image$;
 
-    private _busy$ = new BehaviorSubject<Progress | null>(null);
-    public busy$: Observable<Progress | null> = this._busy$;
+    private _busy$ = new BehaviorSubject<ProgressDisplay | null>(null);
+    public busy$: Observable<ProgressDisplay | null> = this._busy$;
 
     constructor(grid: Grid) {
         this._grid = grid;
@@ -76,8 +78,12 @@ export abstract class Plane implements Initializable {
         this._busy$.next(null);
     }
 
-    public setProgress(progress: number, step: string = "") {
-        this._busy$.next({ percentage: progress, step: step });
+    public resetProgress() {
+        this.setProgress(PROGRESS_INIT);
+    }
+
+    public setProgress(progress: ProgressUpdate, step: string = "") {
+        this._busy$.next({ percentage: progress.percentage, estimate: progress.estimate, step: step });
     }
 
     public onDestroy(): void {

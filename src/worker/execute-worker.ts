@@ -1,8 +1,9 @@
 import { BehaviorSubject, Observable } from 'rxjs';
+import { PROGRESS_DONE, PROGRESS_INIT } from './progress';
 import { CalculationState, MessageFromWorker, MessageToWorker } from './types';
 
 export function executeWorker<T, U>(worker: Worker, setup: T, transferrable: Array<any> = []): Observable<CalculationState<U>> {
-    const calculationState$ = new BehaviorSubject<CalculationState<U>>({ progress: 0 });
+    const calculationState$ = new BehaviorSubject<CalculationState<U>>({ progress: PROGRESS_INIT });
 
     worker.postMessage({ type: MessageToWorker.START, data: setup }, transferrable);
     worker.onmessage = (e) => {
@@ -12,7 +13,7 @@ export function executeWorker<T, U>(worker: Worker, setup: T, transferrable: Arr
                 break;
             }
             case MessageFromWorker.RESULT: {
-                calculationState$.next({ progress: 100, data: e.data.result as U });
+                calculationState$.next({ progress: PROGRESS_DONE, data: e.data.result as U });
                 calculationState$.complete();
                 worker.terminate();
                 break;

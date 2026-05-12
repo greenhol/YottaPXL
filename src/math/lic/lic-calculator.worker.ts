@@ -1,5 +1,6 @@
 import { Grid } from '../../grid/grid';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { Progress } from '../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { VectorFieldReader } from './../vector-field/vector-field-reader';
 import { PointInPixel } from './types';
@@ -22,7 +23,8 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
     const field = new VectorFieldReader(sourceGrid, setup.field, setup.orthogonal);
 
     const targetData = new Float64Array(targetGrid.size);
-    let cnt = 0;
+    const progress = new Progress(targetGrid.height, 0.025);
+
     for (let row = 0; row < targetGrid.height; row++) {
         for (let col = 0; col < targetGrid.width; col++) {
             let length = setup.licConfig.maxLength;
@@ -35,12 +37,8 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
                 Number.MIN_SAFE_INTEGER :
                 calcLicPixel(col, row, length, sourceGrid, image, field);
         }
-        cnt += targetGrid.width;
-        if (cnt > 25000) {
-            const progress = Math.round(100 * (row * targetGrid.width) / targetGrid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
     return targetData;
 }

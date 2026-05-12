@@ -237,7 +237,9 @@ export class Start {
                         busyIndicator.className = 'busyIndicator--busy';
                         progressBar.classList.remove('gone');
                         progressIndicator.style.width = `${progress.percentage * 3.92}px`;
-                        progressStep.textContent = progress.step;
+                        progressStep.textContent = (progress.step != '')
+                            ? `${progress.step}${progress.estimate > 0 ? ` (~${progress.estimate}s left)` : ''}`
+                            : `${progress.estimate > 0 ? `~${progress.estimate}s left` : ''}`;
                         resolutionSelect.classList.add('gone');
                         exportButton.classList.add('gone');
                         setConfigButton.classList.add('gone');

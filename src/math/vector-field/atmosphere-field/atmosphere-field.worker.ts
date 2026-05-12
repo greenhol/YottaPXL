@@ -1,5 +1,6 @@
 import { XoRng } from '../../../../shared/xo-rng';
 import { GridWithMargin } from '../../../grid/grid-with-margin';
+import { Progress } from '../../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../../worker/types';
 import { buildLayers, clampScaleFactor, PerlinLayer, perlinScalarSampleForLayer } from '../../perlin/perlin-utils';
 import { WorkerSetupAtmosphereField } from './worker-setup-atmosphere-field';
@@ -37,7 +38,6 @@ self.onmessage = (e) => {
 function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Float32Array(grid.size * 3);
-    let cnt = 0;
     const yDiff = grid.yMax.sub(grid.yMin).toNumber();
 
     const xMin = grid.range.xMin.toNumber();
@@ -62,6 +62,7 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     //     });
     // }
 
+    const progress = new Progress(grid.height);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
@@ -71,12 +72,8 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
             data[index + 1] = vY;
             data[index + 2] = magnitude;
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
     return data;
 }

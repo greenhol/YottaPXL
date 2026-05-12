@@ -90,7 +90,7 @@ export class Charges extends Plane {
     }
 
     private async calculate() {
-        this.setProgress(0);
+        this.resetProgress();
 
         // Create Source Field
         const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);

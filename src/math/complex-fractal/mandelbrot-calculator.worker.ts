@@ -1,5 +1,6 @@
 import { Grid } from '../../grid/grid';
 import { BigDecimal } from '../../types';
+import { Progress } from '../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { CalculationType } from './types';
 import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
@@ -244,18 +245,14 @@ function computeOrbitForCandidate(
 /** -------------------------------------------------------------------------------------------------------- */
 function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateIterationsForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
     return targetData;
 }
@@ -301,18 +298,14 @@ function calculateIterationsForPixelBigDecimal(col: number, row: number, grid: G
 function calculateIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
     return targetData;
 }
@@ -364,18 +357,14 @@ function calculateIterationsPTForPixel(
 /** --------------------------------------------------------------------------------------------------------------- */
 function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateSmoothIterationForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
     return targetData;
@@ -410,18 +399,14 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
 function calculateSmoothIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateSmoothIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
     return targetData;
@@ -471,18 +456,14 @@ function calculateSmoothIterationsPTForPixel(
 /** ------------------------------------------------------------------------------------------------------- */
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateDistanceForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
     return targetData;
@@ -521,18 +502,14 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
 function calculateDistancesPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    let cnt = 0;
+    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateDistancePTForPixel(col, row, orbit, setup.maxIterations);
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
     return targetData;

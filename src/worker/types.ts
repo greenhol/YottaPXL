@@ -1,5 +1,7 @@
+import { ProgressUpdate } from './progress';
+
 export interface CalculationState<T> {
-    progress: number;
+    progress: ProgressUpdate;
     data?: T;
 }
 

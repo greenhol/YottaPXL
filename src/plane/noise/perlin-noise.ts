@@ -58,7 +58,7 @@ export class PerlinNoise extends Plane {
     }
 
     private async createAndDraw() {
-        this.setProgress(0);
+        this.resetProgress();
         const generator = new PerlinGenerator(new GridWithMargin(this.grid.resolution, this.grid.range, 0));
         const calculation$ = generator.createNoise(
             this.config.data.seed,
@@ -67,7 +67,9 @@ export class PerlinNoise extends Plane {
             this.config.data.scaleFactor,
         );
         calculation$.subscribe({
-            next: (state) => { this.setProgress(state.progress); }
+            next: (state) => {
+                this.setProgress(state.progress);
+            }
         });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {

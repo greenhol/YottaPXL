@@ -1,10 +1,9 @@
 import { XoRng } from '../../../shared/xo-rng';
 import { GridWithMargin } from '../../grid/grid-with-margin';
+import { PROGRESS_DONE, Progress } from '../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { buildLayers, clampScaleFactor, perlinGradientSample } from './perlin-utils';
 import { WorkerSetupPerlin } from './worker-setup-perlin';
-
-const PROGRESS_INTERVAL = 0.05; // report every 5 %
 
 self.onmessage = (e) => {
     const timeStamp = Date.now();
@@ -40,8 +39,7 @@ function calculate(
     let rawAmpMax = -Infinity;
 
     // --- Pass 1: accumulate gradient layers per pixel ---
-    let nextProgressThreshold = PROGRESS_INTERVAL;
-
+    const progress = new Progress(grid.height);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [mx, my] = grid.pixelToMath(col, row);
@@ -71,12 +69,8 @@ function calculate(
             if (rawAmplitude > rawAmpMax) rawAmpMax = rawAmplitude;
         }
 
-        // Progress updates cover 0–90% during pass 1
-        const progress = ((row + 1) / grid.height) * 0.9;
-        if (progress >= nextProgressThreshold) {
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress: Math.round(progress * 100) });
-            nextProgressThreshold += PROGRESS_INTERVAL;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
     // --- Pass 2: normalised Amplitude ---
@@ -87,7 +81,7 @@ function calculate(
     }
 
     // Final progress update after both passes complete
-    self.postMessage({ type: MessageFromWorker.UPDATE, progress: 100 });
+    self.postMessage({ type: MessageFromWorker.UPDATE, progress: PROGRESS_DONE });
 
     return data;
 }

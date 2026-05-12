@@ -55,7 +55,7 @@ export class Noise extends Plane {
     }
 
     private async createAndDraw() {
-        this.setProgress(0);
+        this.resetProgress();
         const calculation$ = this._generator.createNoise(this.config.data.config);
         calculation$.subscribe({
             next: (state) => { this.setProgress(state.progress); }

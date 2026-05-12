@@ -1,4 +1,5 @@
 import { GridWithMargin } from '../../../grid/grid-with-margin';
+import { Progress } from '../../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../../worker/types';
 import { PressureRegion } from './types';
 import { WorkerSetupWeatherField } from './worker-setup-weather-field';
@@ -20,8 +21,8 @@ self.onmessage = (e) => {
 function calculate(setup: WorkerSetupWeatherField): Float32Array {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Float32Array(grid.size * 3);
-    let cnt = 0;
 
+    const progress = new Progress(grid.height);
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
@@ -31,12 +32,8 @@ function calculate(setup: WorkerSetupWeatherField): Float32Array {
             data[index + 1] = vY;
             data[index + 2] = magnitude;
         }
-        cnt += grid.width;
-        if (cnt > 50000) {
-            const progress = Math.round(100 * (row * grid.width) / grid.size);
-            self.postMessage({ type: MessageFromWorker.UPDATE, progress });
-            cnt = 0;
-        }
+        const progressUpdate = progress.update(row);
+        if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
     return data;
 }

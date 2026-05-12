@@ -16,13 +16,18 @@ self.onmessage = (e) => {
         let result: Float32Array = createBernoulliNoise(baseGrid, new XoRng(data.seed), data.p);
         switch (data.type) {
             case BernoulliNoiseType.ISOLATED:
+            case BernoulliNoiseType.ISOLATED_ROUND:
                 result = createIsolatedNoise(result, baseGrid);
                 break;
             case BernoulliNoiseType.ISOLATED_BIG:
                 result = createIsolatedBigNoise(result, baseGrid);
                 break;
         }
-        result = upscaleNoise(baseGrid, result, grid, data.scaleFactor);
+
+        result = (data.type === BernoulliNoiseType.ISOLATED_ROUND)
+            ? upscaleWithCircles(baseGrid, result, grid, data.scaleFactor)
+            : upscaleNoise(baseGrid, result, grid, data.scaleFactor);
+
         console.info(`#NoiseGeneratorBernoulli (worker) - calculation for ${data.type} done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
@@ -119,4 +124,65 @@ function createIsolatedBigNoise(data: Float32Array, grid: GridReader): Float32Ar
         }
     }
     return data;
+}
+
+function upscaleWithCircles(sourceGrid: GridReader, sourceData: Float32Array, targetGrid: GridReader, scale: number): Float32Array {
+    if (scale == 1) return sourceData;
+    const data = new Float32Array(targetGrid.size).fill(1);
+    const radius = scale - 0.5;
+    for (let baseRow = 0; baseRow < sourceGrid.height; baseRow++) {
+        for (let baseCol = 0; baseCol < sourceGrid.width; baseCol++) {
+            const value = sourceData[sourceGrid.getIndex(baseCol, baseRow)];
+            if (value == 0) {
+                drawCircle(
+                    data,
+                    targetGrid.width,
+                    targetGrid.height,
+                    baseCol * scale,
+                    baseRow * scale,
+                    radius,
+                    value,
+                );
+            }
+        }
+    }
+    return data;
+}
+
+function drawCircle(
+    data: Float32Array,
+    width: number,
+    height: number,
+    cCol: number,
+    cRow: number,
+    radius: number,
+    value: number,
+    aaWidth: number = 1.0
+) {
+    // Only iterate over the bounding box of the circle
+    const minCol = Math.max(0, Math.floor(cCol - radius - aaWidth));
+    const maxCol = Math.min(width - 1, Math.ceil(cCol + radius + aaWidth));
+    const minRow = Math.max(0, Math.floor(cRow - radius - aaWidth));
+    const maxRow = Math.min(height - 1, Math.ceil(cRow + radius + aaWidth));
+
+    for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+            const dx = col - cCol;
+            const dy = row - cRow;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            const signedDist = dist - radius;
+            const alpha = 1.0 - smoothstep(-aaWidth, aaWidth, signedDist);
+
+            if (alpha <= 0) continue;
+
+            const idx = row * width + col;
+            data[idx] = data[idx] * (1 - alpha) + value * alpha;
+        }
+    }
+}
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
 }

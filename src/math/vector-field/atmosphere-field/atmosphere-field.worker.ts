@@ -44,7 +44,11 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     const xMax = grid.range.xMax.toNumber();
     const yMin = grid.yMin.toNumber();
     const yMax = grid.yMax.toNumber();
-    const clampedScaleFactor = clampScaleFactor(9, grid); // Grid size of 9°
+
+    const perlinBandAmplitude = buildLayers(new XoRng(null), xMin, xMax, yMin, yMax, clampScaleFactor(8, grid), 0, 1)[0];
+    const perlinBandPhase = buildLayers(new XoRng(null), xMin, xMax, yMin, yMax, clampScaleFactor(8, grid), 0, 1)[0];
+    const perlinBandFreqMod = buildLayers(new XoRng(null), xMin, xMax, yMin, yMax, clampScaleFactor(8, grid), 0, 1)[0];
+    const clampedScaleFactor = clampScaleFactor(12, grid); // Grid size of x°
     const perlinX = buildLayers(new XoRng(null), xMin, xMax, yMin, yMax, clampedScaleFactor, 0, 1)[0];
     const perlinY = buildLayers(new XoRng(null), xMin, xMax, yMin, yMax, clampedScaleFactor, 0, 1)[0];
 
@@ -61,9 +65,8 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
-            const i = grid.getIndex(col, row);
-            const [vX, vY, magnitude] = computeVector(i, x, y, yDiff, perlinX, perlinY);
-            const index = i * 3;
+            const [vX, vY, magnitude] = computeVector(x, y, yDiff, perlinBandAmplitude, perlinBandPhase, perlinBandFreqMod, perlinX, perlinY);
+            const index = grid.getIndex(col, row) * 3;
             data[index] = vX;
             data[index + 1] = vY;
             data[index + 2] = magnitude;
@@ -78,9 +81,27 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     return data;
 }
 
-function computeVector(i: number, x: number, y: number, yDiff: number, perlinX: PerlinLayer, perlinY: PerlinLayer): [number, number, number] {
-    // Combine components
-    let vX = Math.sin(y / yDiff * 5 * Math.PI);
+function computeVector(
+    x: number,
+    y: number,
+    yDiff: number,
+    perlinBandAmplitude: PerlinLayer,
+    perlinBandPhase: PerlinLayer,
+    perlinBandFreqMod: PerlinLayer,
+    perlinX: PerlinLayer,
+    perlinY: PerlinLayer,
+): [number, number, number] {
+    // Bands
+    const amplitudeFactor = 0.3;
+    const amplitude = 1 + perlinScalarSampleForLayer(perlinBandAmplitude.scaleFactor / 2, y, perlinBandAmplitude) * amplitudeFactor;
+
+    const phaseFactor = 0.2;
+    const phase = perlinScalarSampleForLayer(perlinBandPhase.scaleFactor / 2, y, perlinBandPhase) * Math.PI * phaseFactor;
+
+    const freqModFactor = 0.3;
+    const freqMod = 1 + perlinScalarSampleForLayer(perlinBandFreqMod.scaleFactor / 2, y, perlinBandFreqMod) * freqModFactor;
+
+    let vX = Math.sin(y / yDiff * 5 * Math.PI * freqMod + phase) * amplitude;
     let vY = 0;
 
     VORTICES.forEach((vortex) => {

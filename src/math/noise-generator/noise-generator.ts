@@ -13,6 +13,7 @@ export enum NoiseType {
     BERNOULLI = 'Bernoulli Noise',
     BERNOULLI_ISOLATED = 'Bernoulli Noise Isolated',
     BERNOULLI_ISOLATED_BIG = 'Bernoulli Noise Isolated Big',
+    BERNOULLI_ISOLATED_ROUND = 'Bernoulli Noise Isolated Round',
     GAUSSIAN = 'Gaussian Noise',
     BIASED_LOWER = 'Biased Lower',
     BIASED_UPPER = 'Biased Upper',
@@ -61,6 +62,13 @@ export class NoiseGenerator {
             }
             case NoiseType.BERNOULLI_ISOLATED_BIG: {
                 return this.createBernoulliNoiseIsolatedBig(
+                    config.seed,
+                    config.p,
+                    config.scaling,
+                );
+            }
+            case NoiseType.BERNOULLI_ISOLATED_ROUND: {
+                return this.createBernoulliNoiseIsolatedRound(
                     config.seed,
                     config.p,
                     config.scaling,
@@ -116,6 +124,10 @@ export class NoiseGenerator {
 
     private createBernoulliNoiseIsolatedBig(seed: number | null, p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
         return this.createBernoulliNoiseOfType(seed, BernoulliNoiseType.ISOLATED_BIG, p, scaleFactor);
+    }
+
+    private createBernoulliNoiseIsolatedRound(seed: number | null, p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {
+        return this.createBernoulliNoiseOfType(seed, BernoulliNoiseType.ISOLATED_ROUND, p, scaleFactor);
     }
 
     private createBernoulliNoiseOfType(seed: number | null, type: BernoulliNoiseType, p: number = 0.5, scaleFactor: number = 1): Observable<CalculationState<Float32Array>> {

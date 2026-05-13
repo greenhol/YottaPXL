@@ -58,7 +58,7 @@ export class MandelbrotCombinedIV extends Plane {
                 scaling: 1,
             },
             gradientStreamlines: {
-                supportPoints: '0:#FFFFFF, 1:#FFFFAA',
+                supportPoints: '0:#FFFF88, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },

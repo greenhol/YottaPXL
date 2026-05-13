@@ -6,12 +6,10 @@ import { buildLayers, clampScaleFactor, perlinScalarSampleForLayer } from './per
 import { WorkerSetupPerlin } from './worker-setup-perlin';
 
 self.onmessage = (e) => {
-    const timeStamp = Date.now();
     const { type, data }: { type: MessageToWorker, data: WorkerSetupPerlin; } = e.data;
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const result: Float32Array = calculate(grid, new XoRng(data.seed), data.scaleFactor, data.octaveCount, data.octaveAmplitudeFactor);
-        console.info(`#NoiseGeneratorPerlin (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -37,7 +35,7 @@ function calculate(
     let rawMax = -Infinity;
 
     // --- Pass 1: accumulate all layers per pixel ---
-    const progress = new Progress(grid.height);
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [mx, my] = grid.pixelToMath(col, row);
@@ -67,5 +65,6 @@ function calculate(
     // Final progress update after both passes complete
     self.postMessage({ type: MessageFromWorker.UPDATE, progress: PROGRESS_DONE });
 
+    progress.logDone('#PerlinGeneratorScalar (worker)');
     return data;
 }

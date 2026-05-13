@@ -19,7 +19,7 @@ export class MandelbrotCalculator {
 
     public calculateSmoothIterations(grid: Grid, maxIterations: number, pt: boolean = false, referenceCoordinate: string = ''): Observable<CalculationState<Float64Array>> {
         return this.calculateWithWorker(
-            pt ? CalculationType.ITERATIONS_PT : CalculationType.ITERATIONS,
+            pt ? CalculationType.ITERATIONS_SMOOTH_PT : CalculationType.ITERATIONS_SMOOTH,
             grid,
             maxIterations,
             4,

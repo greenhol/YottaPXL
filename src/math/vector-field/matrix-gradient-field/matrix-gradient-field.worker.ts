@@ -5,11 +5,9 @@ import { ImageGradientKernel, SOBEL_KERNEL_1, SOBEL_KERNEL_2, SOBEL_KERNEL_3, SO
 import { WorkerSetupMatrixGradientField } from './worker-setup-matrix-gradient-field';
 
 self.onmessage = (e) => {
-    let timeStamp = Date.now();
     const { type, data }: { type: MessageToWorker, data: WorkerSetupMatrixGradientField; } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
-        console.info(`#MatrixGradientField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -28,7 +26,7 @@ function calculate(setup: WorkerSetupMatrixGradientField): Float32Array {
         default: kernel = SOBEL_KERNEL_6; break;
     }
 
-    const progress = new Progress(grid.height);
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
@@ -41,6 +39,8 @@ function calculate(setup: WorkerSetupMatrixGradientField): Float32Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#MatrixGradientField (worker)');
     return data;
 }
 

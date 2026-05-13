@@ -6,7 +6,6 @@ import { CalculationType } from './types';
 import { WorkerSetupMandelbrot } from './worker-setup-mandelbrot';
 
 self.onmessage = (e) => {
-    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         let result: Float64Array;
@@ -30,7 +29,6 @@ self.onmessage = (e) => {
                 result = calculateDistancesPT(data);
                 break;
         }
-        console.info(`#MandelbrotCalculator (worker) - calculation for ${data.type} done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -245,8 +243,9 @@ function computeOrbitForCandidate(
 /** -------------------------------------------------------------------------------------------------------- */
 function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateIterationsForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
@@ -254,6 +253,8 @@ function calculateIterations(setup: WorkerSetupMandelbrot): Float64Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#MandelbrotCalculator (worker) Iterations');
     return targetData;
 }
 
@@ -298,8 +299,9 @@ function calculateIterationsForPixelBigDecimal(col: number, row: number, grid: G
 function calculateIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
@@ -307,6 +309,8 @@ function calculateIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#MandelbrotCalculator (worker) Iterations PT');
     return targetData;
 }
 
@@ -357,8 +361,9 @@ function calculateIterationsPTForPixel(
 /** --------------------------------------------------------------------------------------------------------------- */
 function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateSmoothIterationForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
@@ -367,6 +372,7 @@ function calculateSmoothIterations(setup: WorkerSetupMandelbrot): Float64Array {
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
+    progress.logDone('#MandelbrotCalculator (worker) Smooth Iterations');
     return targetData;
 }
 
@@ -399,8 +405,9 @@ function calculateSmoothIterationForPixel(col: number, row: number, grid: Grid, 
 function calculateSmoothIterationsPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateSmoothIterationsPTForPixel(col, row, orbit, setup.maxIterations, setup.escapeValue);
@@ -409,6 +416,7 @@ function calculateSmoothIterationsPT(setup: WorkerSetupMandelbrot): Float64Array
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
+    progress.logDone('#MandelbrotCalculator (worker) Smooth Iterations PT');
     return targetData;
 }
 
@@ -456,8 +464,9 @@ function calculateSmoothIterationsPTForPixel(
 /** ------------------------------------------------------------------------------------------------------- */
 function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateDistanceForPixel(col, row, grid, setup.maxIterations, setup.escapeValue);
@@ -466,6 +475,7 @@ function calculateDistances(setup: WorkerSetupMandelbrot): Float64Array {
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
+    progress.logDone('#MandelbrotCalculator (worker) Distances');
     return targetData;
 }
 
@@ -502,8 +512,9 @@ function calculateDistanceForPixel(col: number, row: number, grid: Grid, maxIter
 function calculateDistancesPT(setup: WorkerSetupMandelbrot): Float64Array {
     const grid = Grid.copy(setup.gridBlueprint);
     const orbit = computeReferenceOrbit(setup, grid);
-    const progress = new Progress(grid.height);
     const targetData = new Float64Array(grid.size);
+
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             targetData[grid.getIndex(col, row)] = calculateDistancePTForPixel(col, row, orbit, setup.maxIterations);
@@ -512,6 +523,7 @@ function calculateDistancesPT(setup: WorkerSetupMandelbrot): Float64Array {
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
+    progress.logDone('#MandelbrotCalculator (worker) Distances PT');
     return targetData;
 }
 

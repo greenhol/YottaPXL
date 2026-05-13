@@ -26,11 +26,9 @@ const VORTICES: Vortex[] = [
 const NO_WIND: [number, number, number] = [0, 0, 0];
 
 self.onmessage = (e) => {
-    let timeStamp = Date.now();
     const { type, data }: { type: MessageToWorker, data: WorkerSetupAtmosphereField; } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
-        console.info(`#AtmosphereField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -62,7 +60,7 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
     //     });
     // }
 
-    const progress = new Progress(grid.height);
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
@@ -75,6 +73,8 @@ function calculate(setup: WorkerSetupAtmosphereField): Float32Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#AtmosphereField (worker)');
     return data;
 }
 

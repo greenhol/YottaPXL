@@ -6,12 +6,10 @@ import { buildLayers, clampScaleFactor, perlinGradientSample } from './perlin-ut
 import { WorkerSetupPerlin } from './worker-setup-perlin';
 
 self.onmessage = (e) => {
-    const timeStamp = Date.now();
     const { type, data }: { type: MessageToWorker, data: WorkerSetupPerlin; } = e.data;
     if (type === MessageToWorker.START) {
         const grid = GridWithMargin.copyWithMargin(data.gridBlueprint);
         const result: Float32Array = calculate(grid, new XoRng(data.seed), data.scaleFactor, data.octaveCount, data.octaveAmplitudeFactor);
-        console.info(`#NoiseGeneratorPerlinVector (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -83,5 +81,6 @@ function calculate(
     // Final progress update after both passes complete
     self.postMessage({ type: MessageFromWorker.UPDATE, progress: PROGRESS_DONE });
 
+    progress.logDone('#PerlinGeneratorVector (worker)');
     return data;
 }

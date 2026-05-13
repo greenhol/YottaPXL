@@ -7,11 +7,9 @@ import { PointInPixel } from './types';
 import { WorkerSetupLIC } from './worker-setup-lic';
 
 self.onmessage = (e) => {
-    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
-        console.info(`#LicCalculator (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -21,10 +19,9 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
     const sourceGrid = GridWithMargin.copyWithMargin(setup.sourceGridBlueprint);
     const image = setup.image;
     const field = new VectorFieldReader(sourceGrid, setup.field, setup.orthogonal);
-
     const targetData = new Float64Array(targetGrid.size);
-    const progress = new Progress(targetGrid.height, 0.025);
 
+    const progress = new Progress(targetGrid.height, Progress.getProgressIntervalForResulution(targetGrid.size) / 2);
     for (let row = 0; row < targetGrid.height; row++) {
         for (let col = 0; col < targetGrid.width; col++) {
             let length = setup.licConfig.maxLength;
@@ -40,6 +37,8 @@ function calculate(setup: WorkerSetupLIC): Float64Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#LicCalculator (worker)');
     return targetData;
 }
 

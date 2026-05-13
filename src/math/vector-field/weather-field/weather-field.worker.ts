@@ -9,11 +9,9 @@ const NORTH = 90;
 const SOUTH = -90;
 
 self.onmessage = (e) => {
-    let timeStamp = Date.now();
     const { type, data } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
-        console.info(`#WeatherField (worker) - calculation done in ${(Date.now() - timeStamp) / 1000}s`);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
@@ -22,7 +20,7 @@ function calculate(setup: WorkerSetupWeatherField): Float32Array {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Float32Array(grid.size * 3);
 
-    const progress = new Progress(grid.height);
+    const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
@@ -35,6 +33,8 @@ function calculate(setup: WorkerSetupWeatherField): Float32Array {
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
+
+    progress.logDone('#WeatherField (worker)');
     return data;
 }
 

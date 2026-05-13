@@ -21,7 +21,14 @@ export class Progress {
     private _start: number;
     private _goal: number;
 
+    public static getProgressIntervalForResulution(size: number): number {
+        return Math.min(0.05, Math.max(0.01, 0.05 / Math.sqrt(size / 921600))); // Reference for 5% updates: 1280x720=921600
+    }
+
     constructor(goal: number, progressInterval: number = 0.05) {
+        if (goal <= 0) throw new Error('goal must be a positive number');
+        if (progressInterval <= 0 || progressInterval > 1) throw new Error('progressInterval must be between 0 and 1');
+
         this._progressInterval = progressInterval;
         this._nextProgressThreshold = progressInterval;
         this._updateCount = 0;
@@ -46,5 +53,14 @@ export class Progress {
             };
         }
         return null;
+    }
+
+    public logDone(prefix: string) {
+        const duration = (Date.now() - this._start) / 1000;
+        const color = (duration < 2) ? 'darkgreen' : 'darkorange';
+        console.info(
+            `${prefix} - calculation done in %c${duration}s`,
+            `color: ${color}; font-weight: bold;`,
+        );
     }
 }

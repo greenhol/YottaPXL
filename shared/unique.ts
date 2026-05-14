@@ -24,7 +24,6 @@ class Unique {
             }
         }
         this.list.add(candidate);
-        // console.log(`returning newId ${candidate}`)
         return candidate;
     }
 

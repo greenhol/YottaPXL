@@ -26,7 +26,7 @@ export class Grid extends GridWithoutRange {
 
     public updateRange(range: GridRange): void {
         this._strategy.updateRange(range);
-        console.log(`Grid (${this.width} x ${this.height}) range set to: ${range.xMin} -> ${range.xMax} and yCenter: ${range.yCenter}`);
+        console.log(`#updateRange - Grid (${this.width} x ${this.height}) range set to: ${range.xMin} -> ${range.xMax} and yCenter: ${range.yCenter}`);
     }
 
     public switchToBigDecimalStrategy(): boolean {

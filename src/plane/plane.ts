@@ -33,7 +33,6 @@ export abstract class Plane implements Initializable {
     public abstract config: ModuleConfig<PlaneConfig>;
 
     public init(): void {
-        console.log(this.config.data);
         this.updateGridRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
     }
 
@@ -41,7 +40,7 @@ export abstract class Plane implements Initializable {
 
     public updateGridRange(range: GridRange) {
         this.config.data.gridRange = GridRange.serialize(range);
-        this.config.setInfo('Grid Range as String', GridRange.toString(range));
+        this.config.setInfo('#updateGridRange - Grid Range as String', GridRange.toString(range));
         this.grid.updateRange(GridRangeSerialized.deserialize(this.config.data.gridRange));
         this.refresh();
     }

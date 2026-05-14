@@ -47,7 +47,7 @@ export class ModuleConfig<T extends object> {
         } else {
             const storageObject = this._storageType === 'local' ? localStorage : sessionStorage;
             storageObject.setItem(this._storageKey, JSON.stringify(this.data));
-            console.log(`Configuration ${this._storageKey} saved to ${this._storageType}`);
+            console.log(`#save - Configuration ${this._storageKey} saved to ${this._storageType}`);
         }
     }
 

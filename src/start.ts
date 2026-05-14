@@ -273,7 +273,7 @@ export class Start {
         this._resolutionSelect?.addEventListener('change', (event) => {
             const selectedValue = (event.target as HTMLSelectElement).value;
             const [width, height] = selectedValue.split('x').map(Number);
-            console.log(`Selected resolution: ${width}x${height}`);
+            console.log(`#addResulutionsDropdownEventListener - Selected resolution: ${width}x${height}`);
             this._urlHandler.updateResolution(width, height);
             window.location.reload();
         });
@@ -282,7 +282,7 @@ export class Start {
     private addPlaneDropdownEventListener() {
         this._planeSelect?.addEventListener('change', (event) => {
             const selectedValue = (event.target as HTMLSelectElement).value;
-            console.log(`Selected plane: ${selectedValue}`);
+            console.log(`#addPlaneDropdownEventListener - Selected plane: ${selectedValue}`);
             if (VALID_PLANE_IDS.includes(selectedValue as PlaneId)) {
                 this.switchPlane(selectedValue as PlaneId);
             } else {

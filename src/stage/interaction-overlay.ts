@@ -83,43 +83,44 @@ export class InteractionOverlay {
         const currentRange = this._grid.range;
         const currentXdiff = this._grid.xDiff;
         const swtichBackGridStrategy = this._grid.switchToBigDecimalStrategy();
+        let shiftedRange: GridRange;
         switch (direction) {
             case ShiftDirection.UP: {
-                this._selectedRange$.next({
+                shiftedRange = {
                     xMin: currentRange.xMin,
                     xMax: currentRange.xMax,
                     yCenter: this._grid.pixelToMathBigDecimal(0, -0.5 * this._grid.height)[1],
-                });
+                };
                 break;
             }
             case ShiftDirection.DOWN: {
-                this._selectedRange$.next({
+                shiftedRange = {
                     xMin: currentRange.xMin,
                     xMax: currentRange.xMax,
                     yCenter: this._grid.pixelToMathBigDecimal(0, 1.5 * this._grid.height)[1],
-                });
+                };
                 break;
             }
             case ShiftDirection.LEFT: {
-                this._selectedRange$.next({
+                shiftedRange = {
                     xMin: currentRange.xMin.sub(currentXdiff),
                     xMax: currentRange.xMax.sub(currentXdiff),
                     yCenter: currentRange.yCenter,
-                });
+                };
                 break;
             }
             case ShiftDirection.RIGHT: {
-                this._selectedRange$.next({
+                shiftedRange = {
                     xMin: currentRange.xMin.add(currentXdiff),
                     xMax: currentRange.xMax.add(currentXdiff),
                     yCenter: currentRange.yCenter,
-                });
+                };
                 break;
             }
         }
-        if (swtichBackGridStrategy) {
-            this._grid.switchToNumberStrategy();
-        }
+        if (swtichBackGridStrategy) this._grid.switchToNumberStrategy();
+
+        this._selectedRange$.next(shiftedRange);
     }
 
     private addSvgCss() {
@@ -456,9 +457,7 @@ export class InteractionOverlay {
         const height = parseInt(rect.getAttribute('height') || '0');
         const [mathX1, mathY1] = this._grid.pixelToMathBigDecimal(pixelX, pixelY);
         const [mathX2, mathY2] = this._grid.pixelToMathBigDecimal(pixelX + width, pixelY + height);
-        if (swtichBackGridStrategy) {
-            this._grid.switchToNumberStrategy();
-        }
+        if (swtichBackGridStrategy) this._grid.switchToNumberStrategy();
 
         return {
             x1: mathX1,

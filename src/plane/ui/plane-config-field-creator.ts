@@ -15,8 +15,8 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public readonly UI_FIELD_HEADER_FIELD = this.createHeader('Field');
 
     /** General */
-    public uiFieldSeed(path: string): UiFieldIntegerOptional {
-        return this.createIntegerOptionalField(path, 'Seed', 'Seed for RNG. If empty, RNG is simply unseeded', 0, 2147483647);
+    public uiFieldSeed(path: string, useCase: string = ''): UiFieldIntegerOptional {
+        return this.createIntegerOptionalField(path, `${useCase} Seed`.trim(), 'Seed for RNG. If empty, RNG is simply unseeded', 0, 2147483637); // 2147483647 - 10 to allow internal seed + x, x in [1..10]
     }
 
     /** Color */

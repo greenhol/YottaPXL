@@ -1,8 +1,9 @@
+import { ColorMapperConfig } from '../../math/color/color-mapper';
 import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/types';
 
 export function createAtmosphereDescriptor(
     seed: number | null,
-    bandGradient: string,
+    bandGradient: ColorMapperConfig,
 ): AtmosphereDescriptor {
     return {
         seed: seed ? seed : 0,

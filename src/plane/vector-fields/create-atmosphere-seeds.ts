@@ -1,5 +1,5 @@
 import { XoRng } from '../../../shared/xo-rng';
-import { ColorMapper } from '../../math/color/color-mapper';
+import { ColorMapper, Easing } from '../../math/color/color-mapper';
 import { ColorSeed } from '../../math/vector-field/advection-color/worker-setup-advection-color';
 import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/types';
 
@@ -13,7 +13,7 @@ export function createAtmosphereColorSeeds(
     const xDiff = descr.xMax * 2 - descr.xMin * 2;
     const yDiff = descr.yMax * 2 - descr.yMin * 2;
 
-    const bandMapper = ColorMapper.fromString(descr.bandGradient);
+    const bandMapper = ColorMapper.fromString(descr.bandGradient.supportPoints, descr.bandGradient.easing);
     const seeds: ColorSeed[] = [];
     const bandSeeds: ColorSeed[] = [];
     const vortexSeeds: ColorSeed[] = [];

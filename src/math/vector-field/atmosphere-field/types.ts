@@ -1,4 +1,5 @@
 import { RGB } from '../../../types';
+import { ColorMapperConfig } from '../../color/color-mapper';
 
 export interface PerlinConfig {
     interval: number; // one interval in domain units (e.g. 8 = 8° wide cells)
@@ -38,7 +39,7 @@ export interface AtmosphereDescriptor {
     perlinPerturbationY: PerlinConfig;
 
     // Coloring
-    bandGradient: string;
+    bandGradient: ColorMapperConfig;
 
     // Shared
     vortices: VortexDescriptor[];

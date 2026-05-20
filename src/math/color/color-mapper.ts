@@ -80,7 +80,7 @@ export class ColorMapper {
         }
 
         switch (easing) {
-            case Easing.NONE: this._colorCalculator = this.leftColor; break;
+            case Easing.NONE: this._colorCalculator = this.nearestColor; break;
             case Easing.RGB_LINEAR:
             case Easing.RGB_BALANCED:
             case Easing.RGB_QUADRATIC: this._colorCalculator = this.interpolateColorRGB; break;
@@ -96,7 +96,7 @@ export class ColorMapper {
         }
 
         switch (easing) {
-            case Easing.NONE: this._getInterpolationFactor = this.getInterpolationFactorNone; break; // Never used
+            case Easing.NONE: this._getInterpolationFactor = this.getInterpolationFactorNone; break;
             case Easing.RGB_LINEAR:
             case Easing.HSL_LINEAR:
             case Easing.LAB_LINEAR:
@@ -164,14 +164,16 @@ export class ColorMapper {
         return ((x % range) + range) % range;
     }
 
-    private leftColor(t: number, left: SupportPoint, right: SupportPoint): RGB {
-        return { r: left.color.r, g: left.color.g, b: left.color.b };
-    }
-
     private lerpAngle(start: number, end: number, t: number): number {
         const delta = (end - start + 360) % 360;
         const shortestDelta = delta <= 180 ? delta : delta - 360;
         return (start + shortestDelta * t + 360) % 360;
+    }
+
+    private nearestColor(t: number, left: SupportPoint, right: SupportPoint): RGB {
+        return (this._getInterpolationFactor(t, left, right) == 0) ?
+            { r: left.color.r, g: left.color.g, b: left.color.b } :
+            { r: right.color.r, g: right.color.g, b: right.color.b };
     }
 
     private interpolateColorRGB(t: number, left: SupportPoint, right: SupportPoint): RGB {
@@ -213,7 +215,7 @@ export class ColorMapper {
     }
 
     private getInterpolationFactorNone(x: number, left: SupportPoint, right: SupportPoint): number {
-        return 0; // Never used
+        return Math.round(this.getInterpolationFactorLinear(x, left, right));
     }
 
     private getInterpolationFactorLinear(x: number, left: SupportPoint, right: SupportPoint): number {
@@ -221,14 +223,14 @@ export class ColorMapper {
     }
 
     private getInterpolationFactorBalanced(x: number, left: SupportPoint, right: SupportPoint): number {
-        const normalizedX = (x - left.pos) / (right.pos - left.pos);
+        const normalizedX = this.getInterpolationFactorLinear(x, left, right);
         const linearT = normalizedX;
         const smoothstepT = normalizedX * normalizedX * (3 - 2 * normalizedX);
         return (0.5) * linearT + 0.5 * smoothstepT;
     }
 
     private getInterpolationFactorQuadratic(x: number, left: SupportPoint, right: SupportPoint): number {
-        const normalizedX = (x - left.pos) / (right.pos - left.pos);
+        const normalizedX = this.getInterpolationFactorLinear(x, left, right);
         return normalizedX * normalizedX * (3 - 2 * normalizedX);
     }
 }

@@ -5,7 +5,7 @@ import { Grid } from '../../grid/grid';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { blender, BlendingType } from '../../math/color/color-blender';
-import { ColorMapper } from '../../math/color/color-mapper';
+import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
@@ -27,7 +27,7 @@ enum AtmosphereRender {
 interface AtmosphereConfig extends PlaneConfig {
     render: AtmosphereRender,
     fieldSeed: number | null,
-    bandGradient: string,
+    bandGradient: ColorMapperConfig,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
 }
@@ -46,7 +46,11 @@ export class Atmosphere extends Plane {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             render: AtmosphereRender.FIELD,
             fieldSeed: null,
-            bandGradient: '0.0:#F0E4C8, 0.1:#F0E4C8, 0.2:#C8A882, 0.4:#8B5E3C, 0.6:#D4A96A, 0.8:#A0704A, 0.9:#F0E4C8, 1.0:#F0E4C8',
+            bandGradient: {
+                supportPoints: '0.0:#F0E4C8, 0.1:#F0E4C8, 0.2:#C8A882, 0.4:#8B5E3C, 0.6:#D4A96A, 0.8:#A0704A, 0.9:#F0E4C8, 1.0:#F0E4C8',
+                easing: Easing.RGB_LINEAR,
+                scaling: 1,
+            },
             noiseConfig: {
                 seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
@@ -63,7 +67,8 @@ export class Atmosphere extends Plane {
         [
             CREATE.createEnumField('render', AtmosphereRender, 'Render', 'Render Field, Coloring or both combined'),
             CREATE.uiFieldSeed('fieldSeed', 'Field'),
-            CREATE.uiFieldGradientSupportPoints('bandGradient'),
+            CREATE.uiFieldGradientSupportPoints('bandGradient.supportPoints'),
+            CREATE.uiFieldGradientEasing('bandGradient.easing'),
             CREATE.UI_FIELD_HEADER_NOISE,
             CREATE.uiFieldSeed('noiseConfig.seed', 'Noise'),
             CREATE.uiFieldNoiseType('noiseConfig.type'),
@@ -132,7 +137,7 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 5));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 0));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/2'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));
@@ -151,7 +156,7 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 5));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 0));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/3'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));

@@ -12,12 +12,23 @@ export function createAtmosphereDescriptor(
         yMin: -120,
         yMax: 120,
         bandCount: 5,
+        warpStrength: 5,
         amplitudeFactor: 0.3,
         phaseFactor: 0.2,
         freqModFactor: 0.3,
         perturbationWeight: 0.3,
         perlinBandAmplitude: {
             interval: 8,
+            octaveCount: 0,
+            octaveAmplitudeFactor: 1,
+        },
+        perlinWarpX: {
+            interval: 12,
+            octaveCount: 0,
+            octaveAmplitudeFactor: 1,
+        },
+        perlinWarpY: {
+            interval: 12,
             octaveCount: 0,
             octaveAmplitudeFactor: 1,
         },

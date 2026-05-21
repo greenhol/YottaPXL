@@ -26,12 +26,15 @@ export interface AtmosphereDescriptor {
 
     // Band modulation
     bandCount: number;
+    warpStrength: number;
     amplitudeFactor: number;
     phaseFactor: number;
     freqModFactor: number;
     perturbationWeight: number;
 
     // Perlin layer configs — one per named role
+    perlinWarpX: PerlinConfig;
+    perlinWarpY: PerlinConfig;
     perlinBandAmplitude: PerlinConfig;
     perlinBandPhase: PerlinConfig;
     perlinBandFreqMod: PerlinConfig;

@@ -9,7 +9,7 @@ export function createAtmosphereColorSeeds(
     bandSeedRows: number,
     vortexSeedsPerVortex: number,  // e.g. 50-200
 ): ColorSeed[] {
-    const rng = new XoRng(descr.seed + 5);
+    const rng = new XoRng(descr.seed + 8);
     const xDiff = descr.xMax * 2 - descr.xMin * 2;
     const yDiff = descr.yMax * 2 - descr.yMin * 2;
 

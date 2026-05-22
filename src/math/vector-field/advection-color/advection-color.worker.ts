@@ -25,7 +25,7 @@ function calculate(setup: WorkerSetupAdvectionColor): Uint8ClampedArray {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Uint8ClampedArray(grid.size * 4);
 
-    const spatialIndex = buildSpatialIndex(setup.seeds, setup.influenceRadius);
+    const spatialIndex = buildSpatialIndex(setup.seeds, setup.quality.influenceRadius);
 
     const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
@@ -118,15 +118,16 @@ function advectColor(
     let py = y;
 
     let rAcc = 0, gAcc = 0, bAcc = 0, wAcc = 0;
+    const stepSize = setup.quality.influenceRadius * 0.5;
 
-    for (let step = 0; step < setup.stepCount; step++) {
+    for (let step = 0; step < setup.quality.stepCount; step++) {
         // Accumulate weighted color contributions from nearby seeds
         const nearby = nearbySeeds(px, py, spatialIndex);
         for (const seed of nearby) {
             const dx = px - seed.x;
             const dy = py - seed.y;
             const d2 = dx * dx + dy * dy;
-            const r2 = setup.influenceRadius * setup.influenceRadius;
+            const r2 = setup.quality.influenceRadius * setup.quality.influenceRadius;
             const w = Math.exp(-d2 / r2);
             if (w > 1e-6) {
                 rAcc += seed.color.r * w;
@@ -138,8 +139,8 @@ function advectColor(
 
         // Step backward along the field
         const [vX, vY] = sampleField(px, py, grid, setup.vectorField);
-        px -= vX * setup.stepSize;
-        py -= vY * setup.stepSize;
+        px -= vX * stepSize;
+        py -= vY * stepSize;
     }
 
     if (wAcc === 0) return TRANSPARENT;

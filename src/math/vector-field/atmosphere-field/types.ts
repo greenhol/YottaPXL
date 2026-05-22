@@ -12,7 +12,7 @@ export interface VortexDescriptor {
     y0: number;
     r: number;
     speed: number;
-    color: RGB;
+    color: RGB | null;
 }
 
 export interface AtmosphereDescriptor {

@@ -9,6 +9,7 @@ import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-m
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
+import { AdvectionQuality } from '../../math/vector-field/advection-color/worker-setup-advection-color';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
 import { BigDecimal, COLOR } from '../../types';
@@ -28,6 +29,7 @@ interface AtmosphereConfig extends PlaneConfig {
     render: AtmosphereRender,
     fieldSeed: number | null,
     bandGradient: ColorMapperConfig,
+    advection: AdvectionQuality,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
 }
@@ -51,6 +53,10 @@ export class Atmosphere extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
+            advection: {
+                stepCount: 8,
+                influenceRadius: 3,
+            },
             noiseConfig: {
                 seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
@@ -67,6 +73,9 @@ export class Atmosphere extends Plane {
         [
             CREATE.createEnumField('render', AtmosphereRender, 'Render', 'Render Field, Coloring or both combined'),
             CREATE.uiFieldSeed('fieldSeed', 'Field'),
+            CREATE.UI_FIELD_HEADER_COLOR,
+            CREATE.uiFieldAdvectionStepCount('advection.stepCount'),
+            CREATE.uiFieldAdvectionInfluenceRadius('advection.influenceRadius'),
             CREATE.uiFieldGradientSupportPoints('bandGradient.supportPoints'),
             CREATE.uiFieldGradientEasing('bandGradient.easing'),
             CREATE.UI_FIELD_HEADER_NOISE,
@@ -137,7 +146,7 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 0));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/2'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));
@@ -156,7 +165,7 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, createAtmosphereColorSeeds(descriptor, 120, 90, 0));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/3'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));

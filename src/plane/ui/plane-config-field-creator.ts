@@ -6,6 +6,7 @@ import { NoiseType } from '../../math/noise-generator/noise-generator';
 class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
 
     /** Header */
+    public readonly UI_FIELD_HEADER_COLOR = this.createHeader('Color');
     public readonly UI_FIELD_HEADER_BLENDING = this.createHeader('Blending');
     public readonly UI_FIELD_HEADER_GRADIENT = this.createHeader('Gradient');
     public readonly UI_FIELD_HEADER_NOISE = this.createHeader('Noise');
@@ -41,6 +42,13 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     }
     public uiFieldFallbackColor(path: string): UiFieldColor {
         return this.createColorField(path, 'Fallback Color', 'Fallback Color for pixels of undefined values');
+    }
+    /** Color Advection */
+    public uiFieldAdvectionStepCount(path: string): UiFieldInteger {
+        return this.createIntegerField(path, 'Advection steps', 'Number of steps for color advection calculation (expensive)', 1, 100);
+    }
+    public uiFieldAdvectionInfluenceRadius(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Influence Radius', 'Influence Radius for dolor advection', 0.01, 100);
     }
 
     /** Noise */

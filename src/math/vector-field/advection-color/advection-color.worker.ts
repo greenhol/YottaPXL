@@ -4,14 +4,19 @@ import { Progress } from '../../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../../worker/types';
 import { ColorSeed, WorkerSetupAdvectionColor } from './worker-setup-advection-color';
 
-interface RGBA extends RGB { a: number; }
+interface GridBounds {
+    xMin: number;
+    xMax: number;
+    yMin: number;
+    yMax: number;
+}
 
 interface SpatialIndex {
     cells: Map<string, ColorSeed[]>;
     cellSize: number;
 }
 
-const TRANSPARENT: RGBA = { r: 0, g: 0, b: 0, a: 0 };
+const BLACK: RGB = { r: 0, g: 0, b: 0, };
 
 self.onmessage = (e) => {
     const { type, data }: { type: MessageToWorker, data: WorkerSetupAdvectionColor; } = e.data;
@@ -25,18 +30,24 @@ function calculate(setup: WorkerSetupAdvectionColor): Uint8ClampedArray {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Uint8ClampedArray(grid.size * 4);
 
+    const bounds: GridBounds = {
+        xMin: grid.range.xMin.toNumber(),
+        xMax: grid.range.xMax.toNumber(),
+        yMin: grid.yMin.toNumber(),
+        yMax: grid.yMax.toNumber(),
+    };
     const spatialIndex = buildSpatialIndex(setup.seeds, setup.quality.influenceRadius);
 
     const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
-            const color = advectColor(x, y, grid, setup, spatialIndex);
+            const color = advectColor(x, y, grid, bounds, setup, spatialIndex);
             const index = grid.getIndex(col, row) * 4;
             data[index] = color.r;
             data[index + 1] = color.g;
             data[index + 2] = color.b;
-            data[index + 3] = color.a;
+            data[index + 3] = 255;
         }
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
@@ -86,16 +97,12 @@ function sampleField(
     x: number,
     y: number,
     grid: GridWithMargin,
+    bounds: GridBounds,
     vectorField: Float32Array,
 ): [number, number] {
-    // Clamp to grid bounds
-    const xMin = grid.range.xMin.toNumber();
-    const xMax = grid.range.xMax.toNumber();
-    const yMin = grid.yMin.toNumber();
-    const yMax = grid.yMax.toNumber();
 
-    const cx = Math.max(xMin, Math.min(xMax, x));
-    const cy = Math.max(yMin, Math.min(yMax, y));
+    const cx = Math.max(bounds.xMin, Math.min(bounds.xMax, x));
+    const cy = Math.max(bounds.yMin, Math.min(bounds.yMax, y));
 
     const [col, row] = grid.mathToPixel(cx, cy);
     const index = grid.getIndex(
@@ -111,12 +118,11 @@ function advectColor(
     x: number,
     y: number,
     grid: GridWithMargin,
+    bounds: GridBounds,
     setup: WorkerSetupAdvectionColor,
     spatialIndex: SpatialIndex,
-): RGBA {
-    let px = x;
-    let py = y;
-
+): RGB {
+    let px = x, py = y;
     let rAcc = 0, gAcc = 0, bAcc = 0, wAcc = 0;
     const stepSize = setup.quality.influenceRadius * 0.5;
 
@@ -138,17 +144,16 @@ function advectColor(
         }
 
         // Step backward along the field
-        const [vX, vY] = sampleField(px, py, grid, setup.vectorField);
+        const [vX, vY] = sampleField(px, py, grid, bounds, setup.vectorField);
         px -= vX * stepSize;
         py -= vY * stepSize;
     }
 
-    if (wAcc === 0) return TRANSPARENT;
+    if (wAcc === 0) return BLACK;
 
     return {
         r: Math.round(rAcc / wAcc),
         g: Math.round(gAcc / wAcc),
         b: Math.round(bAcc / wAcc),
-        a: 255,
     };
 }

@@ -24,22 +24,6 @@ export interface PlaneGroup {
     planes: PlaneType[],
 }
 
-export const VALID_PLANE_IDS: PlaneId[] = [
-    'MANDELBROT_ITERATIONS',
-    'MANDELBROT_DISTANCE',
-    'MANDELBROT_VECTOR',
-    'MANDELBROT_COMBINED_ID',
-    'MANDELBROT_COMBINED_IV',
-    'CHARGES',
-    'WEATHER',
-    'ATMOSPHERE',
-    'PERLIN_FIELD',
-    'NOISE',
-    'PERLIN_NOISE',
-    'GRADIENT',
-    'COLOR_BLEND',
-];
-
 export const PLANE_SELECTOR: PlaneGroup[] = [
     {
         name: 'Mandelbrot',

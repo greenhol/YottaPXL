@@ -14,7 +14,7 @@ import { MandelbrotVector } from './plane/complex-fractal/mandelbrot-vector';
 import { Noise } from './plane/noise/noise';
 import { PerlinNoise } from './plane/noise/perlin-noise';
 import { Plane } from './plane/plane';
-import { PLANE_SELECTOR, PlaneId, VALID_PLANE_IDS } from './plane/plane-types';
+import { PLANE_SELECTOR, PlaneId } from './plane/plane-types';
 import { Atmosphere } from './plane/vector-fields/atmosphere';
 import { Charges } from './plane/vector-fields/charges';
 import { PerlinField } from './plane/vector-fields/perlin-field';
@@ -39,6 +39,7 @@ export class Start {
     private _interactionOverlay: InteractionOverlay;
     private _plane: Plane | null = null;
     private _configOverlay: ConfigOverlay;
+    private _busy: boolean = false;
 
     private _urlHandler = new UrlHandler();
 
@@ -117,6 +118,7 @@ export class Start {
             case 'MANDELBROT_COMBINED_IV': this._plane = new MandelbrotCombinedIV(this._grid); break;
             case 'GRADIENT': this._plane = new Gradient(this._grid); break;
             case 'COLOR_BLEND': this._plane = new ColorBlending(this._grid); break;
+            default: console.warn(`#addPlaneDropdownEventListener - Invalid plane ID: ${planeId}`);
         }
         this.subscribeToBusyState();
         this.subscribeToSelection();
@@ -234,6 +236,7 @@ export class Start {
                     const copyConfigButton = document.getElementById('copyConfigButton') as HTMLDivElement;
                     const resetConfigButton = document.getElementById('resetConfigButton') as HTMLDivElement;
                     if (progress !== null) {
+                        this._busy = true;
                         busyIndicator.className = 'busyIndicator--busy';
                         progressBar.classList.remove('gone');
                         progressIndicator.style.width = `${progress.percentage * 3.92}px`;
@@ -249,6 +252,7 @@ export class Start {
                         this._htmlSvg.classList.add('gone');
                         this._rangeArea?.classList.add('invisible');
                     } else {
+                        this._busy = false;
                         busyIndicator.className = 'busyIndicator--idle';
                         progressBar.classList.add('gone');
                         progressIndicator.style.width = '0px';
@@ -283,11 +287,7 @@ export class Start {
         this._planeSelect?.addEventListener('change', (event) => {
             const selectedValue = (event.target as HTMLSelectElement).value;
             console.log(`#addPlaneDropdownEventListener - Selected plane: ${selectedValue}`);
-            if (VALID_PLANE_IDS.includes(selectedValue as PlaneId)) {
-                this.switchPlane(selectedValue as PlaneId);
-            } else {
-                console.warn(`Invalid plane ID: ${selectedValue}`);
-            }
+            this.switchPlane(selectedValue as PlaneId);
         });
     }
 
@@ -421,11 +421,12 @@ export class Start {
 
     private handlePhysicalKeyboardEvents() {
         document.addEventListener(
-            "keydown",
+            "keyup",
             (event) => {
                 if (this._configOverlay.isOpen) return;
                 const activeElement = document.activeElement;
                 if (activeElement === null || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'SELECT')) {
+                    if (this._busy && event.key !== 'o') return;
                     this.handleKeyPress(event.key);
                 }
             },

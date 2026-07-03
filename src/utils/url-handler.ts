@@ -5,7 +5,7 @@ export class UrlHandler {
     private readonly _widthParameter: string = 'width';
     private readonly _heightParameter: string = 'height';
 
-    getResolution(): [number, number] {
+    public getResolution(): [number, number] {
         const fallBackResolution = FALLBACK_RESOLUTION;
         if (!window.location.hash) return resolutionAsArray(fallBackResolution);
         const hash = window.location.hash.substring(1);
@@ -19,7 +19,7 @@ export class UrlHandler {
         }
     }
 
-    updateResolution(width: number, height: number) {
+    public updateResolution(width: number, height: number) {
         const newHash = `${this._widthParameter}=${encodeURIComponent(width)}&${this._heightParameter}=${encodeURIComponent(height)}`;
         window.history.replaceState(null, "", `#${newHash}`);
     }

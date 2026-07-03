@@ -1,5 +1,5 @@
-import { Subscription, timer } from 'rxjs';
-import { idGenerator } from '../shared';
+import { Subscription } from 'rxjs';
+import { timestampString } from '../shared';
 import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/config';
 import { GridRange } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
@@ -19,6 +19,7 @@ import { Atmosphere } from './plane/vector-fields/atmosphere';
 import { Charges } from './plane/vector-fields/charges';
 import { PerlinField } from './plane/vector-fields/perlin-field';
 import { Weather } from './plane/vector-fields/weather';
+import { ExportPng } from './stage/export-png';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
 import { UrlHandler } from './utils/url-handler';
@@ -63,7 +64,7 @@ export class Start {
     private _selectionSubscription: Subscription | null = null;
 
     constructor() {
-        console.log(`#constructor(Start) - ${APP_NAME} - Version: ${APP_VERSION}`);
+        console.log(`#constructor(Start) - ${this.appName}`);
         configVersionCheck();
         this._config = new ModuleConfig<MainConfig>({ currentPlaneId: 'MANDELBROT_ITERATIONS' }, 'mainConfig' + APP_NAME);
 
@@ -78,6 +79,10 @@ export class Start {
         let planeId = this.initializePlaneSelect();
 
         window.onload = () => { this.init(planeId); };
+    }
+
+    private get appName(): string {
+        return `${APP_NAME} - Version: ${APP_VERSION}`;
     }
 
     private init(initialPlane: PlaneId) {
@@ -296,36 +301,18 @@ export class Start {
     }
 
     private exportImage() {
-        const rangeString = GridRange.toString(this._grid.range);
-        let filename = prompt('Enter a filename', `YottaPXL_${rangeString}${idGenerator.newId('')}`);
+        const title = this._config.data.currentPlaneId;
+        const filename = prompt('Enter a filename', `${APP_NAME}_${title}_${timestampString()}`);
+        const planeConfig = this._plane?.config;
         if (!filename) return;
 
-        // Export the image
-        const dataURL = this._htmlCanvas.toDataURL('image/png');
-        const imgLink = document.createElement('a');
-        imgLink.download = `${filename}.png`;
-        imgLink.href = dataURL;
-        imgLink.click();
-
-        // Export the metadata
-        const metaLink = document.createElement('a');
-        const planeConfig = this._plane?.config;
-        if (planeConfig != null) {
-            const metaData = planeConfig.export();
-            metaData.info.push(`Resolution: ${resolutionAsString(this._grid.resolution)} - ${this._grid.resolution.description}`);
-            const metaDataJson = JSON.stringify(metaData, null, 2);
-            const blob = new Blob([metaDataJson], { type: 'application/json' });
-            metaLink.download = `${filename}.json`;
-            metaLink.href = URL.createObjectURL(blob);
-            metaLink.click();
-        }
-
-        // Clean up
-        timer(100).subscribe(() => {
-            imgLink.remove();
-            metaLink.remove();
-            URL.revokeObjectURL(metaLink.href);
-        });
+        ExportPng.exportPng({
+            filename: filename,
+            title: title,
+            creator: this.appName,
+            date: new Date().toUTCString(),
+            config: planeConfig?.export() || {},
+        }, this._htmlCanvas);
     }
 
     private addRangeButtonsClickListener() {

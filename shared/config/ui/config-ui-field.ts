@@ -145,7 +145,7 @@ export class UiFieldInteger extends ConfigUiField<number> {
     }
 
     override get fullDescription() {
-        return `Int ${this._min}..${this._max}: ${this.description}`;
+        return `Int ${this._min}..${this._max}${(this.description.length > 0) ? `: ${this.description}` : ''}`;
     }
 
     override validate(v: string): number {
@@ -173,7 +173,7 @@ export class UiFieldIntegerOptional extends ConfigUiField<number | null> {
     }
 
     override get fullDescription() {
-        return `Int? ${this._min}..${this._max}: ${this.description}`;
+        return `Int? ${this._min}..${this._max}${(this.description.length > 0) ? `: ${this.description}` : ''}`;
     }
 
     override validate(v: string): number | null {
@@ -202,7 +202,7 @@ export class UiFieldFloat extends ConfigUiField<number> {
     }
 
     override get fullDescription() {
-        return `Float ${this._min}..${this._max}: ${this.description}`;
+        return `Float ${this._min}..${this._max}${(this.description.length > 0) ? `: ${this.description}` : ''}`;
     }
 
     override validate(v: string): number {

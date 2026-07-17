@@ -51,7 +51,7 @@ module.exports = (_, argv) => {
                 patterns: [
                     { from: 'src/favicon.ico', to: 'favicon.ico' },
                     { from: 'src/index.css', to: 'index.css' },
-                    { from: 'src/AG_6775.V1.woff2', to: 'AG_6775.V1.woff2' },
+                    { from: 'src/AG_6775.V2.woff2', to: 'AG_6775.V2.woff2' },
                     { from: 'shared/config/ui/config-overlay.html', to: 'config-overlay.html' },
                 ],
             }),

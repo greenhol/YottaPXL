@@ -473,9 +473,9 @@ export class InteractionOverlay {
             const y1 = coords.y1.toFixed(8);
             const x2 = coords.x2.toFixed(8);
             const y2 = coords.y2.toFixed(8);
-            return `(${x1}, ${y1}) => (${x2}, ${y2})`;
+            return `(${x1}, ${y1}) ⟶ (${x2}, ${y2})`;
         } else {
-            return `(${coords.x1}, ${coords.y1}) => (${coords.x2}, ${coords.y2})`;
+            return `(${coords.x1}, ${coords.y1}) ⟶ (${coords.x2}, ${coords.y2})`;
         }
     }
 
@@ -485,9 +485,9 @@ export class InteractionOverlay {
             const y1 = this.truncateString(coords.y1.toString());
             const x2 = this.truncateString(coords.x2.toString());
             const y2 = this.truncateString(coords.y2.toString());
-            return `(${x1}, ${y1}) => (${x2}, ${y2})`;
+            return `(${x1}, ${y1}) ⟶ (${x2}, ${y2})`;
         } else {
-            return `(${coords.x1}, ${coords.y1}) => (${coords.x2}, ${coords.y2})`;
+            return `(${coords.x1}, ${coords.y1}) ⟶ (${coords.x2}, ${coords.y2})`;
         }
     }
 

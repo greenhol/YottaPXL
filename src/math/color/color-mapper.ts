@@ -112,6 +112,10 @@ export class ColorMapper {
         }
     }
 
+    public get colors(): RGB[] {
+        return this._supportPoints.map(point => point.color);
+    }
+
     public mapLooped(x: number, scaling: number = 1, offset: number = 0): RGB {
         const loopedX = this.getLoopingX(x / scaling - offset);
         return this.mapInternal(loopedX);

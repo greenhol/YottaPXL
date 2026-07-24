@@ -1,6 +1,6 @@
 {
   "name": "yotta-pxl",
-  "version": "0.0.74",
+  "version": "0.0.75",
   "description": "YottaPXL",
   "main": "../index.js",
   "scripts": {

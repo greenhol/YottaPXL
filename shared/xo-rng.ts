@@ -15,6 +15,10 @@ export class XoRng {
     public next: () => number;
     public nextInt: () => number;
 
+    public static randomSeed(): number {
+        return Math.floor(Math.random() * 2147483648);
+    }
+
     constructor(seed: number | null) {
         this._seed = seed;
         if (seed !== null) {
@@ -48,6 +52,16 @@ export class XoRng {
 
     public nextInRange(min: number, max: number): number {
         return min + this.next() * (max - min);
+    }
+
+    public nextIntInRange(min: number, max: number): number {
+        if (!Number.isInteger(min) || !Number.isInteger(max)) {
+            throw new Error(`XoRng: min and max must be integers, got ${min} and ${max}`);
+        }
+        if (min > max) {
+            throw new Error(`XoRng: min must be less than or equal to max, got ${min} and ${max}`);
+        }
+        return min + (this.nextInt() % (max - min + 1));
     }
 
     public coordNoise(x: number, y: number): number {

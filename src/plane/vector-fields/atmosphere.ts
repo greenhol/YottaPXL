@@ -10,13 +10,14 @@ import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { AdvectionQuality } from '../../math/vector-field/advection-color/worker-setup-advection-color';
+import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
 import { BigDecimal, COLOR } from '../../types';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
-import { createAtmosphereDescriptor } from './create-atmosphere-descriptor';
+import { AtmosphereType, createAtmosphereDescriptor } from './create-atmosphere-descriptor';
 import { createAtmosphereColorSeeds } from './create-atmosphere-seeds';
 
 enum AtmosphereRender {
@@ -27,9 +28,14 @@ enum AtmosphereRender {
 
 interface AtmosphereConfig extends PlaneConfig {
     render: AtmosphereRender,
+    planet: AtmosphereType,
+    bandCount: number,
+    vorticesCount: number,
+    vorticeMaxRadius: number,
     fieldSeed: number | null,
     bandGradient: ColorMapperConfig,
     advection: AdvectionQuality,
+    vortexSeedMultiplier: number,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
 }
@@ -47,6 +53,10 @@ export class Atmosphere extends Plane {
         {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             render: AtmosphereRender.FIELD,
+            planet: AtmosphereType.PRESET_1,
+            bandCount: 5,
+            vorticesCount: 8,
+            vorticeMaxRadius: 16,
             fieldSeed: null,
             bandGradient: {
                 supportPoints: '0.0:#F0E4C8, 0.1:#F0E4C8, 0.2:#C8A882, 0.4:#8B5E3C, 0.6:#D4A96A, 0.8:#A0704A, 0.9:#F0E4C8, 1.0:#F0E4C8',
@@ -57,6 +67,7 @@ export class Atmosphere extends Plane {
                 stepCount: 8,
                 influenceRadius: 3,
             },
+            vortexSeedMultiplier: 1,
             noiseConfig: {
                 seed: null,
                 type: NoiseType.BERNOULLI_ISOLATED_BIG,
@@ -72,10 +83,16 @@ export class Atmosphere extends Plane {
         'atmosphereConfig',
         [
             CREATE.createEnumField('render', AtmosphereRender, 'Render', 'Render Field, Coloring or both combined'),
+            CREATE.createHeader('Planet'),
+            CREATE.createEnumField('planet', AtmosphereType, 'Planet', 'Preset Planet or random (from seed if set)'),
+            CREATE.createIntegerField('bandCount', 'Band Count', 'Number of horizontal bands', 0, 30),
+            CREATE.createIntegerField('vorticesCount', 'Vortices Count', 'Number of vortices', 0, 50),
+            CREATE.createIntegerField('vorticeMaxRadius', 'Vortice max. Radius', 'Maximal radius a vortice can reach', 1, 50),
             CREATE.uiFieldSeed('fieldSeed', 'Field'),
             CREATE.UI_FIELD_HEADER_COLOR,
             CREATE.uiFieldAdvectionStepCount('advection.stepCount'),
             CREATE.uiFieldAdvectionInfluenceRadius('advection.influenceRadius'),
+            CREATE.createFloatField('vortexSeedMultiplier', 'Vortex Seed Mult.', 'Multiplier for the amount of color seeds placed for the vortices', 0, 20),
             CREATE.uiFieldGradientSupportPoints('bandGradient.supportPoints'),
             CREATE.uiFieldGradientEasing('bandGradient.easing'),
             CREATE.UI_FIELD_HEADER_NOISE,
@@ -91,20 +108,30 @@ export class Atmosphere extends Plane {
     );
 
     override refresh() {
+        const descriptor = createAtmosphereDescriptor(
+            this.config.data.planet,
+            this.config.data.bandCount,
+            this.config.data.vorticesCount,
+            this.config.data.vorticeMaxRadius,
+            this.config.data.fieldSeed,
+            this.config.data.bandGradient,
+        );
+        this.config.setInfo('Effective Seed', descriptor.seed.toString());
+
         switch (this.config.data.render) {
-            case AtmosphereRender.FIELD: this.calculateField(); break;
-            case AtmosphereRender.COLORS: this.calculateColors(); break;
-            case AtmosphereRender.COMBINED: this.calculateCombined(); break;
+            case AtmosphereRender.FIELD: this.calculateField(descriptor); break;
+            case AtmosphereRender.COLORS: this.calculateColors(descriptor); break;
+            case AtmosphereRender.COMBINED: this.calculateCombined(descriptor); break;
         }
     }
 
-    private async calculateField() {
+    private async calculateField(descriptor: AtmosphereDescriptor) {
         this.resetProgress();
         const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
 
         // Create Source Field
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
-        const fieldCalculation$ = fieldGenerator.createAtmosphereField(createAtmosphereDescriptor(this.config.data.fieldSeed, this.config.data.bandGradient));
+        const fieldCalculation$ = fieldGenerator.createAtmosphereField(descriptor);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source 1/2'); } });
         const field = await extractData(fieldCalculation$, 'charges field');
 
@@ -134,10 +161,9 @@ export class Atmosphere extends Plane {
         }
     }
 
-    private async calculateColors() {
+    private async calculateColors(descriptor: AtmosphereDescriptor) {
         this.resetProgress();
         const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 0);
-        const descriptor = createAtmosphereDescriptor(this.config.data.fieldSeed, this.config.data.bandGradient);
 
         // Create Source Field
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
@@ -146,17 +172,16 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/2'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));
         this.setIdle();
     }
 
-    private async calculateCombined() {
+    private async calculateCombined(descriptor: AtmosphereDescriptor) {
         this.resetProgress();
         const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 2 * this.config.data.licConfig.maxLength);
-        const descriptor = createAtmosphereDescriptor(this.config.data.fieldSeed, this.config.data.bandGradient);
 
         // Create Source Field
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
@@ -165,7 +190,7 @@ export class Atmosphere extends Plane {
         const field = await extractData(fieldCalculation$, '');
 
         // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection));
+        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
         colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/3'); } });
         const colors = await extractData(colorCalculation$, '');
         this.updateImage(this.createColorImage(colors, sourceGrid));

@@ -6,6 +6,7 @@ import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/t
 export function createAtmosphereColorSeeds(
     descr: AtmosphereDescriptor,
     quality: AdvectionQuality,
+    vortexSeedMultiplier: number,
 ): ColorSeed[] {
     const rng = new XoRng(descr.seed + 8);
     const xDiff = descr.xMax * 2 - descr.xMin * 2;
@@ -31,7 +32,7 @@ export function createAtmosphereColorSeeds(
     const vortexSeeds: ColorSeed[] = [];
     for (const vortex of descr.vortices) {
         if (vortex.color === null) continue;
-        const vortexSeedsPerVortex = Math.ceil(Math.PI * vortex.r * vortex.r / (seedSpacing * seedSpacing));
+        const vortexSeedsPerVortex = Math.ceil(Math.PI * vortex.r * vortex.r / (seedSpacing * seedSpacing)) * vortexSeedMultiplier;
         let placed = 0;
         while (placed < vortexSeedsPerVortex) {
             // Uniform random sampling within the unit circle, scaled to vortex radius

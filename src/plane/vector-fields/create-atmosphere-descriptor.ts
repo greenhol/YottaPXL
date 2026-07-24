@@ -1,11 +1,22 @@
-import { ColorMapperConfig } from '../../math/color/color-mapper';
-import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/types';
+import { XoRng } from '../../../shared/xo-rng';
+import { ColorMapper, ColorMapperConfig } from '../../math/color/color-mapper';
+import { AtmosphereDescriptor, VortexDescriptor } from '../../math/vector-field/atmosphere-field/types';
+import { RGB } from '../../types';
+
+export enum AtmosphereType {
+    PRESET_1 = 'Preset 1',
+    RANDOM = 'Random',
+}
 
 export function createAtmosphereDescriptor(
+    type: AtmosphereType,
+    bandCount: number,
+    vorticesCount: number,
+    vorticeMaxRadius: number,
     seed: number | null,
     bandGradient: ColorMapperConfig,
 ): AtmosphereDescriptor {
-    return {
+    const descriptor: AtmosphereDescriptor = {
         seed: seed ? seed : 0,
         xMin: -180,
         xMax: 180,
@@ -64,4 +75,152 @@ export function createAtmosphereDescriptor(
             { x0: 140, y0: 33, r: 5, speed: 0.5, color: null, }, // { r: 132, g: 52, b: 38 }, },    // deep mahogany
         ],
     };
+
+    if (type === AtmosphereType.RANDOM) {
+        const effetiveSeed = (seed == null) ? XoRng.randomSeed() : seed;
+        if (effetiveSeed != seed) {
+            console.log(`#createAtmosphereDescriptor - new XoRNG seed created: ${effetiveSeed}`);
+            descriptor.seed = effetiveSeed;
+        }
+        const rng = new XoRng(effetiveSeed);
+
+        // Bands
+        descriptor.bandCount = bandCount;
+
+        // Vortices
+        const gradient = ColorMapper.fromString(bandGradient.supportPoints);
+        const colors = gradient.colors;
+        descriptor.vortices = distributeVortices(descriptor.xMin, descriptor.xMax, descriptor.yMin, descriptor.yMax, vorticesCount, vorticeMaxRadius, colors, rng);
+    }
+
+    console.log(`#createAtmosphereDescriptor - type: ${type}, bandCount: ${descriptor.bandCount}, vorticesCount: ${descriptor.vortices.length}`);
+    return descriptor;
 }
+
+function distributeVortices(
+    x1: number,
+    x2: number,
+    y1: number,
+    y2: number,
+    vorticesCount: number,
+    maxRadius: number,
+    colors: RGB[],
+    rng: XoRng,
+): VortexDescriptor[] {
+    const rMin = maxRadius / 4;
+    const rMax = maxRadius;
+    const candidatesPerCircle = 20;
+    const colorCount = colors.length;
+    const vortices: VortexDescriptor[] = [];
+
+    for (let i = 0; i < vorticesCount; i++) {
+        const radius = rMin + rng.next() * (rMax - rMin);
+        const color = colors[rng.nextIntInRange(0, colorCount - 1)];
+        const speed = rng.nextInRange(0.1, 1);
+
+        let bestCandidate: VortexDescriptor | null = null;
+        let bestScore = -Infinity;
+
+        for (let c = 0; c < candidatesPerCircle; c++) {
+            const candidate: VortexDescriptor = {
+                x0: x1 + rng.next() * (x2 - x1),
+                y0: y1 + rng.next() * (y2 - y1),
+                r: radius,
+                color: color,
+                speed: speed,
+            };
+
+            // Score = minimum surface-to-surface distance to any existing circle.
+            // Positive = no overlap, negative = overlap. We want to maximize this.
+            let minSurfaceDistance = Infinity;
+
+            if (vortices.length === 0) {
+                minSurfaceDistance = Infinity;
+            } else {
+                for (const existing of vortices) {
+                    const dx = candidate.x0 - existing.x0;
+                    const dy = candidate.y0 - existing.y0;
+                    const centerDistance = Math.sqrt(dx * dx + dy * dy);
+                    const surfaceDistance = centerDistance - (candidate.r + existing.r);
+
+                    if (surfaceDistance < minSurfaceDistance) {
+                        minSurfaceDistance = surfaceDistance;
+                    }
+                }
+            }
+
+            if (minSurfaceDistance > bestScore) {
+                bestScore = minSurfaceDistance;
+                bestCandidate = candidate;
+            }
+        }
+
+        if (bestCandidate) {
+            vortices.push(bestCandidate);
+        }
+    }
+
+    return vortices;
+}
+
+// function distributeVortices(
+//     x1: number,
+//     x2: number,
+//     y1: number,
+//     y2: number,
+//     maxNumPoints: number,
+//     colors: RGB[],
+//     rng: XoRng,
+// ): VortexDescriptor[] {
+//     const rMin = 4;
+//     const rMax = 16;
+//     const colorCount = colors.length;
+//     const vortices: VortexDescriptor[] = [];
+//     const maxAttempts = 10000;
+
+//     for (let i = 0; i < maxNumPoints; i++) {
+//         let attempts = 0;
+//         let placed = false;
+
+//         const r = rMin + rng.next() * (rMax - rMin);
+//         const color = colors[rng.nextIntInRange(0, colorCount - 1)];
+
+//         while (!placed && attempts < maxAttempts) {
+//             const x = x1 + rng.next() * (x2 - x1);
+//             const y = y1 + rng.next() * (y2 - y1);
+//             const candidate = { x, y, r };
+
+//             // Check if the candidate's disk overlaps with any existing disk
+//             let valid = true;
+//             for (const point of vortices) {
+//                 const dx = candidate.x - point.x0;
+//                 const dy = candidate.y - point.y0;
+//                 const distance = Math.sqrt(dx * dx + dy * dy);
+//                 const minDistance = candidate.r + point.r;
+//                 if (distance < minDistance) {
+//                     valid = false;
+//                     break;
+//                 }
+//             }
+
+//             if (valid) {
+//                 vortices.push({
+//                     x0: candidate.x,
+//                     y0: candidate.y,
+//                     r: candidate.r,
+//                     color: color,
+//                     speed: rng.nextInRange(0.1, 1),
+//                 });
+//                 placed = true;
+//             }
+//             attempts++;
+//         }
+
+//         if (!placed) {
+//             console.warn(`#distributePointsWithRadii - Failed to place point ${i + 1}. Try reducing maxNumPoints or adjusting R_MIN/R_MAX.`);
+//             break;
+//         }
+//     }
+
+//     return vortices;
+// }

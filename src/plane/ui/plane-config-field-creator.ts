@@ -48,7 +48,7 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
         return this.createIntegerField(path, 'Advection steps', 'Number of steps for color advection calculation (expensive)', 1, 100);
     }
     public uiFieldAdvectionInfluenceRadius(path: string): UiFieldFloat {
-        return this.createFloatField(path, 'Influence Radius', 'Influence Radius for dolor advection', 0.01, 100);
+        return this.createFloatField(path, 'Influence Radius', 'Influence Radius for color advection', 0.01, 100);
     }
 
     /** Noise */

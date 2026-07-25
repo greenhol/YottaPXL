@@ -1,9 +1,9 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Initializable } from '../../shared';
+import { RGB } from '../../shared/colour/colour';
 import { ModuleConfig } from '../../shared/config';
+import { Initializable } from '../../shared/initializable';
 import { Grid } from '../grid/grid';
 import { GridRange, GridRangeSerialized } from '../grid/grid-range';
-import { RGB } from '../types';
 import { PROGRESS_INIT, ProgressUpdate } from '../worker/progress';
 
 export interface PlaneConfig {
@@ -65,11 +65,11 @@ export abstract class Plane implements Initializable {
         this._image$.next(image);
     }
 
-    public setPixel(imageData: Uint8ClampedArray, index: number, color: RGB) {
+    public setPixel(imageData: Uint8ClampedArray, index: number, colour: RGB) {
         const pixelIndex = index * 4;
-        imageData[pixelIndex] = color.r;     // R
-        imageData[pixelIndex + 1] = color.g; // G
-        imageData[pixelIndex + 2] = color.b; // B
+        imageData[pixelIndex] = colour.r;     // R
+        imageData[pixelIndex + 1] = colour.g; // G
+        imageData[pixelIndex + 2] = colour.b; // B
         imageData[pixelIndex + 3] = 255;     // A (opaque)
     }
 

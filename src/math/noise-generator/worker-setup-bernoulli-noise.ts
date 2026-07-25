@@ -1,5 +1,5 @@
 import { GridWithMarginBlueprint } from '../../grid/grid-with-margin';
-import { BernoulliNoiseType } from './types';
+import { BernoulliNoiseType } from './types/bernoulli-noise-type';
 
 export interface WorkerSetupBernoulliNoise {
     gridBlueprint: GridWithMarginBlueprint;

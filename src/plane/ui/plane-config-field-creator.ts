@@ -1,12 +1,12 @@
-import { ConfigUiFieldCreator, UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
-import { BlendingType } from '../../math/color/color-blender';
-import { Easing } from '../../math/color/color-mapper';
+import { ConfigUiFieldCreator, UiFieldBool, UiFieldColour as UiFieldColour, UiFieldFloat, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from '../../../shared/config';
+import { BlendingType } from '../../../shared/colour/colour-blender';
+import { Easing } from '../../../shared/colour/colour-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
 
 class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
 
     /** Header */
-    public readonly UI_FIELD_HEADER_COLOR = this.createHeader('Color');
+    public readonly UI_FIELD_HEADER_COLOUR = this.createHeader('ColoUr');
     public readonly UI_FIELD_HEADER_BLENDING = this.createHeader('Blending');
     public readonly UI_FIELD_HEADER_GRADIENT = this.createHeader('Gradient');
     public readonly UI_FIELD_HEADER_NOISE = this.createHeader('Noise');
@@ -20,9 +20,9 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
         return this.createIntegerOptionalField(path, `${useCase} Seed`.trim(), 'Seed for RNG. If empty, RNG is simply unseeded', 0, 2147483637); // 2147483647 - 10 to allow internal seed + x, x in [1..10]
     }
 
-    /** Color */
+    /** Colour */
     public uiFieldGradientSupportPoints(path: string): UiFieldString {
-        return this.createStringField(path, 'Support Points', 'Input for Gradient support points. Syntax comma separated x:color, e.g. \'0:#FF0000, 1:#0000FF\'');
+        return this.createStringField(path, 'Support Points', 'Input for Gradient support points. Syntax comma separated x:colour, e.g. \'0:#FF0000, 1:#0000FF\'');
     }
     public uiFieldGradientEasing(path: string): UiFieldStringEnum<Record<string, unknown>> {
         return this.createEnumField<Record<string, unknown>>(path, Easing, 'Easing', 'How Gradient behaves around the support points');
@@ -30,25 +30,25 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public uiFieldGradientScaling(path: string): UiFieldFloat {
         return this.createFloatField(path, 'Scaling', 'Gradient is scaled by this factor', 0.00001, 10000);
     }
-    public uiFieldColorBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
+    public uiFieldColourBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
         return new UiFieldStringEnum<Record<string, unknown>>(
             path,
             BlendingType,
             'Blending Type',
-            'Combines two Colors:\n' +
-            '\'Manipulation\' uses the channels of Color 2 to manipulate Color 1 by properties of different color spaces\n' +
+            'Combines two Colours:\n' +
+            '\'Manipulation\' uses the channels of Colour 2 to manipulate Colour 1 by properties of different colour spaces\n' +
             '\'Blending\' blends all channels in different ways directly',
         );
     }
-    public uiFieldFallbackColor(path: string): UiFieldColor {
-        return this.createColorField(path, 'Fallback Color', 'Fallback Color for pixels of undefined values');
+    public uiFieldFallbackColour(path: string): UiFieldColour {
+        return this.createColourField(path, 'Fallback Colour', 'Fallback Colour for pixels of undefined values');
     }
-    /** Color Advection */
+    /** Colour Advection */
     public uiFieldAdvectionStepCount(path: string): UiFieldInteger {
-        return this.createIntegerField(path, 'Advection steps', 'Number of steps for color advection calculation (expensive)', 1, 100);
+        return this.createIntegerField(path, 'Advection steps', 'Number of steps for colour advection calculation (expensive)', 1, 100);
     }
     public uiFieldAdvectionInfluenceRadius(path: string): UiFieldFloat {
-        return this.createFloatField(path, 'Influence Radius', 'Influence Radius for color advection', 0.01, 100);
+        return this.createFloatField(path, 'Influence Radius', 'Influence Radius for colour advection', 0.01, 100);
     }
 
     /** Noise */

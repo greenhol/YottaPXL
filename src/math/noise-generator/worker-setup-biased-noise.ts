@@ -1,5 +1,5 @@
 import { GridWithMarginBlueprint } from '../../grid/grid-with-margin';
-import { BiasType } from './types';
+import { BiasType } from './types/bias-type';
 
 export interface WorkerSetupBiasedNoise {
     gridBlueprint: GridWithMarginBlueprint;

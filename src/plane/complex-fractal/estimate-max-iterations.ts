@@ -1,4 +1,4 @@
-import { BigDecimal } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 
 export function estimateMaxIterations(userMaxIterations: number, xDiffInitial: BigDecimal, xDiff: BigDecimal): number {
     if (userMaxIterations !== 0) {

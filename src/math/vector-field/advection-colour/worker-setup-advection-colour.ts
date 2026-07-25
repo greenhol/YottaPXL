@@ -1,20 +1,20 @@
+import { RGB } from '../../../../shared/colour/colour';
 import { GridWithMarginBlueprint } from '../../../grid/grid-with-margin';
-import { RGB } from '../../../types';
 
 export interface AdvectionQuality {
     stepCount: number; // number of backward integration steps per pixel - primary quality/cost knob
     influenceRadius: number; // gaussian falloff radius for seed weighting in math units - seed reach and implicit step size
 }
 
-export interface ColorSeed {
+export interface ColourSeed {
     x: number;
     y: number;
-    color: RGB;
+    colour: RGB;
 }
 
-export interface WorkerSetupAdvectionColor {
+export interface WorkerSetupAdvectionColour {
     gridBlueprint: GridWithMarginBlueprint;
     vectorField: Float32Array;
     quality: AdvectionQuality;
-    seeds: ColorSeed[];
+    seeds: ColourSeed[];
 }

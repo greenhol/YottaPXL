@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { executeWorker } from '../../worker/execute-worker';
 import { CalculationState } from '../../worker/types';
-import { AdvectionQuality, ColorSeed, WorkerSetupAdvectionColor } from './advection-color/worker-setup-advection-color';
+import { AdvectionQuality, ColourSeed, WorkerSetupAdvectionColour } from './advection-colour/worker-setup-advection-colour';
 import { AtmosphereDescriptor } from './atmosphere-field/types';
 import { WorkerSetupAtmosphereField } from './atmosphere-field/worker-setup-atmosphere-field';
 import { Charge } from './charge-field/types';
@@ -47,15 +47,15 @@ export class VectorFieldGenerator {
         return executeWorker<WorkerSetupAtmosphereField, Float32Array>(worker, setup);
     }
 
-    public createAdvectionColor(vectorField: Float32Array, quality: AdvectionQuality, seeds: ColorSeed[]): Observable<CalculationState<Uint8ClampedArray>> {
-        const worker = new Worker(new URL('./advection-color/advection-color.worker.ts', import.meta.url));
-        const setup: WorkerSetupAdvectionColor = {
+    public createAdvectionColour(vectorField: Float32Array, quality: AdvectionQuality, seeds: ColourSeed[]): Observable<CalculationState<Uint8ClampedArray>> {
+        const worker = new Worker(new URL('./advection-colour/advection-colour.worker.ts', import.meta.url));
+        const setup: WorkerSetupAdvectionColour = {
             gridBlueprint: this._grid.withMarginBlueprint,
             vectorField: vectorField,
             quality: quality,
             seeds: seeds,
         };
-        return executeWorker<WorkerSetupAdvectionColor, Uint8ClampedArray>(worker, setup);
+        return executeWorker<WorkerSetupAdvectionColour, Uint8ClampedArray>(worker, setup);
     }
 
     public createMatrixGradientField(input: Float32Array | Float64Array, min: number, max: number, kernelOrder: number = 2): Observable<CalculationState<Float32Array>> {

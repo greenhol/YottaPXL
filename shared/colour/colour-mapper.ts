@@ -1,9 +1,9 @@
-import { COLOR, RGB, stringToRgb } from '../../types/color';
-import { converter } from './color-converter';
+import { converter } from './colour-converter';
+import { Colour, RGB } from './colour';
 
 export interface SupportPoint {
     pos: number;
-    color: RGB;
+    colour: RGB;
 }
 
 export enum Easing {
@@ -14,39 +14,39 @@ export enum Easing {
     HSL_LINEAR = 'HSL Linear',
     HSL_BALANCED = 'HSL Balanced',
     HSL_QUADRATIC = 'HSL Quadratic',
-    LAB_LINEAR = 'LAB Linear',
-    LAB_BALANCED = 'LAB Balanced',
-    LAB_QUADRATIC = 'LAB Quadratic',
-    LCH_LINEAR = 'LCH Linear',
-    LCH_BALANCED = 'LCH Balanced',
-    LCH_QUADRATIC = 'LCH Quadratic',
+    LAB_LINEAR = 'Lab Linear',
+    LAB_BALANCED = 'Lab Balanced',
+    LAB_QUADRATIC = 'Lab Quadratic',
+    LCH_LINEAR = 'Lch Linear',
+    LCH_BALANCED = 'Lch Balanced',
+    LCH_QUADRATIC = 'Lch Quadratic',
 }
 
-export interface ColorMapperConfig {
+export interface ColourMapperConfig {
     supportPoints: string,
     easing: Easing,
     scaling: number,
 }
 
-export class ColorMapper {
+export class ColourMapper {
     private _supportPoints: SupportPoint[];
-    private _colorCalculator: (t: number, left: SupportPoint, right: SupportPoint) => RGB;
+    private _colourCalculator: (t: number, left: SupportPoint, right: SupportPoint) => RGB;
     private _getInterpolationFactor: (x: number, left: SupportPoint, right: SupportPoint) => number;
 
-    public static fromString(input: string, easing: Easing = Easing.RGB_LINEAR): ColorMapper {
-        return new ColorMapper(ColorMapper.parseSupportPoints(input), easing);
+    public static fromString(input: string, easing: Easing = Easing.RGB_LINEAR): ColourMapper {
+        return new ColourMapper(ColourMapper.parseSupportPoints(input), easing);
     }
 
-    public static fromColors(colors: RGB[], easing: Easing = Easing.RGB_LINEAR): ColorMapper {
-        const points: SupportPoint[] = colors.map((color, index) => {
-            return { pos: index / colors.length, color: color };
+    public static fromColours(colours: RGB[], easing: Easing = Easing.RGB_LINEAR): ColourMapper {
+        const points: SupportPoint[] = colours.map((colour, index) => {
+            return { pos: index / colours.length, colour: colour };
         });
-        points.push({ pos: 1, color: colors[0] });
-        return new ColorMapper(points, easing);
+        points.push({ pos: 1, colour: colours[0] });
+        return new ColourMapper(points, easing);
     }
 
     private static parseSupportPoints(inputString: string): SupportPoint[] {
-        const errorFallback: SupportPoint[] = [{ pos: 0, color: COLOR.RED }, { pos: 1, color: COLOR.DARKRED }];
+        const errorFallback: SupportPoint[] = [{ pos: 0, colour: Colour.RED }, { pos: 1, colour: Colour.DARKRED }];
         try {
             const pairs = [...inputString.matchAll(/([0-9.]+)\s*:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})\b/g)];
 
@@ -55,12 +55,12 @@ export class ColorMapper {
                 return errorFallback;
             }
 
-            return pairs.map(([, xStr, colorStr]) => {
+            return pairs.map(([, xStr, colourStr]) => {
                 const pos = parseFloat(xStr);
                 if (isNaN(pos) || pos < 0 || pos > 1) {
                     console.error(`#parseSupportPoints - Invalid pos value: "${xStr}". Must be a number between 0 and 1.`);
                 }
-                return { pos, color: stringToRgb(colorStr) };
+                return { pos, colour: Colour.stringToRgb(colourStr) };
             });
 
         } catch (e) {
@@ -80,19 +80,19 @@ export class ColorMapper {
         }
 
         switch (easing) {
-            case Easing.NONE: this._colorCalculator = this.nearestColor; break;
+            case Easing.NONE: this._colourCalculator = this.nearestColour; break;
             case Easing.RGB_LINEAR:
             case Easing.RGB_BALANCED:
-            case Easing.RGB_QUADRATIC: this._colorCalculator = this.interpolateColorRGB; break;
+            case Easing.RGB_QUADRATIC: this._colourCalculator = this.interpolateColourRGB; break;
             case Easing.HSL_LINEAR:
             case Easing.HSL_BALANCED:
-            case Easing.HSL_QUADRATIC: this._colorCalculator = this.interpolateColorHSL; break;
+            case Easing.HSL_QUADRATIC: this._colourCalculator = this.interpolateColourHSL; break;
             case Easing.LAB_LINEAR:
             case Easing.LAB_BALANCED:
-            case Easing.LAB_QUADRATIC: this._colorCalculator = this.interpolateColorLAB; break;
+            case Easing.LAB_QUADRATIC: this._colourCalculator = this.interpolateColourLab; break;
             case Easing.LCH_LINEAR:
             case Easing.LCH_BALANCED:
-            case Easing.LCH_QUADRATIC: this._colorCalculator = this.interpolateColorLCH; break;
+            case Easing.LCH_QUADRATIC: this._colourCalculator = this.interpolateColourLch; break;
         }
 
         switch (easing) {
@@ -112,8 +112,8 @@ export class ColorMapper {
         }
     }
 
-    public get colors(): RGB[] {
-        return this._supportPoints.map(point => point.color);
+    public get colours(): RGB[] {
+        return this._supportPoints.map(point => point.colour);
     }
 
     public mapLooped(x: number, scaling: number = 1, offset: number = 0): RGB {
@@ -126,14 +126,14 @@ export class ColorMapper {
         const firstPos = this._supportPoints[0].pos;
         const lastPos = this._supportPoints[this._supportPoints.length - 1].pos;
 
-        if (transformedX <= firstPos) return this._supportPoints[0].color;
-        if (transformedX >= lastPos) return this._supportPoints[this._supportPoints.length - 1].color;
+        if (transformedX <= firstPos) return this._supportPoints[0].colour;
+        if (transformedX >= lastPos) return this._supportPoints[this._supportPoints.length - 1].colour;
         return this.mapInternal(transformedX);
     }
 
     public get supportPointsString(): string {
         return this._supportPoints
-            .map(point => `${point.pos}:${this.rgbToHex(point.color)}`)
+            .map(point => `${point.pos}:${this.rgbToHex(point.colour)}`)
             .join(', ');
     }
 
@@ -153,11 +153,11 @@ export class ColorMapper {
             throw new Error('Could not find a valid range for interpolation.');
         }
 
-        return this._colorCalculator(x, left, right);
+        return this._colourCalculator(x, left, right);
     }
 
-    private rgbToHex(color: RGB): string {
-        return `#${[color.r, color.g, color.b]
+    private rgbToHex(colour: RGB): string {
+        return `#${[colour.r, colour.g, colour.b]
             .map(x => x.toString(16).padStart(2, '0'))
             .join('')}`;
     }
@@ -174,48 +174,48 @@ export class ColorMapper {
         return (start + shortestDelta * t + 360) % 360;
     }
 
-    private nearestColor(t: number, left: SupportPoint, right: SupportPoint): RGB {
+    private nearestColour(t: number, left: SupportPoint, right: SupportPoint): RGB {
         return (this._getInterpolationFactor(t, left, right) == 0) ?
-            { r: left.color.r, g: left.color.g, b: left.color.b } :
-            { r: right.color.r, g: right.color.g, b: right.color.b };
+            { r: left.colour.r, g: left.colour.g, b: left.colour.b } :
+            { r: right.colour.r, g: right.colour.g, b: right.colour.b };
     }
 
-    private interpolateColorRGB(t: number, left: SupportPoint, right: SupportPoint): RGB {
+    private interpolateColourRGB(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
-        const r = Math.round(left.color.r + (right.color.r - left.color.r) * easedT);
-        const g = Math.round(left.color.g + (right.color.g - left.color.g) * easedT);
-        const b = Math.round(left.color.b + (right.color.b - left.color.b) * easedT);
+        const r = Math.round(left.colour.r + (right.colour.r - left.colour.r) * easedT);
+        const g = Math.round(left.colour.g + (right.colour.g - left.colour.g) * easedT);
+        const b = Math.round(left.colour.b + (right.colour.b - left.colour.b) * easedT);
         return { r, g, b };
     }
 
-    private interpolateColorHSL(t: number, left: SupportPoint, right: SupportPoint): RGB {
+    private interpolateColourHSL(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
-        const leftHSL = converter.rgbToHsl(left.color);
-        const rightHSL = converter.rgbToHsl(right.color);
+        const leftHSL = converter.rgbToHsl(left.colour);
+        const rightHSL = converter.rgbToHsl(right.colour);
         const h = this.lerpAngle(leftHSL.h, rightHSL.h, easedT);
         const s = leftHSL.s + (rightHSL.s - leftHSL.s) * easedT;
         const l = leftHSL.l + (rightHSL.l - leftHSL.l) * easedT;
         return converter.hslToRgb({ h, s, l });
     }
 
-    private interpolateColorLAB(t: number, left: SupportPoint, right: SupportPoint): RGB {
+    private interpolateColourLab(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
-        const leftLAB = converter.rgbToOklab(left.color);
-        const rightLAB = converter.rgbToOklab(right.color);
+        const leftLAB = converter.rgbToOkLab(left.colour);
+        const rightLAB = converter.rgbToOkLab(right.colour);
         const L = leftLAB.L + (rightLAB.L - leftLAB.L) * easedT;
         const a = leftLAB.a + (rightLAB.a - leftLAB.a) * easedT;
         const b = leftLAB.b + (rightLAB.b - leftLAB.b) * easedT;
-        return converter.oklabToRgb({ L, a, b });
+        return converter.okLabToRgb({ L, a, b });
     }
 
-    private interpolateColorLCH(t: number, left: SupportPoint, right: SupportPoint): RGB {
+    private interpolateColourLch(t: number, left: SupportPoint, right: SupportPoint): RGB {
         const easedT = this._getInterpolationFactor(t, left, right);
-        const leftLCH = converter.rgbToOklch(left.color);
-        const rightLCH = converter.rgbToOklch(right.color);
-        const L = leftLCH.L + (rightLCH.L - leftLCH.L) * easedT;
-        const c = leftLCH.c + (rightLCH.c - leftLCH.c) * easedT;
-        const h = this.lerpAngle(leftLCH.h, rightLCH.h, easedT);
-        return converter.oklchToRgb({ L, c, h });
+        const leftLch = converter.rgbToOkLch(left.colour);
+        const rightLch = converter.rgbToOkLch(right.colour);
+        const L = leftLch.L + (rightLch.L - leftLch.L) * easedT;
+        const c = leftLch.c + (rightLch.c - leftLch.c) * easedT;
+        const h = this.lerpAngle(leftLch.h, rightLch.h, easedT);
+        return converter.okLchToRgb({ L, c, h });
     }
 
     private getInterpolationFactorNone(x: number, left: SupportPoint, right: SupportPoint): number {

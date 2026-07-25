@@ -1,4 +1,4 @@
-import { BigDecimal } from '../types';
+import { BigDecimal } from '../types/big-decimal';
 
 const GRID_RANGE_SEPARATOR: string = '_';
 

@@ -1,4 +1,4 @@
-import { BigDecimal } from '../types';
+import { BigDecimal } from '../types/big-decimal';
 import { GridRange } from './grid-range';
 
 /**

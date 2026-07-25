@@ -1,23 +1,23 @@
-import { HSL, LinearRGB, OKLab, OKLCH, RGB, XYZ } from '../../types';
+import { HSL, LinearRGB, OkLab, OkLch, RGB, XYZ } from './colour';
 
-interface ColorConverterApi {
+interface ColourConverterApi {
     // Brightness
-    getBrightness(color: RGB): number;
+    getBrightness(colour: RGB): number;
 
     // sRGB <-> HSL
     rgbToHsl(rgb: RGB): HSL;
     hslToRgb(hsl: HSL): RGB;
 
     // sRGB <-> OKLab
-    rgbToOklab(rgb: RGB): OKLab;
-    oklabToRgb(oklab: OKLab): RGB;
+    rgbToOkLab(rgb: RGB): OkLab;
+    okLabToRgb(okLab: OkLab): RGB;
 
-    // sRGB <-> OKLCH
-    rgbToOklch(rgb: RGB): OKLCH;
-    oklchToRgb(oklch: OKLCH): RGB;
+    // sRGB <-> OKLch
+    rgbToOkLch(rgb: RGB): OkLch;
+    okLchToRgb(okLch: OkLch): RGB;
 }
 
-export class ColorConverter implements ColorConverterApi {
+export class ColourConverter implements ColourConverterApi {
     // D65 reference white (normalized so Y = 1)
     private readonly d65: XYZ = { X: 0.95047, Y: 1.0, Z: 1.08883 };
 
@@ -50,7 +50,7 @@ export class ColorConverter implements ColorConverterApi {
     ];
 
     // LMS' (nonlinear) -> OKLab
-    private readonly mLmsToOklab: number[][] = [
+    private readonly mLmsToOkLab: number[][] = [
         [0.2104542553, 0.7936177850, -0.0040720468],
         [1.9779984951, -2.4285922050, 0.4505937099],
         [0.0259040371, 0.7827717662, -0.8086757660],
@@ -63,8 +63,8 @@ export class ColorConverter implements ColorConverterApi {
         [1.0, -0.0894841775, -1.2914855480],
     ];
 
-    public getBrightness(color: RGB): number {
-        return (color.r + color.g + color.b) / 765;
+    public getBrightness(colour: RGB): number {
+        return (colour.r + colour.g + colour.b) / 765;
     }
 
     // --- RGB <-> HSL --------------------------------------------------------
@@ -116,8 +116,8 @@ export class ColorConverter implements ColorConverterApi {
         });
     }
 
-    // --- RGB <-> OKLab ------------------------------------------------------
-    public rgbToOklab(rgb: RGB): OKLab {
+    // --- RGB <-> OkLab ------------------------------------------------------
+    public rgbToOkLab(rgb: RGB): OkLab {
         const lin = this.rgbToLinearRgb(rgb);
         const xyz = this.linearRgbToXyz(lin);
         const lab = this.xyzToOklab(xyz);
@@ -128,21 +128,21 @@ export class ColorConverter implements ColorConverterApi {
         };
     }
 
-    public oklabToRgb(oklab: OKLab): RGB {
-        const clamped: OKLab = {
-            L: this.clamp(oklab.L, 0, 1),
-            a: this.clamp(oklab.a, -0.5, 0.5),
-            b: this.clamp(oklab.b, -0.5, 0.5),
+    public okLabToRgb(okLab: OkLab): RGB {
+        const clamped: OkLab = {
+            L: this.clamp(okLab.L, 0, 1),
+            a: this.clamp(okLab.a, -0.5, 0.5),
+            b: this.clamp(okLab.b, -0.5, 0.5),
         };
         const xyz = this.oklabToXyz(clamped);
         const lin = this.xyzToLinearRgb(xyz);
         return this.linearRgbToRgb(lin);
     }
 
-    // --- RGB <-> OKLCH ------------------------------------------------------
-    public rgbToOklch(rgb: RGB): OKLCH {
-        const lab = this.rgbToOklab(rgb);
-        const lch = this.oklabToOklch(lab);
+    // --- RGB <-> OkLch ------------------------------------------------------
+    public rgbToOkLch(rgb: RGB): OkLch {
+        const lab = this.rgbToOkLab(rgb);
+        const lch = this.okLabToOkLch(lab);
         return {
             L: this.clamp(lch.L, 0, 1),
             c: this.clamp(lch.c, 0, 0.5),
@@ -150,13 +150,13 @@ export class ColorConverter implements ColorConverterApi {
         };
     }
 
-    public oklchToRgb(oklch: OKLCH): RGB {
-        const clamped: OKLCH = {
-            L: this.clamp(oklch.L, 0, 1),
-            c: this.clamp(oklch.c, 0, 0.5),
-            h: ((oklch.h % 360) + 360) % 360,
+    public okLchToRgb(okLch: OkLch): RGB {
+        const clamped: OkLch = {
+            L: this.clamp(okLch.L, 0, 1),
+            c: this.clamp(okLch.c, 0, 0.5),
+            h: ((okLch.h % 360) + 360) % 360,
         };
-        return this.oklabToRgb(this.oklchToOklab(clamped));
+        return this.okLabToRgb(this.okLchToOkLab(clamped));
     }
 
     // --- sRGB <-> Linear RGB -----------------------------------------------
@@ -188,17 +188,17 @@ export class ColorConverter implements ColorConverterApi {
         return { r, g, b };
     }
 
-    // --- XYZ <-> OKLab ------------------------------------------------------
-    private xyzToOklab(xyz: XYZ): OKLab {
+    // --- XYZ <-> OkLab ------------------------------------------------------
+    private xyzToOklab(xyz: XYZ): OkLab {
         const [l, m, s] = this.mul3(this.mXyzToLms, [xyz.X, xyz.Y, xyz.Z]);
         const l_ = Math.cbrt(l);
         const m_ = Math.cbrt(m);
         const s_ = Math.cbrt(s);
-        const [L, a, b] = this.mul3(this.mLmsToOklab, [l_, m_, s_]);
+        const [L, a, b] = this.mul3(this.mLmsToOkLab, [l_, m_, s_]);
         return { L, a, b };
     }
 
-    private oklabToXyz(oklab: OKLab): XYZ {
+    private oklabToXyz(oklab: OkLab): XYZ {
         const [l_, m_, s_] = this.mul3(this.mOklabToLms, [oklab.L, oklab.a, oklab.b]);
         const l = l_ * l_ * l_;
         const m = m_ * m_ * m_;
@@ -207,20 +207,20 @@ export class ColorConverter implements ColorConverterApi {
         return { X, Y, Z };
     }
 
-    // --- OKLab <-> OKLCH ----------------------------------------------------
-    private oklabToOklch(oklab: OKLab): OKLCH {
-        const c = Math.sqrt(oklab.a * oklab.a + oklab.b * oklab.b);
-        let h = Math.atan2(oklab.b, oklab.a) * 180 / Math.PI;
+    // --- OKLab <-> OkLch ----------------------------------------------------
+    private okLabToOkLch(okLab: OkLab): OkLch {
+        const c = Math.sqrt(okLab.a * okLab.a + okLab.b * okLab.b);
+        let h = Math.atan2(okLab.b, okLab.a) * 180 / Math.PI;
         if (h < 0) h += 360;
-        return { L: oklab.L, c, h };
+        return { L: okLab.L, c, h };
     }
 
-    private oklchToOklab(oklch: OKLCH): OKLab {
-        const hRad = oklch.h * Math.PI / 180;
+    private okLchToOkLab(okLch: OkLch): OkLab {
+        const hRad = okLch.h * Math.PI / 180;
         return {
-            L: oklch.L,
-            a: oklch.c * Math.cos(hRad),
-            b: oklch.c * Math.sin(hRad),
+            L: okLch.L,
+            a: okLch.c * Math.cos(hRad),
+            b: okLch.c * Math.sin(hRad),
         };
     }
 
@@ -245,4 +245,4 @@ export class ColorConverter implements ColorConverterApi {
     }
 }
 
-export const converter = new ColorConverter();
+export const converter = new ColourConverter();

@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { idGenerator } from '../../unique';
 
-export type UiFieldType = 'header' | 'string' | 'integer' | 'integer?' | 'float' | 'boolean' | 'color' | 'enum';
+export type UiFieldType = 'header' | 'string' | 'integer' | 'integer?' | 'float' | 'boolean' | 'colour' | 'enum';
 
 export abstract class ConfigUiField<T> {
 
@@ -229,14 +229,14 @@ export class UiFieldBool extends ConfigUiField<boolean> {
     }
 }
 
-export class UiFieldColor extends ConfigUiField<string> {
+export class UiFieldColour extends ConfigUiField<string> {
 
     constructor(
         path: string,
         label: string,
         description: string,
     ) {
-        super(path, 'color', label, description);
+        super(path, 'colour', label, description);
     }
 
     override get fullDescription() {

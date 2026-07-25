@@ -1,9 +1,9 @@
-import { InitializeAfterConstruct } from '../../../shared';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange } from '../../grid/grid-range';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
-import { BigDecimal } from '../../types';
-import { COLORS } from '../../types/colors';
+import { BigDecimal } from '../../types/big-decimal';
+import { Colours } from '../../types/colours';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
@@ -22,12 +22,12 @@ enum GradientDemos {
     CAPPUCCINO = 'Cappuccino',
     C64_RAINBOW = 'C64 Rainbow',
     C64_MANDELBROT = 'C64 Mandelbrot',
-    C64_ALL_COLORS = 'C64 All Colors',
+    C64_ALL_COLOURS = 'C64 All Colours',
 }
 
 interface GradientPlaneConfig extends PlaneConfig {
     demo: GradientDemos,
-    config: ColorMapperConfig,
+    config: ColourMapperConfig,
     offset: number,
 };
 
@@ -68,8 +68,8 @@ export class Gradient extends Plane {
 
     private createImage(): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapper = this.getColorMapper();
-        this.config.setInfo('Effective Gradient', colorMapper.supportPointsString);
+        const colourMapper = this.getColourMapper();
+        this.config.setInfo('Effective Gradient', colourMapper.supportPointsString);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -77,33 +77,33 @@ export class Gradient extends Plane {
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    colorMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset),
+                    colourMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset),
                 );
             }
         }
         return imageData;
     }
 
-    private getColorMapper(): ColorMapper {
+    private getColourMapper(): ColourMapper {
         if (this.config.data.config.supportPoints.length > 0) {
-            return ColorMapper.fromString(this.config.data.config.supportPoints, this.config.data.config.easing);
+            return ColourMapper.fromString(this.config.data.config.supportPoints, this.config.data.config.easing);
         }
         switch (this.config.data.demo) {
-            case GradientDemos.BW: return ColorMapper.fromColors(COLORS.BW, this.config.data.config.easing);
-            case GradientDemos.RGB: return ColorMapper.fromColors(COLORS.RGB, this.config.data.config.easing);
-            case GradientDemos.HOT_METAL: return ColorMapper.fromColors(COLORS.HOT_METAL, this.config.data.config.easing);
-            case GradientDemos.RAINBOW: return ColorMapper.fromColors(COLORS.RAINBOW, this.config.data.config.easing);
-            case GradientDemos.OCEAN: return ColorMapper.fromColors(COLORS.OCEAN, this.config.data.config.easing);
-            case GradientDemos.FIRE: return ColorMapper.fromColors(COLORS.FIRE, this.config.data.config.easing);
-            case GradientDemos.PURPLE_HAZE: return ColorMapper.fromColors(COLORS.PURPLE_HAZE, this.config.data.config.easing);
-            case GradientDemos.GREYSCALE: return ColorMapper.fromColors(COLORS.GREYSCALE, this.config.data.config.easing);
-            case GradientDemos.SUNSET: return ColorMapper.fromColors(COLORS.SUNSET, this.config.data.config.easing);
-            case GradientDemos.ELECTRIC: return ColorMapper.fromColors(COLORS.ELECTRIC, this.config.data.config.easing);
-            case GradientDemos.PASTEL: return ColorMapper.fromColors(COLORS.PASTEL, this.config.data.config.easing);
-            case GradientDemos.CAPPUCCINO: return ColorMapper.fromColors(COLORS.CAPPUCCINO, this.config.data.config.easing);
-            case GradientDemos.C64_RAINBOW: return ColorMapper.fromColors(COLORS.C64_RAINBOW, this.config.data.config.easing);
-            case GradientDemos.C64_MANDELBROT: return ColorMapper.fromColors(COLORS.C64_MANDELBROT, this.config.data.config.easing);
-            case GradientDemos.C64_ALL_COLORS: return ColorMapper.fromColors(COLORS.C64_ALL_COLORS, this.config.data.config.easing);
+            case GradientDemos.BW: return ColourMapper.fromColours(Colours.BW, this.config.data.config.easing);
+            case GradientDemos.RGB: return ColourMapper.fromColours(Colours.RGB, this.config.data.config.easing);
+            case GradientDemos.HOT_METAL: return ColourMapper.fromColours(Colours.HOT_METAL, this.config.data.config.easing);
+            case GradientDemos.RAINBOW: return ColourMapper.fromColours(Colours.RAINBOW, this.config.data.config.easing);
+            case GradientDemos.OCEAN: return ColourMapper.fromColours(Colours.OCEAN, this.config.data.config.easing);
+            case GradientDemos.FIRE: return ColourMapper.fromColours(Colours.FIRE, this.config.data.config.easing);
+            case GradientDemos.PURPLE_HAZE: return ColourMapper.fromColours(Colours.PURPLE_HAZE, this.config.data.config.easing);
+            case GradientDemos.GREYSCALE: return ColourMapper.fromColours(Colours.GREYSCALE, this.config.data.config.easing);
+            case GradientDemos.SUNSET: return ColourMapper.fromColours(Colours.SUNSET, this.config.data.config.easing);
+            case GradientDemos.ELECTRIC: return ColourMapper.fromColours(Colours.ELECTRIC, this.config.data.config.easing);
+            case GradientDemos.PASTEL: return ColourMapper.fromColours(Colours.PASTEL, this.config.data.config.easing);
+            case GradientDemos.CAPPUCCINO: return ColourMapper.fromColours(Colours.CAPPUCCINO, this.config.data.config.easing);
+            case GradientDemos.C64_RAINBOW: return ColourMapper.fromColours(Colours.C64_RAINBOW, this.config.data.config.easing);
+            case GradientDemos.C64_MANDELBROT: return ColourMapper.fromColours(Colours.C64_MANDELBROT, this.config.data.config.easing);
+            case GradientDemos.C64_ALL_COLOURS: return ColourMapper.fromColours(Colours.C64_ALL_COLOURS, this.config.data.config.easing);
         }
     }
 

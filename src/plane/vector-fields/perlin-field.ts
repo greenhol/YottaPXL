@@ -1,17 +1,18 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
+import { blender, BlendingType } from '../../../shared/colour/colour-blender';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { blender, BlendingType } from '../../math/color/color-blender';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { PerlinGenerator } from '../../math/perlin/perlin-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
-import { BigDecimal, COLOR } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -24,8 +25,8 @@ interface PerlinFieldPlaneConfig extends PlaneConfig {
     isohypse: boolean,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
-    gradientMagnitude: ColorMapperConfig,
-    gradientStreamlines: ColorMapperConfig,
+    gradientMagnitude: ColourMapperConfig,
+    gradientStreamlines: ColourMapperConfig,
     blending: BlendingType,
 }
 
@@ -90,7 +91,7 @@ export class PerlinField extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
             CREATE.UI_FIELD_HEADER_BLENDING,
-            CREATE.uiFieldColorBlending('blending'),
+            CREATE.uiFieldColourBlending('blending'),
         ]
     );
 
@@ -184,9 +185,9 @@ export class PerlinField extends Plane {
     private createImage(data: Float64Array, vectorField: VectorFieldReader): ImageDataArray {
         const medianMagnitude = vectorField.evaluateMedianMagnitude();
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperMagnitude = ColorMapper.fromString(this.config.data.gradientMagnitude.supportPoints, this.config.data.gradientMagnitude.easing);
-        const colorMapperStreamlines = ColorMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
-        const fallbackColor = COLOR.RED;
+        const colourMapperMagnitude = ColourMapper.fromString(this.config.data.gradientMagnitude.supportPoints, this.config.data.gradientMagnitude.easing);
+        const colourMapperStreamlines = ColourMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
+        const fallbackColour = Colour.RED;
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -196,8 +197,8 @@ export class PerlinField extends Plane {
                     imageData,
                     index,
                     blender.blend(
-                        (isNaN(magnitude)) ? fallbackColor : colorMapperMagnitude.mapLooped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
-                        (isNaN(data[index])) ? fallbackColor : colorMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
+                        (isNaN(magnitude)) ? fallbackColour : colourMapperMagnitude.mapLooped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
+                        (isNaN(data[index])) ? fallbackColour : colourMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
                         this.config.data.blending,
                     ),
                 );

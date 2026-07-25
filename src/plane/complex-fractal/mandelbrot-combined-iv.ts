@@ -1,16 +1,17 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
+import { blender, BlendingType } from '../../../shared/colour/colour-blender';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { blender, BlendingType } from '../../math/color/color-blender';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { BigDecimal, stringToRgb } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -22,9 +23,9 @@ interface MandelbrotCombinedIvConfig extends PlaneConfig {
     escapeValue: number,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
-    gradientIterations: ColorMapperConfig,
-    gradientStreamlines: ColorMapperConfig,
-    fallbackColor: string,
+    gradientIterations: ColourMapperConfig,
+    gradientStreamlines: ColourMapperConfig,
+    fallbackColour: string,
     blending: BlendingType,
 }
 
@@ -62,7 +63,7 @@ export class MandelbrotCombinedIV extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
-            fallbackColor: '#000000',
+            fallbackColour: '#000000',
             blending: BlendingType.HSL,
         },
         'mandelbrotCombinedIvConfig',
@@ -86,9 +87,9 @@ export class MandelbrotCombinedIV extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
             CREATE.uiFieldGradientScaling('gradientStreamlines.scaling'),
-            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.uiFieldFallbackColour('fallbackColour'),
             CREATE.UI_FIELD_HEADER_BLENDING,
-            CREATE.uiFieldColorBlending('blending'),
+            CREATE.uiFieldColourBlending('blending'),
         ],
     );
 
@@ -170,9 +171,9 @@ export class MandelbrotCombinedIV extends Plane {
 
     private createImage(iterations: Float64Array, field: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperIterations = ColorMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
-        const colorMapperStreamlines = ColorMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
-        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
+        const colourMapperIterations = ColourMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
+        const colourMapperStreamlines = ColourMapper.fromString(this.config.data.gradientStreamlines.supportPoints, this.config.data.gradientStreamlines.easing);
+        const fallbackColour = Colour.stringToRgb(this.config.data.fallbackColour);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -183,10 +184,10 @@ export class MandelbrotCombinedIV extends Plane {
                     imageData,
                     index,
                     (valueIterations === this._effectiveMaxIterations) ?
-                        fallbackColor :
+                        fallbackColour :
                         blender.blend(
-                            colorMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
-                            colorMapperStreamlines.mapClamped(field[index], this.config.data.gradientStreamlines.scaling),
+                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
+                            colourMapperStreamlines.mapClamped(field[index], this.config.data.gradientStreamlines.scaling),
                             this.config.data.blending,
                         )
                 );

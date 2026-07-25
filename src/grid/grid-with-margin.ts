@@ -1,4 +1,4 @@
-import { BigDecimal } from '../types';
+import { BigDecimal } from '../types/big-decimal';
 import { Grid } from './grid';
 import { GridRange, GridRangeSerialized } from './grid-range';
 import { Resolution } from './resolutions';

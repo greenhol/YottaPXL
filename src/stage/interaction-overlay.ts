@@ -1,7 +1,7 @@
 import { BehaviorSubject, filter, Observable, Subject, takeUntil, timer } from 'rxjs';
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
-import { BigDecimal } from '../types';
+import { BigDecimal } from '../types/big-decimal';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
 const ID_USER_RECT = 'user-rectangle';

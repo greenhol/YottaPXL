@@ -1,8 +1,8 @@
+import { Colour, RGB } from '../../../../shared/colour/colour';
 import { GridWithMargin } from '../../../grid/grid-with-margin';
-import { RGB } from '../../../types';
 import { Progress } from '../../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../../worker/types';
-import { ColorSeed, WorkerSetupAdvectionColor } from './worker-setup-advection-color';
+import { ColourSeed, WorkerSetupAdvectionColour } from './worker-setup-advection-colour';
 
 interface GridBounds {
     xMin: number;
@@ -12,21 +12,19 @@ interface GridBounds {
 }
 
 interface SpatialIndex {
-    cells: Map<string, ColorSeed[]>;
+    cells: Map<string, ColourSeed[]>;
     cellSize: number;
 }
 
-const BLACK: RGB = { r: 0, g: 0, b: 0, };
-
 self.onmessage = (e) => {
-    const { type, data }: { type: MessageToWorker, data: WorkerSetupAdvectionColor; } = e.data;
+    const { type, data }: { type: MessageToWorker, data: WorkerSetupAdvectionColour; } = e.data;
     if (type === MessageToWorker.START) {
         const result = calculate(data);
         self.postMessage({ type: MessageFromWorker.RESULT, result }, [result.buffer]);
     }
 };
 
-function calculate(setup: WorkerSetupAdvectionColor): Uint8ClampedArray {
+function calculate(setup: WorkerSetupAdvectionColour): Uint8ClampedArray {
     const grid = GridWithMargin.copyWithMargin(setup.gridBlueprint);
     const data = new Uint8ClampedArray(grid.size * 4);
 
@@ -42,26 +40,26 @@ function calculate(setup: WorkerSetupAdvectionColor): Uint8ClampedArray {
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
             const [x, y] = grid.pixelToMath(col, row);
-            const color = advectColor(x, y, grid, bounds, setup, spatialIndex);
+            const colour = advectColour(x, y, grid, bounds, setup, spatialIndex);
             const index = grid.getIndex(col, row) * 4;
-            data[index] = color.r;
-            data[index + 1] = color.g;
-            data[index + 2] = color.b;
+            data[index] = colour.r;
+            data[index + 1] = colour.g;
+            data[index + 2] = colour.b;
             data[index + 3] = 255;
         }
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
     }
 
-    progress.logDone('#AdvectionColor (worker)');
+    progress.logDone('#AdvectionColour (worker)');
     return data;
 }
 
 // ── Spatial index ─────────────────────────────────────────────────────────────
-function buildSpatialIndex(seeds: ColorSeed[], influenceRadius: number): SpatialIndex {
+function buildSpatialIndex(seeds: ColourSeed[], influenceRadius: number): SpatialIndex {
     // Cell size matches influence radius so only immediate neighbors need checking
     const cellSize = influenceRadius;
-    const cells = new Map<string, ColorSeed[]>();
+    const cells = new Map<string, ColourSeed[]>();
 
     for (const seed of seeds) {
         const key = cellKey(seed.x, seed.y, cellSize);
@@ -76,10 +74,10 @@ function cellKey(x: number, y: number, cellSize: number): string {
     return `${Math.floor(x / cellSize)},${Math.floor(y / cellSize)}`;
 }
 
-function nearbySeeds(x: number, y: number, index: SpatialIndex): ColorSeed[] {
+function nearbySeeds(x: number, y: number, index: SpatialIndex): ColourSeed[] {
     const cx = Math.floor(x / index.cellSize);
     const cy = Math.floor(y / index.cellSize);
-    const result: ColorSeed[] = [];
+    const result: ColourSeed[] = [];
 
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
@@ -114,12 +112,12 @@ function sampleField(
 }
 
 // ── Advection ─────────────────────────────────────────────────────────────────
-function advectColor(
+function advectColour(
     x: number,
     y: number,
     grid: GridWithMargin,
     bounds: GridBounds,
-    setup: WorkerSetupAdvectionColor,
+    setup: WorkerSetupAdvectionColour,
     spatialIndex: SpatialIndex,
 ): RGB {
     let px = x, py = y;
@@ -127,7 +125,7 @@ function advectColor(
     const stepSize = setup.quality.influenceRadius * 0.5;
 
     for (let step = 0; step < setup.quality.stepCount; step++) {
-        // Accumulate weighted color contributions from nearby seeds
+        // Accumulate weighted colour contributions from nearby seeds
         const nearby = nearbySeeds(px, py, spatialIndex);
         for (const seed of nearby) {
             const dx = px - seed.x;
@@ -136,9 +134,9 @@ function advectColor(
             const r2 = setup.quality.influenceRadius * setup.quality.influenceRadius;
             const w = Math.exp(-d2 / r2);
             if (w > 1e-6) {
-                rAcc += seed.color.r * w;
-                gAcc += seed.color.g * w;
-                bAcc += seed.color.b * w;
+                rAcc += seed.colour.r * w;
+                gAcc += seed.colour.g * w;
+                bAcc += seed.colour.b * w;
                 wAcc += w;
             }
         }
@@ -149,7 +147,7 @@ function advectColor(
         py -= vY * stepSize;
     }
 
-    if (wAcc === 0) return BLACK;
+    if (wAcc === 0) return Colour.BLACK;
 
     return {
         r: Math.round(rAcc / wAcc),

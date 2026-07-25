@@ -1,14 +1,15 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
-import { BigDecimal, stringToRgb } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -21,8 +22,8 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     interpolate: boolean,
     escapeValue: number,
     licConfig: LicConfig,
-    gradient: ColorMapperConfig,
-    fallbackColor: string,
+    gradient: ColourMapperConfig,
+    fallbackColour: string,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.fromNumber(-3), xMax: BigDecimal.fromNumber(1.8), yCenter: BigDecimal.ZERO };
@@ -54,7 +55,7 @@ export class MandelbrotVector extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
             },
-            fallbackColor: '#000000',
+            fallbackColour: '#000000',
         },
         'mandelbrotVectorConfig',
         [
@@ -72,7 +73,7 @@ export class MandelbrotVector extends Plane {
             CREATE.UI_FIELD_HEADER_GRADIENT,
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
-            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.uiFieldFallbackColour('fallbackColour'),
         ],
     );
 
@@ -147,8 +148,8 @@ export class MandelbrotVector extends Plane {
 
     private drawImage(data: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
-        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
+        const colourMapper = ColourMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
+        const fallbackColour = Colour.stringToRgb(this.config.data.fallbackColour);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -157,7 +158,7 @@ export class MandelbrotVector extends Plane {
                 this.setPixel(
                     imageData,
                     index,
-                    (value == Number.MIN_SAFE_INTEGER) ? fallbackColor : colorMapper.mapClamped(value));
+                    (value == Number.MIN_SAFE_INTEGER) ? fallbackColour : colourMapper.mapClamped(value));
             }
         }
         return imageData;

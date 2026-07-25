@@ -3,7 +3,7 @@ import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { BiasType } from './types';
+import { BiasType } from './types/bias-type';
 import { upscaleNoise } from './upscale-noise';
 import { WorkerSetupBiasedNoise } from './worker-setup-biased-noise';
 

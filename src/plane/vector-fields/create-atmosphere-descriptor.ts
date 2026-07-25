@@ -1,7 +1,7 @@
+import { RGB } from '../../../shared/colour/colour';
+import { ColourMapper, ColourMapperConfig } from '../../../shared/colour/colour-mapper';
 import { XoRng } from '../../../shared/xo-rng';
-import { ColorMapper, ColorMapperConfig } from '../../math/color/color-mapper';
 import { AtmosphereDescriptor, VortexDescriptor } from '../../math/vector-field/atmosphere-field/types';
-import { RGB } from '../../types';
 
 export enum AtmosphereType {
     PRESET_1 = 'Preset 1',
@@ -14,7 +14,7 @@ export function createAtmosphereDescriptor(
     vorticesCount: number,
     vorticeMaxRadius: number,
     seed: number | null,
-    bandGradient: ColorMapperConfig,
+    bandGradient: ColourMapperConfig,
 ): AtmosphereDescriptor {
     const descriptor: AtmosphereDescriptor = {
         seed: seed ? seed : 0,
@@ -65,14 +65,14 @@ export function createAtmosphereDescriptor(
         },
         bandGradient: bandGradient,
         vortices: [
-            { x0: -90, y0: -40, r: 12, speed: 0.4, color: null, }, // { r: 179, g: 83, b: 45 }, },  // burnt orange-red
-            { x0: 20, y0: 60, r: 15, speed: 0.3, color: null, }, // { r: 156, g: 64, b: 36 }, },    // deep rust
-            { x0: 100, y0: -60, r: 10, speed: 0.6, color: null, }, // { r: 194, g: 101, b: 58 }, }, // warm terracotta
-            { x0: -120, y0: 33, r: 8, speed: 0.5, color: null, }, // { r: 139, g: 58, b: 40 }, },   // dark brick
-            { x0: -75, y0: 80, r: 11, speed: 0.15, color: null, }, // { r: 168, g: 78, b: 42 }, },  // medium rust
-            { x0: -15, y0: -65, r: 6, speed: 0.5, color: null, }, // { r: 145, g: 72, b: 55 }, },   // brownish rust
-            { x0: 55, y0: -20, r: 8, speed: 0.2, color: null, }, // { r: 187, g: 95, b: 50 }, },    // amber rust
-            { x0: 140, y0: 33, r: 5, speed: 0.5, color: null, }, // { r: 132, g: 52, b: 38 }, },    // deep mahogany
+            { x0: -90, y0: -40, r: 12, speed: 0.4, colour: null, }, // { r: 179, g: 83, b: 45 }, },  // burnt orange-red
+            { x0: 20, y0: 60, r: 15, speed: 0.3, colour: null, }, // { r: 156, g: 64, b: 36 }, },    // deep rust
+            { x0: 100, y0: -60, r: 10, speed: 0.6, colour: null, }, // { r: 194, g: 101, b: 58 }, }, // warm terracotta
+            { x0: -120, y0: 33, r: 8, speed: 0.5, colour: null, }, // { r: 139, g: 58, b: 40 }, },   // dark brick
+            { x0: -75, y0: 80, r: 11, speed: 0.15, colour: null, }, // { r: 168, g: 78, b: 42 }, },  // medium rust
+            { x0: -15, y0: -65, r: 6, speed: 0.5, colour: null, }, // { r: 145, g: 72, b: 55 }, },   // brownish rust
+            { x0: 55, y0: -20, r: 8, speed: 0.2, colour: null, }, // { r: 187, g: 95, b: 50 }, },    // amber rust
+            { x0: 140, y0: 33, r: 5, speed: 0.5, colour: null, }, // { r: 132, g: 52, b: 38 }, },    // deep mahogany
         ],
     };
 
@@ -88,9 +88,9 @@ export function createAtmosphereDescriptor(
         descriptor.bandCount = bandCount;
 
         // Vortices
-        const gradient = ColorMapper.fromString(bandGradient.supportPoints);
-        const colors = gradient.colors;
-        descriptor.vortices = distributeVortices(descriptor.xMin, descriptor.xMax, descriptor.yMin, descriptor.yMax, vorticesCount, vorticeMaxRadius, colors, rng);
+        const gradient = ColourMapper.fromString(bandGradient.supportPoints);
+        const colours = gradient.colours;
+        descriptor.vortices = distributeVortices(descriptor.xMin, descriptor.xMax, descriptor.yMin, descriptor.yMax, vorticesCount, vorticeMaxRadius, colours, rng);
     }
 
     console.log(`#createAtmosphereDescriptor - type: ${type}, bandCount: ${descriptor.bandCount}, vorticesCount: ${descriptor.vortices.length}`);
@@ -104,18 +104,18 @@ function distributeVortices(
     y2: number,
     vorticesCount: number,
     maxRadius: number,
-    colors: RGB[],
+    colours: RGB[],
     rng: XoRng,
 ): VortexDescriptor[] {
     const rMin = maxRadius / 4;
     const rMax = maxRadius;
     const candidatesPerCircle = 20;
-    const colorCount = colors.length;
+    const colourCount = colours.length;
     const vortices: VortexDescriptor[] = [];
 
     for (let i = 0; i < vorticesCount; i++) {
         const radius = rMin + rng.next() * (rMax - rMin);
-        const color = colors[rng.nextIntInRange(0, colorCount - 1)];
+        const colour = colours[rng.nextIntInRange(0, colourCount - 1)];
         const speed = rng.nextInRange(0.1, 1);
 
         let bestCandidate: VortexDescriptor | null = null;
@@ -126,7 +126,7 @@ function distributeVortices(
                 x0: x1 + rng.next() * (x2 - x1),
                 y0: y1 + rng.next() * (y2 - y1),
                 r: radius,
-                color: color,
+                colour: colour,
                 speed: speed,
             };
 
@@ -162,65 +162,3 @@ function distributeVortices(
 
     return vortices;
 }
-
-// function distributeVortices(
-//     x1: number,
-//     x2: number,
-//     y1: number,
-//     y2: number,
-//     maxNumPoints: number,
-//     colors: RGB[],
-//     rng: XoRng,
-// ): VortexDescriptor[] {
-//     const rMin = 4;
-//     const rMax = 16;
-//     const colorCount = colors.length;
-//     const vortices: VortexDescriptor[] = [];
-//     const maxAttempts = 10000;
-
-//     for (let i = 0; i < maxNumPoints; i++) {
-//         let attempts = 0;
-//         let placed = false;
-
-//         const r = rMin + rng.next() * (rMax - rMin);
-//         const color = colors[rng.nextIntInRange(0, colorCount - 1)];
-
-//         while (!placed && attempts < maxAttempts) {
-//             const x = x1 + rng.next() * (x2 - x1);
-//             const y = y1 + rng.next() * (y2 - y1);
-//             const candidate = { x, y, r };
-
-//             // Check if the candidate's disk overlaps with any existing disk
-//             let valid = true;
-//             for (const point of vortices) {
-//                 const dx = candidate.x - point.x0;
-//                 const dy = candidate.y - point.y0;
-//                 const distance = Math.sqrt(dx * dx + dy * dy);
-//                 const minDistance = candidate.r + point.r;
-//                 if (distance < minDistance) {
-//                     valid = false;
-//                     break;
-//                 }
-//             }
-
-//             if (valid) {
-//                 vortices.push({
-//                     x0: candidate.x,
-//                     y0: candidate.y,
-//                     r: candidate.r,
-//                     color: color,
-//                     speed: rng.nextInRange(0.1, 1),
-//                 });
-//                 placed = true;
-//             }
-//             attempts++;
-//         }
-
-//         if (!placed) {
-//             console.warn(`#distributePointsWithRadii - Failed to place point ${i + 1}. Try reducing maxNumPoints or adjusting R_MIN/R_MAX.`);
-//             break;
-//         }
-//     }
-
-//     return vortices;
-// }

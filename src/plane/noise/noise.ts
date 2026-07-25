@@ -1,11 +1,12 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { Grid } from '../../grid/grid';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { BigDecimal, createGreyByIntensity } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
@@ -78,7 +79,7 @@ export class Noise extends Plane {
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    createGreyByIntensity(data[destinationIndex])
+                    Colour.createGreyByIntensity(data[destinationIndex])
                 );
             }
         }

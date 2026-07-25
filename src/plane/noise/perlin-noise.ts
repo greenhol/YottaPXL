@@ -1,11 +1,11 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { PerlinGenerator } from '../../math/perlin/perlin-generator';
-import { BigDecimal } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
@@ -14,7 +14,7 @@ interface PerlinNoisePlaneConfig extends PlaneConfig {
     octaveCount: number,
     octaveAmplitudeFactor: number,
     scaleFactor: number,
-    gradient: ColorMapperConfig,
+    gradient: ColourMapperConfig,
 }
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(50), yCenter: BigDecimal.ZERO };
@@ -82,14 +82,14 @@ export class PerlinNoise extends Plane {
 
     private createImage(data: Float32Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapper = ColorMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
+        const colourMapper = ColourMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const destinationIndex = this.grid.getIndex(col, row);
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    colorMapper.mapClamped(data[destinationIndex]),
+                    colourMapper.mapClamped(data[destinationIndex]),
                 );
             }
         }

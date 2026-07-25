@@ -1,5 +1,5 @@
-import { RGB } from '../../../types';
-import { ColorMapperConfig } from '../../color/color-mapper';
+import { RGB } from '../../../../shared/colour/colour';
+import { ColourMapperConfig } from '../../../../shared/colour/colour-mapper';
 
 export interface PerlinConfig {
     interval: number; // one interval in domain units (e.g. 8 = 8° wide cells)
@@ -12,7 +12,7 @@ export interface VortexDescriptor {
     y0: number;
     r: number;
     speed: number;
-    color: RGB | null;
+    colour: RGB | null;
 }
 
 export interface AtmosphereDescriptor {
@@ -41,8 +41,8 @@ export interface AtmosphereDescriptor {
     perlinPerturbationX: PerlinConfig;
     perlinPerturbationY: PerlinConfig;
 
-    // Coloring
-    bandGradient: ColorMapperConfig;
+    // Colouring
+    bandGradient: ColourMapperConfig;
 
     // Shared
     vortices: VortexDescriptor[];

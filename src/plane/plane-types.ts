@@ -11,7 +11,7 @@ export type PlaneId =
     'NOISE' |
     'PERLIN_NOISE' |
     'GRADIENT' |
-    'COLOR_BLEND';
+    'COLOUR_BLEND';
 
 export interface PlaneType {
     id: PlaneId,
@@ -47,8 +47,8 @@ export const PLANE_SELECTOR: PlaneGroup[] = [
         planes: [
             { id: 'NOISE', short: 'Noise types', description: 'A set of different noise types' },
             { id: 'PERLIN_NOISE', short: 'Perlin Noise', description: 'Perlin Noise' },
-            { id: 'GRADIENT', short: 'Color Gradients', description: 'A selection of color gradients and custom for defining your own' },
-            { id: 'COLOR_BLEND', short: 'Color Blending', description: 'A selection of color blenders demonstrated on gradients' },
+            { id: 'GRADIENT', short: 'Colour Gradients', description: 'A selection of colour gradients and custom for defining your own' },
+            { id: 'COLOUR_BLEND', short: 'Colour Blending', description: 'A selection of colour blenders demonstrated on gradients' },
         ],
     },
 ];

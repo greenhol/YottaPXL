@@ -3,7 +3,7 @@ import { GridReader } from '../../grid/grid-reader';
 import { GridWithMargin } from '../../grid/grid-with-margin';
 import { GridWithoutRange } from '../../grid/grid-without-range';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { BernoulliNoiseType } from './types';
+import { BernoulliNoiseType } from './types/bernoulli-noise-type';
 import { upscaleNoise } from './upscale-noise';
 import { WorkerSetupBernoulliNoise } from './worker-setup-bernoulli-noise';
 

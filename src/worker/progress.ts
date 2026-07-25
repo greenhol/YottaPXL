@@ -57,10 +57,10 @@ export class Progress {
 
     public logDone(prefix: string) {
         const duration = (Date.now() - this._start) / 1000;
-        const color = (duration < 2) ? 'darkgreen' : 'darkorange';
+        const colour = (duration < 2) ? 'darkgreen' : 'darkorange';
         console.info(
             `${prefix} - calculation done in %c${duration}s`,
-            `color: ${color}; font-weight: bold;`,
+            `colour: ${colour}; font-weight: bold;`,
         );
     }
 }

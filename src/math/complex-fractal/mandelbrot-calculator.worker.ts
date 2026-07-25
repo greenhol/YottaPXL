@@ -1,5 +1,5 @@
 import { Grid } from '../../grid/grid';
-import { BigDecimal } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { Progress } from '../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
 import { CalculationType } from './types';

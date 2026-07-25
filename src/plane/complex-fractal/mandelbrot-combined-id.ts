@@ -1,10 +1,11 @@
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
+import { blender, BlendingType } from '../../../shared/colour/colour-blender';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { GridRange } from '../../grid/grid-range';
-import { blender, BlendingType } from '../../math/color/color-blender';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { MandelbrotCalculator } from '../../math/complex-fractal/mandelbrot-calculator';
-import { BigDecimal, stringToRgb } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -14,9 +15,9 @@ interface MandelbrotCombinedIdConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     escapeValue: number,
-    gradientIterations: ColorMapperConfig,
-    gradientDistance: ColorMapperConfig,
-    fallbackColor: string,
+    gradientIterations: ColourMapperConfig,
+    gradientDistance: ColourMapperConfig,
+    fallbackColour: string,
     blending: BlendingType,
 }
 
@@ -43,7 +44,7 @@ export class MandelbrotCombinedID extends Plane {
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
             },
-            fallbackColor: '#000000',
+            fallbackColour: '#000000',
             blending: BlendingType.INTENSITY,
         },
         'mandelbrotCombinedIdConfig',
@@ -60,9 +61,9 @@ export class MandelbrotCombinedID extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientDistance.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientDistance.easing'),
             CREATE.uiFieldGradientScaling('gradientDistance.scaling'),
-            CREATE.uiFieldFallbackColor('fallbackColor'),
+            CREATE.uiFieldFallbackColour('fallbackColour'),
             CREATE.UI_FIELD_HEADER_BLENDING,
-            CREATE.uiFieldColorBlending('blending'),
+            CREATE.uiFieldColourBlending('blending'),
         ],
     );
 
@@ -94,11 +95,11 @@ export class MandelbrotCombinedID extends Plane {
 
     private createImage(iterations: Float64Array, distances: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperIterations = ColorMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
+        const colourMapperIterations = ColourMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
         let max = 0;
         distances.forEach(value => { if (value > max) max = value; });
-        const colorMapperDistances = ColorMapper.fromString(this.config.data.gradientDistance.supportPoints, this.config.data.gradientDistance.easing);
-        const fallbackColor = stringToRgb(this.config.data.fallbackColor);
+        const colourMapperDistances = ColourMapper.fromString(this.config.data.gradientDistance.supportPoints, this.config.data.gradientDistance.easing);
+        const fallbackColour = Colour.stringToRgb(this.config.data.fallbackColour);
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -108,10 +109,10 @@ export class MandelbrotCombinedID extends Plane {
                     imageData,
                     index,
                     (valueIterations === this._effectiveMaxIterations) ?
-                        fallbackColor :
+                        fallbackColour :
                         blender.blend(
-                            colorMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
-                            colorMapperDistances.mapLooped(distances[index], max * this.config.data.gradientDistance.scaling),
+                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
+                            colourMapperDistances.mapLooped(distances[index], max * this.config.data.gradientDistance.scaling),
                             this.config.data.blending,
                         ),
                 );

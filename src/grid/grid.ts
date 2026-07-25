@@ -1,4 +1,4 @@
-import { BigDecimal } from '../types';
+import { BigDecimal } from '../types/big-decimal';
 import { BigDecimalCoordinateStrategy, NumberCoordinateStrategy } from './grid-coordinate-strategy';
 import { GridRange, GridRangeSerialized } from './grid-range';
 import { GridWithoutRange } from './grid-without-range';

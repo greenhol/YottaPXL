@@ -1,11 +1,11 @@
 import { Subscription } from 'rxjs';
-import { timestampString } from '../shared';
 import { ConfigOverlay, configVersionCheck, ModuleConfig } from '../shared/config';
+import { timestampString } from '../shared/timestamp-string';
 import { GridRange } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
-import { ColorBlending } from './plane/color/color-blending';
-import { Gradient } from './plane/color/gradient';
+import { ColourBlending } from './plane/colour/colour-blending';
+import { Gradient } from './plane/colour/gradient';
 import { MandelbrotCombinedID } from './plane/complex-fractal/mandelbrot-combined-id';
 import { MandelbrotCombinedIV } from './plane/complex-fractal/mandelbrot-combined-iv';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
@@ -122,7 +122,7 @@ export class Start {
             case 'MANDELBROT_COMBINED_ID': this._plane = new MandelbrotCombinedID(this._grid); break;
             case 'MANDELBROT_COMBINED_IV': this._plane = new MandelbrotCombinedIV(this._grid); break;
             case 'GRADIENT': this._plane = new Gradient(this._grid); break;
-            case 'COLOR_BLEND': this._plane = new ColorBlending(this._grid); break;
+            case 'COLOUR_BLEND': this._plane = new ColourBlending(this._grid); break;
             default: console.warn(`#addPlaneDropdownEventListener - Invalid plane ID: ${planeId}`);
         }
         this.subscribeToBusyState();

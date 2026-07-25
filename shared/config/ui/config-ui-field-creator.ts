@@ -1,4 +1,4 @@
-import { UiFieldBool, UiFieldColor, UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from './config-ui-field';
+import { UiFieldBool, UiFieldColour, UiFieldFloat, UiFieldHeader, UiFieldInteger, UiFieldIntegerOptional, UiFieldString, UiFieldStringEnum } from './config-ui-field';
 
 export abstract class ConfigUiFieldCreator {
 
@@ -55,12 +55,12 @@ export abstract class ConfigUiFieldCreator {
         return new UiFieldBool(path, label, description);
     }
 
-    public createColorField(
+    public createColourField(
         path: string,
         label: string,
         description: string = '',
-    ): UiFieldColor {
-        return new UiFieldColor(path, label, description);
+    ): UiFieldColour {
+        return new UiFieldColour(path, label, description);
     }
 
     public createEnumField<T extends Record<string, unknown>>(

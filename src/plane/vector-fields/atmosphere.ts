@@ -1,29 +1,30 @@
 import { lastValueFrom } from 'rxjs';
-import { InitializeAfterConstruct } from '../../../shared';
+import { Colour } from '../../../shared/colour/colour';
+import { blender, BlendingType } from '../../../shared/colour/colour-blender';
+import { ColourMapper, ColourMapperConfig, Easing } from '../../../shared/colour/colour-mapper';
 import { ModuleConfig } from '../../../shared/config';
+import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { Grid } from '../../grid/grid';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { GridWithMargin } from '../../grid/grid-with-margin';
-import { blender, BlendingType } from '../../math/color/color-blender';
-import { ColorMapper, ColorMapperConfig, Easing } from '../../math/color/color-mapper';
 import { LicCalculator, SourceData } from '../../math/lic/lic-calculator';
 import { LicConfig } from '../../math/lic/types';
 import { NoiseConfig, NoiseGenerator, NoiseType } from '../../math/noise-generator/noise-generator';
-import { AdvectionQuality } from '../../math/vector-field/advection-color/worker-setup-advection-color';
+import { AdvectionQuality } from '../../math/vector-field/advection-colour/worker-setup-advection-colour';
 import { AtmosphereDescriptor } from '../../math/vector-field/atmosphere-field/types';
 import { VectorFieldGenerator } from '../../math/vector-field/vector-field-generator';
 import { VectorFieldReader } from '../../math/vector-field/vector-field-reader';
-import { BigDecimal, COLOR } from '../../types';
+import { BigDecimal } from '../../types/big-decimal';
 import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { AtmosphereType, createAtmosphereDescriptor } from './create-atmosphere-descriptor';
-import { createAtmosphereColorSeeds } from './create-atmosphere-seeds';
+import { createAtmosphereColourSeeds } from './create-atmosphere-seeds';
 
 enum AtmosphereRender {
     FIELD = 'Field',
-    COLORS = 'Colors',
-    COMBINED = 'Colored Field',
+    COLOURS = 'Colours',
+    COMBINED = 'Coloured Field',
 }
 
 interface AtmosphereConfig extends PlaneConfig {
@@ -33,7 +34,7 @@ interface AtmosphereConfig extends PlaneConfig {
     vorticesCount: number,
     vorticeMaxRadius: number,
     fieldSeed: number | null,
-    bandGradient: ColorMapperConfig,
+    bandGradient: ColourMapperConfig,
     advection: AdvectionQuality,
     vortexSeedMultiplier: number,
     noiseConfig: NoiseConfig,
@@ -82,17 +83,17 @@ export class Atmosphere extends Plane {
         },
         'atmosphereConfig',
         [
-            CREATE.createEnumField('render', AtmosphereRender, 'Render', 'Render Field, Coloring or both combined'),
+            CREATE.createEnumField('render', AtmosphereRender, 'Render', 'Render Field, Colouring or both combined'),
             CREATE.createHeader('Planet'),
             CREATE.createEnumField('planet', AtmosphereType, 'Planet', 'Preset Planet or random (from seed if set)'),
             CREATE.createIntegerField('bandCount', 'Band Count', 'Number of horizontal bands', 0, 30),
             CREATE.createIntegerField('vorticesCount', 'Vortices Count', 'Number of vortices', 0, 50),
             CREATE.createIntegerField('vorticeMaxRadius', 'Vortice max. Radius', 'Maximal radius a vortice can reach', 1, 50),
             CREATE.uiFieldSeed('fieldSeed', 'Field'),
-            CREATE.UI_FIELD_HEADER_COLOR,
+            CREATE.UI_FIELD_HEADER_COLOUR,
             CREATE.uiFieldAdvectionStepCount('advection.stepCount'),
             CREATE.uiFieldAdvectionInfluenceRadius('advection.influenceRadius'),
-            CREATE.createFloatField('vortexSeedMultiplier', 'Vortex Seed Mult.', 'Multiplier for the amount of color seeds placed for the vortices', 0, 20),
+            CREATE.createFloatField('vortexSeedMultiplier', 'Vortex Seed Mult.', 'Multiplier for the amount of colour seeds placed for the vortices', 0, 20),
             CREATE.uiFieldGradientSupportPoints('bandGradient.supportPoints'),
             CREATE.uiFieldGradientEasing('bandGradient.easing'),
             CREATE.UI_FIELD_HEADER_NOISE,
@@ -120,7 +121,7 @@ export class Atmosphere extends Plane {
 
         switch (this.config.data.render) {
             case AtmosphereRender.FIELD: this.calculateField(descriptor); break;
-            case AtmosphereRender.COLORS: this.calculateColors(descriptor); break;
+            case AtmosphereRender.COLOURS: this.calculateColours(descriptor); break;
             case AtmosphereRender.COMBINED: this.calculateCombined(descriptor); break;
         }
     }
@@ -161,7 +162,7 @@ export class Atmosphere extends Plane {
         }
     }
 
-    private async calculateColors(descriptor: AtmosphereDescriptor) {
+    private async calculateColours(descriptor: AtmosphereDescriptor) {
         this.resetProgress();
         const sourceGrid = new GridWithMargin(this.grid.resolution, GridRangeSerialized.deserialize(this.config.data.gridRange), 0);
 
@@ -171,11 +172,11 @@ export class Atmosphere extends Plane {
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 1/2'); } });
         const field = await extractData(fieldCalculation$, '');
 
-        // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
-        colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/2'); } });
-        const colors = await extractData(colorCalculation$, '');
-        this.updateImage(this.createColorImage(colors, sourceGrid));
+        // Create Colour Image
+        const colourCalculation$ = fieldGenerator.createAdvectionColour(field, this.config.data.advection, createAtmosphereColourSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
+        colourCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Colour 2/2'); } });
+        const colours = await extractData(colourCalculation$, '');
+        this.updateImage(this.createColourImage(colours, sourceGrid));
         this.setIdle();
     }
 
@@ -189,11 +190,11 @@ export class Atmosphere extends Plane {
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 1/3'); } });
         const field = await extractData(fieldCalculation$, '');
 
-        // Create Color Image
-        const colorCalculation$ = fieldGenerator.createAdvectionColor(field, this.config.data.advection, createAtmosphereColorSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
-        colorCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Color 2/3'); } });
-        const colors = await extractData(colorCalculation$, '');
-        this.updateImage(this.createColorImage(colors, sourceGrid));
+        // Create Colour Image
+        const colourCalculation$ = fieldGenerator.createAdvectionColour(field, this.config.data.advection, createAtmosphereColourSeeds(descriptor, this.config.data.advection, this.config.data.vortexSeedMultiplier));
+        colourCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Colour 2/3'); } });
+        const colours = await extractData(colourCalculation$, '');
+        this.updateImage(this.createColourImage(colours, sourceGrid));
 
         // Create Source Noise
         const noiseGenerator = new NoiseGenerator(sourceGrid);
@@ -213,7 +214,7 @@ export class Atmosphere extends Plane {
         calculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'LIC 3/3'); } });
         const result = await lastValueFrom(calculation$);
         if (result.data != null) {
-            this.updateImage(this.createCombinedImage(result.data, colors, sourceGrid));
+            this.updateImage(this.createCombinedImage(result.data, colours, sourceGrid));
             this.setIdle();
         } else {
             console.error('#calculateAndDraw - calculation did not produce data');
@@ -239,9 +240,9 @@ export class Atmosphere extends Plane {
 
     private createFieldImage(data: Float64Array, vectorField: VectorFieldReader): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperMagnitude = ColorMapper.fromString('0:#FFF, 0:#FFF');
-        const colorMapperStreamlines = ColorMapper.fromString('0:#FF0, 1:#FFF');
-        const fallbackColor = COLOR.RED;
+        const colourMapperMagnitude = ColourMapper.fromString('0:#FFF, 0:#FFF');
+        const colourMapperStreamlines = ColourMapper.fromString('0:#FF0, 1:#FFF');
+        const fallbackColour = Colour.RED;
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -251,9 +252,8 @@ export class Atmosphere extends Plane {
                     imageData,
                     index,
                     blender.blend(
-                        (isNaN(magnitude)) ? fallbackColor : colorMapperMagnitude.mapClamped(magnitude),
-                        // colorMapperStreamlines.mapClamped((data[index] - licMin) / licDiff),
-                        colorMapperStreamlines.mapClamped(data[index]),
+                        (isNaN(magnitude)) ? fallbackColour : colourMapperMagnitude.mapClamped(magnitude),
+                        colourMapperStreamlines.mapClamped(data[index]),
                         BlendingType.HSL,
                     ),
                 );
@@ -262,7 +262,7 @@ export class Atmosphere extends Plane {
         return imageData;
     }
 
-    private createColorImage(data: Uint8ClampedArray, sourceGrid: GridWithMargin): ImageDataArray {
+    private createColourImage(data: Uint8ClampedArray, sourceGrid: GridWithMargin): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
 
         for (let row = 0; row < this.grid.height; row++) {
@@ -282,11 +282,11 @@ export class Atmosphere extends Plane {
 
     private createCombinedImage(
         licData: Float64Array,
-        colors: Uint8ClampedArray,
+        colours: Uint8ClampedArray,
         sourceGridForField: GridWithMargin,
     ): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
-        const colorMapperStreamlines = ColorMapper.fromString('0:#FF0, 1:#FFF');
+        const colourMapperStreamlines = ColourMapper.fromString('0:#FF0, 1:#FFF');
 
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
@@ -298,8 +298,8 @@ export class Atmosphere extends Plane {
                     imageData,
                     indexDestination,
                     blender.blend(
-                        { r: colors[pixelIndexSource], g: colors[pixelIndexSource + 1], b: colors[pixelIndexSource + 2] },
-                        colorMapperStreamlines.mapClamped(licData[indexDestination]),
+                        { r: colours[pixelIndexSource], g: colours[pixelIndexSource + 1], b: colours[pixelIndexSource + 2] },
+                        colourMapperStreamlines.mapClamped(licData[indexDestination]),
                         BlendingType.HSL,
                     ),
                 );

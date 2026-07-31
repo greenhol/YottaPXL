@@ -6,7 +6,7 @@ import { NoiseType } from '../../math/noise-generator/noise-generator';
 class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
 
     /** Header */
-    public readonly UI_FIELD_HEADER_COLOUR = this.createHeader('ColoUr');
+    public readonly UI_FIELD_HEADER_COLOUR = this.createHeader('Colour');
     public readonly UI_FIELD_HEADER_BLENDING = this.createHeader('Blending');
     public readonly UI_FIELD_HEADER_GRADIENT = this.createHeader('Gradient');
     public readonly UI_FIELD_HEADER_NOISE = this.createHeader('Noise');

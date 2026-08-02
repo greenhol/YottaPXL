@@ -2,6 +2,7 @@ import { BehaviorSubject, filter, Observable, Subject, takeUntil, timer } from '
 import { Grid } from '../grid/grid';
 import { GridRange } from '../grid/grid-range';
 import { BigDecimal } from '../types/big-decimal';
+import { copyToClipboard } from '../utils/copy-to-clipboard';
 
 const ID_INVALID_RECT = 'invalid-rectangle';
 const ID_USER_RECT = 'user-rectangle';
@@ -131,6 +132,7 @@ export class InteractionOverlay {
     }
 
     private addEventListeners() {
+        this.addKeyboardEvents();
         this._overlay.addEventListener('mousedown', (e) => { if (!this._frozen) this.onMouseDown(e); });
         this._overlay.addEventListener('mousemove', (e) => { if (!this._frozen) this.onMouseMove(e); });
         this._overlay.addEventListener('mouseup', (e) => { if (!this._frozen) this.onMouseUp(e); });
@@ -140,6 +142,19 @@ export class InteractionOverlay {
         this._overlay.addEventListener('touchmove', (e) => { if (!this._frozen) this.onTouchMove(e); });
         this._overlay.addEventListener('touchend', (e) => { if (!this._frozen) this.onTouchEnd(e); });
         window.addEventListener('scroll', () => { this.onWindowScroll(); });
+    }
+
+    private addKeyboardEvents() {
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.ctrlKey) {
+                this._overlay.classList.add('ctrl-cursor');
+            }
+        });
+        document.addEventListener('keyup', (e: KeyboardEvent) => {
+            if (!e.ctrlKey) {
+                this._overlay.classList.remove('ctrl-cursor');
+            }
+        });
     }
 
     private onTouchStart(e: TouchEvent) {
@@ -221,8 +236,14 @@ export class InteractionOverlay {
             this.emitSelection(selection);
         } else if (this._p1 != null && this._p2 == null) {
             this.cancelLongPress();
-            this.emitFromPosition(e.offsetX, e.offsetY, 1);
-            return;
+            if (e.ctrlKey) {
+                const positionString = `${e.offsetX}, ${e.offsetY}`;
+                copyToClipboard(positionString);
+                this._overlay.classList.remove('ctrl-cursor');
+            } else {
+                this.emitFromPosition(e.offsetX, e.offsetY, 1);
+                return;
+            }
         }
         this.resetInteraction();
     }

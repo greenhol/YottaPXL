@@ -22,6 +22,7 @@ import { Weather } from './plane/vector-fields/weather';
 import { ExportPng } from './stage/export-png';
 import { InteractionOverlay, ShiftDirection } from './stage/interaction-overlay';
 import { Stage } from './stage/stage';
+import { copyToClipboard } from './utils/copy-to-clipboard';
 import { UrlHandler } from './utils/url-handler';
 
 declare const APP_NAME: string;
@@ -330,7 +331,7 @@ export class Start {
         copyRangeButton?.addEventListener('click', (e: PointerEvent) => {
             this.triggerButtonFeedback(copyRangeButton);
             const rangeInputText: string = this._rangeInput.value;
-            this.copyToClipboard(rangeInputText);
+            copyToClipboard(rangeInputText);
         });
         resetRangeButton?.addEventListener('click', (e: PointerEvent) => {
             if (this._plane != null) {
@@ -356,7 +357,7 @@ export class Start {
                 this.triggerButtonFeedback(copyConfigButton);
                 const metaData = planeConfig.export();
                 const metaDataJson = JSON.stringify(metaData, null, 2);
-                this.copyToClipboard(metaDataJson);
+                copyToClipboard(metaDataJson);
             }
         });
         resetConfigButton?.addEventListener('click', (e: PointerEvent) => {
@@ -373,37 +374,6 @@ export class Start {
         button?.addEventListener('animationend', () => {
             button.classList.remove('feedback');
         }, { once: true });
-    }
-
-    private async copyToClipboard(text: string): Promise<boolean> {
-        if (navigator.clipboard) {
-            try {
-                await navigator.clipboard.writeText(text);
-                return true;
-            } catch (err) {
-                console.warn('#copyToClipboard - Modern clipboard API failed:', err);
-            }
-        }
-
-        // Fallback for mobile/older browsers
-        return new Promise((resolve) => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-
-            try {
-                const success = document.execCommand('copy');
-                resolve(success);
-            } catch (err) {
-                console.error('#copyToClipboard - Fallback copy failed:', err);
-                resolve(false);
-            } finally {
-                document.body.removeChild(textarea);
-            }
-        });
     }
 
     private handlePhysicalKeyboardEvents() {

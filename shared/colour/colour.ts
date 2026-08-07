@@ -4,6 +4,10 @@ export interface RGB {
     b: number; // 0-255
 }
 
+export interface RGBA extends RGB {
+    a: number; // 0-255
+}
+
 export interface LinearRGB {
     r: number; // 0-1
     g: number; // 0-1

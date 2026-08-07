@@ -11,6 +11,7 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public readonly UI_FIELD_HEADER_GRADIENT = this.createHeader('Gradient');
     public readonly UI_FIELD_HEADER_NOISE = this.createHeader('Noise');
     public readonly UI_FIELD_HEADER_PERLIN = this.createHeader('Perlin');
+    public readonly UI_FIELD_HEADER_BOKEH = this.createHeader('Bokeh');
     public readonly UI_FIELD_HEADER_FRACTAL = this.createHeader('Fractal');
     public readonly UI_FIELD_HEADER_LIC = this.createHeader('LIC');
     public readonly UI_FIELD_HEADER_FIELD = this.createHeader('Field');

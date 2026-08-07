@@ -4,6 +4,7 @@ import { timestampString } from '../shared/timestamp-string';
 import { GridRange } from './grid/grid-range';
 import { GridRx } from './grid/grid-rx';
 import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from './grid/resolutions';
+import { Bokeh } from './plane/bokeh/bokeh';
 import { ColourBlending } from './plane/colour/colour-blending';
 import { Gradient } from './plane/colour/gradient';
 import { MandelbrotCombinedID } from './plane/complex-fractal/mandelbrot-combined-id';
@@ -113,6 +114,7 @@ export class Start {
         switch (planeId) {
             case 'NOISE': this._plane = new Noise(this._grid); break;
             case 'PERLIN_NOISE': this._plane = new PerlinNoise(this._grid); break;
+            case 'BOKEH': this._plane = new Bokeh(this._grid); break;
             case 'CHARGES': this._plane = new Charges(this._grid); break;
             case 'WEATHER': this._plane = new Weather(this._grid); break;
             case 'ATMOSPHERE': this._plane = new Atmosphere(this._grid); break;

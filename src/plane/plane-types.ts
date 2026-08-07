@@ -10,6 +10,7 @@ export type PlaneId =
     'PERLIN_FIELD' |
     'NOISE' |
     'PERLIN_NOISE' |
+    'BOKEH' |
     'GRADIENT' |
     'COLOUR_BLEND';
 
@@ -47,6 +48,7 @@ export const PLANE_SELECTOR: PlaneGroup[] = [
         planes: [
             { id: 'NOISE', short: 'Noise types', description: 'A set of different noise types' },
             { id: 'PERLIN_NOISE', short: 'Perlin Noise', description: 'Perlin Noise' },
+            { id: 'BOKEH', short: 'Bokeh', description: 'Bokeh simulation' },
             { id: 'GRADIENT', short: 'Colour Gradients', description: 'A selection of colour gradients and custom for defining your own' },
             { id: 'COLOUR_BLEND', short: 'Colour Blending', description: 'A selection of colour blenders demonstrated on gradients' },
         ],

@@ -4,7 +4,7 @@ import { InitializeAfterConstruct } from '../../../shared/initializable';
 import { Grid } from '../../grid/grid';
 import { GridRange, GridRangeSerialized } from '../../grid/grid-range';
 import { BokehProcessor } from '../../math/bokeh/bokeh-processor';
-import { BokehConfig } from '../../math/bokeh/types';
+import { BokehConfig, BokehType } from '../../math/bokeh/types';
 import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
@@ -43,9 +43,15 @@ export class Bokeh extends Plane {
             maxRadius: 1,
             zOffset: 5,
             bokehConfig: {
+                type: BokehType.SOFT_DISC,
                 maxBlurRadius: 30,
                 pixelsPerZUnit: 6,
                 focusZ: 0,
+                edgeSoftnessPx: 1,
+                bladeCount: 5,
+                apertureRotation: 0,
+                innerRadiusRatio: 0.6,
+                rimIntensity: 3,
             }
         },
         'bokeh',
@@ -57,7 +63,15 @@ export class Bokeh extends Plane {
             CREATE.createFloatField('maxRadius', 'Max. Radius', undefined, 0.1, 10),
             CREATE.createFloatField('zOffset', 'Z Offset', '± Z Range around 0', 0.1, 10),
             CREATE.UI_FIELD_HEADER_BOKEH,
+            CREATE.createEnumField('bokehConfig.type', BokehType, 'Type'),
             CREATE.createFloatField('bokehConfig.maxBlurRadius', 'Max Blur Radius', undefined, 0, 100),
+            CREATE.createFloatField('bokehConfig.pixelsPerZUnit', 'Pixels per Z Unit', undefined, 0.1, 100),
+            CREATE.createFloatField('bokehConfig.focusZ', 'Focus Z', 'Ideally inbetween ± Z Offset'),
+            CREATE.createFloatField('bokehConfig.edgeSoftnessPx', 'Edge Softness', 'Edge Softness in Pixels', 0.1, 100),
+            CREATE.createIntegerField('bokehConfig.bladeCount', 'Plade Count', 'For type Polygon only', 3, 12),
+            CREATE.createFloatField('bokehConfig.apertureRotation', 'Aperture Rotation', 'For type Polygon only', 0, 360),
+            CREATE.createFloatField('bokehConfig.innerRadiusRatio', 'Inner Radius Ratio', 'For type Ring only', 0, 1),
+            CREATE.createFloatField('bokehConfig.rimIntensity', 'Rim Intensity', 'For type Bright Rim only', 1, 10),
         ]
     );
 

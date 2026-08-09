@@ -6,8 +6,9 @@ import { XoRng } from '../../../shared/xo-rng';
 export enum DotDistributionType {
     RANDOM = 'Random',
     RANDOM_EVENLY = 'Random but distributed evenly',
-    ORDERED = 'Ordered by Z',
     RANDOM_WALK = 'Random Walk',
+    ORDERED_1 = 'Ordered by Z - Variant 1',
+    ORDERED_2 = 'Ordered by Z - Variant 2',
 }
 
 export interface DotGeneratorConfig {
@@ -38,8 +39,9 @@ export class DotGenerator {
         switch (config.type) {
             case DotDistributionType.RANDOM: return this.purelyRandom(config);
             case DotDistributionType.RANDOM_EVENLY: return this.evenlyRandom(config);
-            case DotDistributionType.ORDERED: return this.ordered(config);
             case DotDistributionType.RANDOM_WALK: return this.randomWalk(config);
+            case DotDistributionType.ORDERED_1: return this.ordered1(config);
+            case DotDistributionType.ORDERED_2: return this.ordered2(config);
         }
     }
 
@@ -113,7 +115,7 @@ export class DotGenerator {
         return dots;
     }
 
-    private ordered(config: DotGeneratorConfig): Dot[] {
+    private ordered1(config: DotGeneratorConfig): Dot[] {
         const rng = new XoRng(config.seed);
         const dots: Dot[] = [];
 
@@ -124,6 +126,28 @@ export class DotGenerator {
                     y: row,
                     z: col - 5,
                     r: 0.25 + Math.abs(row) / 4,
+                    colour: { r: 0, g: 0, b: 0, a: 0 },
+                });
+            }
+        }
+
+        const colours = this.randomSaturatedColour(dots.length, rng);
+        dots.forEach((dot, index) => dot.colour = colours[index]);
+
+        return dots;
+    }
+
+    private ordered2(config: DotGeneratorConfig): Dot[] {
+        const rng = new XoRng(config.seed);
+        const dots: Dot[] = [];
+
+        for (let row = -2; row <= 2; row += 2) {
+            for (let col = 1; col <= 9; col += 2) {
+                dots.push({
+                    x: col,
+                    y: row,
+                    z: col - 5,
+                    r: 0.4,
                     colour: { r: 0, g: 0, b: 0, a: 0 },
                 });
             }

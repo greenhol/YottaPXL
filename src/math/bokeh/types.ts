@@ -1,10 +1,27 @@
+export enum BokehType {
+    SOFT_DISC = 'Soft Disc',
+    FLAT_DISC = 'Flat Disc',
+    POLYGON = 'Polygon',
+    RING = 'Ring',
+    BRIGHT_RIM = 'Bright Rim',
+}
+
 export interface BokehConfig {
-    /** Blur radius in pixels at maximum |z|. Also acts as a hard clamp. */
-    maxBlurRadius: number;
+    type: BokehType;
 
-    /** Pixels of blur radius per unit of |z|. Determines how quickly things go out of focus. */
-    pixelsPerZUnit: number;
-
-    /** z value that is considered "in focus". Defaults to 0 conceptually, but explicit here for flexibility. */
+    // General
+    maxBlurRadius: number;       // >= 0
+    pixelsPerZUnit: number;      // >= 0
     focusZ: number;
+    edgeSoftnessPx: number;      // >= 0, used by all types — width of the AA transition band
+
+    // Polygon only
+    bladeCount: number;          // 3–12
+    apertureRotation: number;    // 0-360 in degrees
+
+    // Ring only
+    innerRadiusRatio: number;    // 0–1, inner radius as fraction of outer radius
+
+    // Bright rim
+    rimIntensity: number;        // 1-10, how much brighter the edge is vs. center
 }

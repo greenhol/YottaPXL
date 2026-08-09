@@ -1,7 +1,7 @@
 import { GridWithoutRange } from '../../grid/grid-without-range';
 import { Progress } from '../../worker/progress';
 import { MessageFromWorker, MessageToWorker } from '../../worker/types';
-import { BokehConfig } from './types';
+import { BokehConfig, BokehType } from './types';
 import { WorkerSetupBokeh } from './worker-setup-bokeh';
 
 self.onmessage = (e) => {
@@ -22,7 +22,8 @@ interface OccupancyMask {
 
 function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
     const grid = GridWithoutRange.copyWithoutRange(setup.gridBlueprint);
-    const { colourData, zData, coverageData, config } = setup;
+    const { colourData, zData, coverageData } = setup;
+    const config = validateAndClampConfig(setup.config);
     const output = new Uint8ClampedArray(grid.size * 4);
 
     // Upper bound on how far any source pixel's own blur disc can possibly reach.
@@ -30,10 +31,14 @@ function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
     const searchRadius = Math.ceil(config.maxBlurRadius) + 1;
     const occupancy = buildOccupancyMask(grid, coverageData);
 
+    // Resolved once, not per candidate pixel — keeps the billions-of-iterations hot loop
+    // as a single monomorphic call instead of re-branching on config.type every time.
+    const kernelWeightFn = resolveKernelWeightFn(config);
+
     const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            gatherPixel(col, row, grid, colourData, zData, coverageData, config, searchRadius, occupancy, output);
+            gatherPixel(col, row, grid, colourData, zData, coverageData, config, searchRadius, occupancy, kernelWeightFn, output);
         }
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
@@ -41,6 +46,28 @@ function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
 
     progress.logDone('#BokehProcessor (worker)');
     return output;
+}
+
+/** Defensive validation, run once per calculate() call. Logs and clamps anything out of range. */
+function validateAndClampConfig(config: BokehConfig): BokehConfig {
+    const validatedConfig = structuredClone(config);
+    validatedConfig.maxBlurRadius = clampWithWarning('maxBlurRadius', validatedConfig.maxBlurRadius, 0, Infinity);
+    validatedConfig.pixelsPerZUnit = clampWithWarning('pixelsPerZUnit', validatedConfig.pixelsPerZUnit, 0, Infinity);
+    validatedConfig.edgeSoftnessPx = clampWithWarning('edgeSoftnessPx', validatedConfig.edgeSoftnessPx, 0, Infinity);
+    validatedConfig.bladeCount = Math.round(clampWithWarning('bladeCount', validatedConfig.bladeCount, 3, 12));
+    validatedConfig.apertureRotation = ((validatedConfig.apertureRotation % 360) + 360) % 360;
+    validatedConfig.innerRadiusRatio = clampWithWarning('innerRadiusRatio', validatedConfig.innerRadiusRatio, 0, 1);
+    validatedConfig.rimIntensity = clampWithWarning('rimIntensity', validatedConfig.rimIntensity, 1, 10);
+
+    return validatedConfig;
+}
+
+function clampWithWarning(name: string, value: number, min: number, max: number): number {
+    const clampedValue = Math.max(min, Math.min(max, value));
+    if (clampedValue !== value) {
+        console.warn(`#BokehConfig - ${name}=${value} out of range [${min}, ${max}], clamped to ${clampedValue}`);
+    }
+    return clampedValue;
 }
 
 /**
@@ -85,6 +112,7 @@ function gatherPixel(
     config: BokehConfig,
     searchRadius: number,
     occupancy: OccupancyMask,
+    kernelWeightFn: KernelWeightFn,
     output: Uint8ClampedArray,
 ): void {
     const colMin = Math.max(0, col - searchRadius);
@@ -122,20 +150,19 @@ function gatherPixel(
                     const qBlurRadius = blurRadiusForZ(zData[qIndex], config);
                     const dx = qCol - col;
                     const dy = qRow - row;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    const weight = kernelWeight(distance, qBlurRadius);
+                    const weight = kernelWeightFn(dx, dy, qBlurRadius, config);
                     if (weight <= 0) continue;
 
                     const qAlpha = qCoverage / 255;
-                    const qcolourIndex = qIndex * 4;
+                    const qColourIndex = qIndex * 4;
                     const premultWeight = qAlpha * weight;
 
                     sumWeight += weight;
                     sumAlpha += premultWeight;
-                    sumPremultR += colourData[qcolourIndex] * premultWeight;
-                    sumPremultG += colourData[qcolourIndex + 1] * premultWeight;
-                    sumPremultB += colourData[qcolourIndex + 2] * premultWeight;
+                    sumPremultR += colourData[qColourIndex] * premultWeight;
+                    sumPremultG += colourData[qColourIndex + 1] * premultWeight;
+                    sumPremultB += colourData[qColourIndex + 2] * premultWeight;
                 }
             }
         }
@@ -161,9 +188,113 @@ function blurRadiusForZ(z: number, config: BokehConfig): number {
     return Math.min(config.maxBlurRadius, raw);
 }
 
-/** Analytic ~1px antialiased edge band, consistent with the rasterizer's own AA approach. */
-function kernelWeight(distance: number, radius: number): number {
-    return clamp01(radius - distance + 0.5);
+type KernelWeightFn = (dx: number, dy: number, radius: number, config: BokehConfig) => number;
+
+/**
+ * Picks the shape/intensity-profile function for the configured BokehType ONCE,
+ * before the pixel loop runs, rather than switching on config.type per candidate
+ * pixel (billions of times over a full image). All types are radially symmetric
+ * (only need distance) except POLYGON, which also needs the angle of (dx, dy) to
+ * know where it sits relative to the blade orientation — hence every resolved
+ * function still receives dx/dy rather than a precomputed distance.
+ *
+ * Also precomputes anything derivable purely from `config` (e.g. POLYGON's
+ * segmentAngle/apothemRatio) here, once, rather than recomputing it — including
+ * expensive trig — on every single candidate pixel inside the hot loop.
+ */
+function resolveKernelWeightFn(config: BokehConfig): KernelWeightFn {
+    switch (config.type) {
+        case BokehType.SOFT_DISC:
+            return (dx, dy, radius, cfg) => softDiscWeight(distanceOf(dx, dy), radius, cfg.edgeSoftnessPx);
+        case BokehType.FLAT_DISC:
+            return (dx, dy, radius) => flatDiscWeight(distanceOf(dx, dy), radius);
+        case BokehType.POLYGON: {
+            const segmentAngle = (2 * Math.PI) / config.bladeCount;
+            const angleOffset = (config.apertureRotation * Math.PI) / 180 + segmentAngle / 2;
+            const apothemRatio = Math.cos(Math.PI / config.bladeCount);
+            return (dx, dy, radius, cfg) =>
+                polygonWeight(dx, dy, radius, cfg.edgeSoftnessPx, segmentAngle, angleOffset, apothemRatio);
+        }
+        case BokehType.RING:
+            return (dx, dy, radius, config) => ringWeight(distanceOf(dx, dy), radius, config);
+        case BokehType.BRIGHT_RIM:
+            return (dx, dy, radius, config) => brightRimWeight(distanceOf(dx, dy), radius, config);
+    }
+}
+
+function distanceOf(dx: number, dy: number): number {
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+/** Uniform-intensity disc with a soft, edgeSoftnessPx-wide antialiased edge. */
+function softDiscWeight(distance: number, radius: number, edgeSoftnessPx: number): number {
+    return softEdge(radius - distance, edgeSoftnessPx);
+}
+
+/** Same disc, but always a hard step edge — ignores edgeSoftnessPx by design (see brainstorm notes). */
+function flatDiscWeight(distance: number, radius: number): number {
+    return distance <= radius ? 1 : 0;
+}
+
+/**
+ * Regular-polygon aperture (straight-blade look). The disc radius varies with
+ * angle: full `radius` at each vertex, down to the apothem (radius * apothemRatio)
+ * at each edge midpoint — so effectiveRadius is always within [apothem, radius].
+ *
+ * That bound lets most candidates skip the expensive atan2/cos entirely:
+ * anything farther than `radius` is guaranteed outside regardless of angle,
+ * and anything closer than the apothem is guaranteed inside regardless of angle.
+ * Only the thin boundary shell between the two actually needs the real angle
+ * calculation to know exactly where within that range it falls.
+ */
+function polygonWeight(
+    dx: number,
+    dy: number,
+    radius: number,
+    edgeSoftnessPx: number,
+    segmentAngle: number,
+    angleOffset: number,
+    apothemRatio: number,
+): number {
+    const distance = distanceOf(dx, dy);
+    const apothem = radius * apothemRatio;
+    const halfSoft = edgeSoftnessPx / 2;
+
+    if (distance > radius + halfSoft) { return 0; }         // clearly outside at every angle
+    if (distance < apothem - halfSoft) { return 1; }         // clearly inside at every angle
+
+    // boundary shell — angle actually matters here
+    const angle = Math.atan2(dy, dx) - angleOffset;
+    const wrapped = ((angle % segmentAngle) + segmentAngle) % segmentAngle - segmentAngle / 2;
+    const effectiveRadius = apothem / Math.cos(wrapped);
+
+    return softEdge(effectiveRadius - distance, edgeSoftnessPx);
+}
+
+/** Annulus — softened outer boundary AND softened inner hole boundary. */
+function ringWeight(distance: number, radius: number, config: BokehConfig): number {
+    const innerRadius = radius * config.innerRadiusRatio;
+    const outer = softEdge(radius - distance, config.edgeSoftnessPx);
+    const inner = softEdge(distance - innerRadius, config.edgeSoftnessPx);
+    return outer * inner;
+}
+
+/** Soft disc whose intensity increases toward the edge ("soap bubble" look). */
+function brightRimWeight(distance: number, radius: number, config: BokehConfig): number {
+    const base = softEdge(radius - distance, config.edgeSoftnessPx);
+    const normalizedDistance = radius > 0 ? clamp01(distance / radius) : 0;
+    const rimMultiplier = lerp(1, config.rimIntensity, normalizedDistance);
+    return base * rimMultiplier;
+}
+
+/** Analytic antialiased edge band, `edgeSoftnessPx` wide, centered on delta=0. */
+function softEdge(delta: number, edgeSoftnessPx: number): number {
+    if (edgeSoftnessPx <= 0) { return delta >= 0 ? 1 : 0; }
+    return clamp01(delta / edgeSoftnessPx + 0.5);
+}
+
+function lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
 }
 
 function clamp01(value: number): number {

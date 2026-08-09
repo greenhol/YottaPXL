@@ -13,6 +13,7 @@ export interface BokehConfig {
     maxBlurRadius: number;       // >= 0
     pixelsPerZUnit: number;      // >= 0
     focusZ: number;
+    focusRange: number;          // >= 0
     edgeSoftnessPx: number;      // >= 0, used by all types — width of the AA transition band
 
     // Polygon only

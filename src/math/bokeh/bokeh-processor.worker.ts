@@ -50,7 +50,6 @@ function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
     return output;
 }
 
-/** Defensive validation, run once per calculate() call. Logs and clamps anything out of range. */
 function validateAndClampConfig(config: BokehConfig): BokehConfig {
     const validatedConfig = structuredClone(config);
     validatedConfig.maxBlurRadius = clampWithWarning('maxBlurRadius', validatedConfig.maxBlurRadius, 0, Infinity);
@@ -215,8 +214,9 @@ function gatherPixel(
 }
 
 function blurRadiusForZ(z: number, config: BokehConfig): number {
-    const raw = Math.abs(z - config.focusZ) * config.pixelsPerZUnit;
-    return Math.min(config.maxBlurRadius, raw);
+    const distance = Math.abs(z - config.focusZ);
+    const effectiveDistance = Math.max(0, distance - config.focusRange);
+    return Math.min(config.maxBlurRadius, effectiveDistance * config.pixelsPerZUnit);
 }
 
 type KernelWeightFn = (dx: number, dy: number, radius: number, config: BokehConfig) => number;

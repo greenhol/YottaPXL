@@ -7,6 +7,7 @@ import { FALLBACK_RESOLUTION, Resolution, resolutionAsString, RESOLUTIONS } from
 import { Bokeh } from './plane/bokeh/bokeh';
 import { ColourBlending } from './plane/colour/colour-blending';
 import { Gradient } from './plane/colour/gradient';
+import { MandelbrotBokeh } from './plane/complex-fractal/mandelbrot-bokeh';
 import { MandelbrotCombinedID } from './plane/complex-fractal/mandelbrot-combined-id';
 import { MandelbrotCombinedIV } from './plane/complex-fractal/mandelbrot-combined-iv';
 import { MandelbrotDistance } from './plane/complex-fractal/mandelbrot-distance';
@@ -122,6 +123,7 @@ export class Start {
             case 'MANDELBROT_ITERATIONS': this._plane = new MandelbrotIterations(this._grid); break;
             case 'MANDELBROT_DISTANCE': this._plane = new MandelbrotDistance(this._grid); break;
             case 'MANDELBROT_VECTOR': this._plane = new MandelbrotVector(this._grid); break;
+            case 'MANDELBROT_BOKEH': this._plane = new MandelbrotBokeh(this._grid); break;
             case 'MANDELBROT_COMBINED_ID': this._plane = new MandelbrotCombinedID(this._grid); break;
             case 'MANDELBROT_COMBINED_IV': this._plane = new MandelbrotCombinedIV(this._grid); break;
             case 'GRADIENT': this._plane = new Gradient(this._grid); break;

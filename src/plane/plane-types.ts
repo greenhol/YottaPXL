@@ -2,6 +2,7 @@ export type PlaneId =
     'MANDELBROT_ITERATIONS' |
     'MANDELBROT_DISTANCE' |
     'MANDELBROT_VECTOR' |
+    'MANDELBROT_BOKEH' |
     'MANDELBROT_COMBINED_ID' |
     'MANDELBROT_COMBINED_IV' |
     'CHARGES' |
@@ -32,6 +33,7 @@ export const PLANE_SELECTOR: PlaneGroup[] = [
             { id: 'MANDELBROT_ITERATIONS', short: 'Iterations', description: 'Mandelbrot set visualization by number of iterations' },
             { id: 'MANDELBROT_DISTANCE', short: 'Distance', description: 'Mandelbrot set visualization by approximated distance to the border' },
             { id: 'MANDELBROT_VECTOR', short: 'Vector Field', description: 'Mandelbrot set visualization by distance approximation displayed as a vector field' },
+            { id: 'MANDELBROT_BOKEH', short: 'Bokeh', description: 'Mandelbrot set visualization by distance approximation displayed with Bokeh applied' },
             { id: 'MANDELBROT_COMBINED_ID', short: 'Combination of Iterations and Distance', description: 'Mandelbrot set visualization by combining number of iterations with approximated distance' },
             { id: 'MANDELBROT_COMBINED_IV', short: 'Combination of Iterations and Vector Field', description: 'Mandelbrot set visualization by combining number of iterations with vector field' },
         ],

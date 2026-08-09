@@ -2,6 +2,7 @@ import { ConfigUiFieldCreator, UiFieldBool, UiFieldColour as UiFieldColour, UiFi
 import { BlendingType } from '../../../shared/colour/colour-blender';
 import { Easing } from '../../../shared/colour/colour-mapper';
 import { NoiseType } from '../../math/noise-generator/noise-generator';
+import { BokehType } from '../../math/bokeh/types';
 
 class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
 
@@ -106,6 +107,38 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     }
     public uiFieldLicStrength(path: string): UiFieldFloat {
         return this.createFloatField(path, 'LIC Strength Factor', 'Strength multiplicator for streamlines.\nIf set to negative value, max Lenth will be used everywhere', -1, 1000);
+    }
+
+    /** Bokeh */
+    public uiFieldBokehType(path: string): UiFieldStringEnum<Record<string, unknown>> {
+        return this.createEnumField<Record<string, unknown>>(path, BokehType, 'Bokeh Type');
+    }
+    public uiFieldBokehMaxBlurRadius(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Max Blur Radius', undefined, 0, 100);
+    }
+    public uiFieldBokehPixelsPerZUnit(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Pixels per Z Unit', undefined, 0.1, 100);
+    }
+    public uiFieldBokehFocusZ(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Focus Z', 'Ideally inbetween ± Z Offset');
+    }
+    public uiFieldBokehFocusRange(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Focus Range', 'Range where image remains sharp');
+    }
+    public uiFieldBokehEdgeSoftnessPx(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Edge Softness', 'Edge Softness in Pixels', 0.1, 100);
+    }
+    public uiFieldBokehBladeCount(path: string): UiFieldInteger {
+        return this.createIntegerField(path, 'Blade Count', 'For type Polygon only', 3, 12);
+    }
+    public uiFieldBokehApertureRotation(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Aperture Rotation', 'For type Polygon only', 0, 360);
+    }
+    public uiFieldBokehInnerRadiusRatio(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Inner Radius Ratio', 'For type Ring only', 0, 1);
+    }
+    public uiFieldBokehRimIntensity(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Rim Intensity', 'For type Bright Rim only', 1, 10);
     }
 }
 

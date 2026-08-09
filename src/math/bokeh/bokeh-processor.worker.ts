@@ -12,10 +12,12 @@ self.onmessage = (e) => {
     }
 };
 
-const OCCUPANCY_TILE_SIZE = 16; // px — coarse granularity for skipping empty regions
+const TILE_SIZE = 16; // px — coarse granularity for skipping empty/unreachable regions
 
-interface OccupancyMask {
-    tiles: Uint8Array; // 1 = tile contains at least one covered pixel, 0 = fully empty
+const EMPTY_TILE = -1; // sentinel: tile has no covered pixels at all
+
+interface MaxRadiusMask {
+    maxRadius: Float32Array; // per tile: largest blurRadiusForZ() among its covered pixels, or EMPTY_TILE
     tileCols: number;
     tileRows: number;
 }
@@ -29,7 +31,7 @@ function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
     // Upper bound on how far any source pixel's own blur disc can possibly reach.
     // +1 keeps the antialiased edge band (see kernelWeight) fully inside the search box.
     const searchRadius = Math.ceil(config.maxBlurRadius) + 1;
-    const occupancy = buildOccupancyMask(grid, coverageData);
+    const radiusMask = buildMaxRadiusMask(grid, zData, coverageData, config);
 
     // Resolved once, not per candidate pixel — keeps the billions-of-iterations hot loop
     // as a single monomorphic call instead of re-branching on config.type every time.
@@ -38,7 +40,7 @@ function calculate(setup: WorkerSetupBokeh): Uint8ClampedArray {
     const progress = new Progress(grid.height, Progress.getProgressIntervalForResulution(grid.size));
     for (let row = 0; row < grid.height; row++) {
         for (let col = 0; col < grid.width; col++) {
-            gatherPixel(col, row, grid, colourData, zData, coverageData, config, searchRadius, occupancy, kernelWeightFn, output);
+            gatherPixel(col, row, grid, colourData, zData, coverageData, config, searchRadius, radiusMask, kernelWeightFn, output);
         }
         const progressUpdate = progress.update(row);
         if (progressUpdate) self.postMessage({ type: MessageFromWorker.UPDATE, progress: progressUpdate });
@@ -71,28 +73,52 @@ function clampWithWarning(name: string, value: number, min: number, max: number)
 }
 
 /**
- * Coarse "does this region contain anything at all" grid, built once from
- * coverageData. Lets gatherPixel skip whole empty regions of the search box
- * in one check instead of scanning every individual empty pixel within them.
- * For dense fields (e.g. Mandelbrot, coverage=255 everywhere) every tile ends
- * up occupied, so this degenerates to the original brute-force behaviour —
- * it only pays off for scenes with genuinely empty background.
+ * Coarse per-tile grid storing the LARGEST blurRadiusForZ() among that tile's
+ * covered pixels (EMPTY_TILE if it has none). Lets gatherPixel skip a tile
+ * entirely, via one check, in two situations:
+ *  - the tile is empty (nothing there to contribute at all — same role the
+ *    old boolean occupancy mask played), or
+ *  - the tile is occupied, but even its most-blurred pixel's disc can't
+ *    reach this far (its own maxRadius is smaller than the tile's closest
+ *    possible distance to the output pixel) — this is the new part: it
+ *    means a fixed global search box no longer forces every pixel to pay
+ *    for the worst-case maxBlurRadius, only for what's actually nearby.
+ * For dense fields (e.g. Mandelbrot) where blur radius varies sharply
+ * pixel-to-pixel near the interesting detail, tiles there will tend to
+ * have a maxRadius close to the true local max anyway, so this yields much
+ * smaller savings there than for sparse, mostly-uniform-z dot scenes.
  */
-function buildOccupancyMask(grid: GridWithoutRange, coverageData: Uint8ClampedArray): OccupancyMask {
-    const tileCols = Math.ceil(grid.width / OCCUPANCY_TILE_SIZE);
-    const tileRows = Math.ceil(grid.height / OCCUPANCY_TILE_SIZE);
-    const tiles = new Uint8Array(tileCols * tileRows);
+function buildMaxRadiusMask(
+    grid: GridWithoutRange,
+    zData: Float32Array,
+    coverageData: Uint8ClampedArray,
+    config: BokehConfig,
+): MaxRadiusMask {
+    const tileCols = Math.ceil(grid.width / TILE_SIZE);
+    const tileRows = Math.ceil(grid.height / TILE_SIZE);
+    const maxRadius = new Float32Array(tileCols * tileRows).fill(EMPTY_TILE);
 
     for (let row = 0; row < grid.height; row++) {
-        const tileRow = Math.floor(row / OCCUPANCY_TILE_SIZE);
+        const tileRow = Math.floor(row / TILE_SIZE);
         for (let col = 0; col < grid.width; col++) {
-            if (coverageData[grid.getIndex(col, row)] === 0) { continue; }
-            const tileCol = Math.floor(col / OCCUPANCY_TILE_SIZE);
-            tiles[tileRow * tileCols + tileCol] = 1;
+            const index = grid.getIndex(col, row);
+            if (coverageData[index] === 0) { continue; }
+
+            const radius = blurRadiusForZ(zData[index], config);
+            const tileCol = Math.floor(col / TILE_SIZE);
+            const tileIndex = tileRow * tileCols + tileCol;
+            if (radius > maxRadius[tileIndex]) { maxRadius[tileIndex] = radius; }
         }
     }
 
-    return { tiles, tileCols, tileRows };
+    return { maxRadius, tileCols, tileRows };
+}
+
+/** Closest possible distance from point (px, py) to an axis-aligned pixel box. */
+function distanceToBox(px: number, py: number, xMin: number, xMax: number, yMin: number, yMax: number): number {
+    const dx = px < xMin ? xMin - px : (px > xMax ? px - xMax : 0);
+    const dy = py < yMin ? yMin - py : (py > yMax ? py - yMax : 0);
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 /**
@@ -111,7 +137,7 @@ function gatherPixel(
     coverageData: Uint8ClampedArray,
     config: BokehConfig,
     searchRadius: number,
-    occupancy: OccupancyMask,
+    radiusMask: MaxRadiusMask,
     kernelWeightFn: KernelWeightFn,
     output: Uint8ClampedArray,
 ): void {
@@ -120,10 +146,10 @@ function gatherPixel(
     const rowMin = Math.max(0, row - searchRadius);
     const rowMax = Math.min(grid.height - 1, row + searchRadius);
 
-    const tileColMin = Math.floor(colMin / OCCUPANCY_TILE_SIZE);
-    const tileColMax = Math.floor(colMax / OCCUPANCY_TILE_SIZE);
-    const tileRowMin = Math.floor(rowMin / OCCUPANCY_TILE_SIZE);
-    const tileRowMax = Math.floor(rowMax / OCCUPANCY_TILE_SIZE);
+    const tileColMin = Math.floor(colMin / TILE_SIZE);
+    const tileColMax = Math.floor(colMax / TILE_SIZE);
+    const tileRowMin = Math.floor(rowMin / TILE_SIZE);
+    const tileRowMax = Math.floor(rowMax / TILE_SIZE);
 
     let sumWeight = 0;
     let sumAlpha = 0;
@@ -133,16 +159,21 @@ function gatherPixel(
 
     for (let tileRow = tileRowMin; tileRow <= tileRowMax; tileRow++) {
         for (let tileCol = tileColMin; tileCol <= tileColMax; tileCol++) {
-            if (occupancy.tiles[tileRow * occupancy.tileCols + tileCol] === 0) { continue; } // whole tile empty, skip entirely
+            const tileMaxRadius = radiusMask.maxRadius[tileRow * radiusMask.tileCols + tileCol];
+            if (tileMaxRadius === EMPTY_TILE) { continue; } // tile has nothing in it at all
 
-            // clip this tile's pixel range to both the tile's own bounds and the search box
-            const qRowStart = Math.max(rowMin, tileRow * OCCUPANCY_TILE_SIZE);
-            const qRowEnd = Math.min(rowMax, tileRow * OCCUPANCY_TILE_SIZE + OCCUPANCY_TILE_SIZE - 1);
-            const qColStart = Math.max(colMin, tileCol * OCCUPANCY_TILE_SIZE);
-            const qColEnd = Math.min(colMax, tileCol * OCCUPANCY_TILE_SIZE + OCCUPANCY_TILE_SIZE - 1);
+            // tile bounds in pixel space, clipped to the search box
+            const tileColStart = Math.max(colMin, tileCol * TILE_SIZE);
+            const tileColEnd = Math.min(colMax, tileCol * TILE_SIZE + TILE_SIZE - 1);
+            const tileRowStart = Math.max(rowMin, tileRow * TILE_SIZE);
+            const tileRowEnd = Math.min(rowMax, tileRow * TILE_SIZE + TILE_SIZE - 1);
 
-            for (let qRow = qRowStart; qRow <= qRowEnd; qRow++) {
-                for (let qCol = qColStart; qCol <= qColEnd; qCol++) {
+            // even this tile's most-blurred pixel can't reach us from its closest possible position — skip
+            const tileDistance = distanceToBox(col, row, tileColStart, tileColEnd, tileRowStart, tileRowEnd);
+            if (tileDistance > tileMaxRadius) { continue; }
+
+            for (let qRow = tileRowStart; qRow <= tileRowEnd; qRow++) {
+                for (let qCol = tileColStart; qCol <= tileColEnd; qCol++) {
                     const qIndex = grid.getIndex(qCol, qRow);
                     const qCoverage = coverageData[qIndex];
                     if (qCoverage === 0) continue; // empty pixel within an otherwise-occupied tile

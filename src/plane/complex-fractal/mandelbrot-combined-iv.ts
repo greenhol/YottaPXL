@@ -16,6 +16,7 @@ import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
+import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
 interface MandelbrotCombinedIvConfig extends PlaneConfig {
     maxIterations: number,
@@ -23,6 +24,7 @@ interface MandelbrotCombinedIvConfig extends PlaneConfig {
     escapeValue: number,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
+    useLogColourScaling: boolean,
     gradientIterations: ColourMapperConfig,
     gradientStreamlines: ColourMapperConfig,
     fallbackColour: string,
@@ -53,6 +55,7 @@ export class MandelbrotCombinedIV extends Plane {
                 maxLength: 5,
                 strength: -1,
             },
+            useLogColourScaling: false,
             gradientIterations: {
                 supportPoints: '0:#FFFFFF, 0.1:#B1BCBE, 0.4:#405F26, 0.6:#2F4F20, 0.9:#B1BCBE, 1:#FFFFFF',
                 easing: Easing.RGB_BALANCED,
@@ -84,6 +87,7 @@ export class MandelbrotCombinedIV extends Plane {
             CREATE.uiFieldGradientEasing('gradientIterations.easing'),
             CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
             CREATE.createHeader('Streamlines', 'Gradient clapmed'),
+            CREATE.uiFieldUseLogColourScaling('useLogColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
             CREATE.uiFieldGradientScaling('gradientStreamlines.scaling'),
@@ -178,7 +182,9 @@ export class MandelbrotCombinedIV extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                const valueIterations = iterations[index];
+                let valueIterations = (this.config.data.useLogColourScaling)
+                    ? shapeIterationCountForColour(iterations[index], this._effectiveMaxIterations)
+                    : iterations[index];
 
                 this.setPixel(
                     imageData,

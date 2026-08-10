@@ -94,6 +94,9 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public uiFieldFractalReferenceCoordinate(path: string): UiFieldString {
         return this.createStringField(path, 'Coord for Precision', 'Reference point in Pixels used for Perturbation theory. Syntax: Comma separated row, col (e.g. 200, 350)\nIf empty, a grid scan will try to find a suitable point.');
     }
+    public uiFieldUseLogColourScaling(path: string): UiFieldBool {
+        return this.createBoolField(path, 'Log Colour Scaling', 'Scale iteration count logarithmically before applying for colour');
+    }
 
     /** LIC */
     public uiFieldLicLenth(path: string): UiFieldFloat {

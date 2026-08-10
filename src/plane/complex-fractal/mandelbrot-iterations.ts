@@ -9,12 +9,14 @@ import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
+import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
 interface MandelbrotIterationsConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     precision: boolean,
     referenceCoordinate: string,
+    useLogColourScaling: boolean,
     gradient: ColourMapperConfig,
     fallbackColour: string,
 }
@@ -33,6 +35,7 @@ export class MandelbrotIterations extends Plane {
             interpolate: false,
             precision: false,
             referenceCoordinate: '',
+            useLogColourScaling: false,
             gradient: {
                 supportPoints: '0:#000000, 0.5:#FFFFFF, 1:#000000',
                 easing: Easing.RGB_LINEAR,
@@ -48,6 +51,7 @@ export class MandelbrotIterations extends Plane {
             CREATE.uiFieldFractalPrecision('precision'),
             CREATE.uiFieldFractalReferenceCoordinate('referenceCoordinate'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldUseLogColourScaling('useLogColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
@@ -86,12 +90,16 @@ export class MandelbrotIterations extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = data[index];
+                let value = (this.config.data.useLogColourScaling)
+                    ? shapeIterationCountForColour(data[index], this._effectiveMaxIterations)
+                    : data[index];
 
                 this.setPixel(
                     imageData,
                     index,
-                    (value >= this._effectiveMaxIterations) ? fallbackColour : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                    (value >= this._effectiveMaxIterations)
+                        ? fallbackColour
+                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
                 );
             }
         }

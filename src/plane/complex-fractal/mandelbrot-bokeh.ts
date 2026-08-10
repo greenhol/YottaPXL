@@ -11,12 +11,14 @@ import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
+import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
 interface MandelbrotBokehConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     precision: boolean,
     referenceCoordinate: string,
+    useLogColourScaling: boolean,
     gradient: ColourMapperConfig,
     fallbackColour: string,
     zRange: number;
@@ -38,6 +40,7 @@ export class MandelbrotBokeh extends Plane {
             interpolate: true,
             precision: false,
             referenceCoordinate: '',
+            useLogColourScaling: false,
             gradient: {
                 supportPoints: '0:#f2ebdc, 0.2:#d2aa78, 0.4:#824a25, 0.6:#412313, 0.8:#faf5ed, 1:#f2ebdc',
                 easing: Easing.RGB_LINEAR,
@@ -45,13 +48,13 @@ export class MandelbrotBokeh extends Plane {
             },
             fallbackColour: '#000',
             zRange: 5,
-            zGamma: 4,
+            zGamma: 1,
             bokehConfig: {
                 type: BokehType.SOFT_DISC,
                 maxBlurRadius: 30,
                 pixelsPerZUnit: 6,
                 focusZ: 0,
-                focusRange: 3,
+                focusRange: 2,
                 edgeSoftnessPx: 1,
                 bladeCount: 5,
                 apertureRotation: 0,
@@ -67,6 +70,7 @@ export class MandelbrotBokeh extends Plane {
             CREATE.uiFieldFractalPrecision('precision'),
             CREATE.uiFieldFractalReferenceCoordinate('referenceCoordinate'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldUseLogColourScaling('useLogColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
@@ -141,12 +145,16 @@ export class MandelbrotBokeh extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                let value = data[index];
+                let value = (this.config.data.useLogColourScaling)
+                    ? shapeIterationCountForColour(data[index], this._effectiveMaxIterations)
+                    : data[index];
 
                 this.setPixel(
                     imageData,
                     index,
-                    (value >= this._effectiveMaxIterations) ? fallbackColour : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                    (value >= this._effectiveMaxIterations)
+                        ? fallbackColour
+                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
                 );
             }
         }
@@ -154,7 +162,10 @@ export class MandelbrotBokeh extends Plane {
     }
 
     private mandelbrotToZ(iterationCount: number, maxIterations: number): number {
-        const normalizedDistance = (maxIterations - iterationCount) / maxIterations;
+        const logCount = Math.log(iterationCount + 1);
+        const logMax = Math.log(maxIterations + 1);
+        const normalizedDistance = (logMax - logCount) / logMax;
+
         const shaped = Math.pow(normalizedDistance, this.config.data.zGamma);
         return shaped * this.config.data.zRange;
     }

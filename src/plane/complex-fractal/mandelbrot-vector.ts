@@ -21,6 +21,7 @@ interface MandelbrotVectorConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     escapeValue: number,
+    kernelOrder: number,
     licConfig: LicConfig,
     gradient: ColourMapperConfig,
     fallbackColour: string,
@@ -45,6 +46,7 @@ export class MandelbrotVector extends Plane {
             maxIterations: 0,
             interpolate: false,
             escapeValue: 100,
+            kernelOrder: 4,
             licConfig: {
                 minLength: 5,
                 maxLength: 5,
@@ -54,6 +56,7 @@ export class MandelbrotVector extends Plane {
                 supportPoints: '0:#000000, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             fallbackColour: '#000000',
         },
@@ -69,6 +72,7 @@ export class MandelbrotVector extends Plane {
             CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.UI_FIELD_HEADER_LIC,
+            CREATE.createIntegerField('kernelOrder', 'Sobel Kernel', 'Order of Sobel Kernel', 1, 6),
             CREATE.uiFieldLicLenth('licConfig.maxLength'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
@@ -100,7 +104,7 @@ export class MandelbrotVector extends Plane {
 
         // Create Source Field
         const fieldGenerator = new VectorFieldGenerator(sourceGrid);
-        const fieldCalculation$ = fieldGenerator.createMatrixGradientField(mandelbrotDistances, 0, this._effectiveMaxIterations);
+        const fieldCalculation$ = fieldGenerator.createMatrixGradientField(mandelbrotDistances, 0, this._effectiveMaxIterations, this.config.data.kernelOrder);
         fieldCalculation$.subscribe({ next: (state) => { this.setProgress(state.progress, 'Source Field 2/4'); } });
         const field = await extractData(fieldCalculation$, 'charges field');
 

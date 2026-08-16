@@ -63,6 +63,7 @@ export class Atmosphere extends Plane {
                 supportPoints: '0.0:#F0E4C8, 0.1:#F0E4C8, 0.2:#C8A882, 0.4:#8B5E3C, 0.6:#D4A96A, 0.8:#A0704A, 0.9:#F0E4C8, 1.0:#F0E4C8',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             advection: {
                 stepCount: 8,

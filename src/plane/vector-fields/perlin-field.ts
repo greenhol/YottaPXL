@@ -58,11 +58,13 @@ export class PerlinField extends Plane {
                 supportPoints: '0:#FFFFFF, 0.5:#888888, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 5,
+                offset: 0,
             },
             gradientStreamlines: {
                 supportPoints: '0:#FFFF00, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             blending: BlendingType.HSL,
         },
@@ -87,6 +89,7 @@ export class PerlinField extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientMagnitude.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientMagnitude.easing'),
             CREATE.uiFieldGradientScaling('gradientMagnitude.scaling'),
+            CREATE.uiFieldGradientOffset('gradientMagnitude.offset'),
             CREATE.createHeader('Streamlines', 'Gradient clapmed'),
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
@@ -197,8 +200,8 @@ export class PerlinField extends Plane {
                     imageData,
                     index,
                     blender.blend(
-                        (isNaN(magnitude)) ? fallbackColour : colourMapperMagnitude.mapLooped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling),
-                        (isNaN(data[index])) ? fallbackColour : colourMapperStreamlines.mapClamped(data[index], this.config.data.gradientStreamlines.scaling),
+                        (isNaN(magnitude)) ? fallbackColour : colourMapperMagnitude.mapLooped(magnitude, medianMagnitude * this.config.data.gradientMagnitude.scaling, this.config.data.gradientMagnitude.offset),
+                        (isNaN(data[index])) ? fallbackColour : colourMapperStreamlines.mapClamped(data[index]),
                         this.config.data.blending,
                     ),
                 );

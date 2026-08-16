@@ -33,6 +33,7 @@ export class MandelbrotDistance extends Plane {
                 supportPoints: '0:#FFFFFF, 0.5:#000000, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
+                offset: 0,
             },
             fallbackColour: '#000000',
         },
@@ -45,6 +46,7 @@ export class MandelbrotDistance extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
+            CREATE.uiFieldGradientOffset('gradient.offset'),
             CREATE.uiFieldFallbackColour('fallbackColour'),
         ],
     );
@@ -87,7 +89,7 @@ export class MandelbrotDistance extends Plane {
                 this.setPixel(
                     imageData,
                     index,
-                    (value <= 0) ? fallbackColour : colourMapper.mapLooped(value, max * this.config.data.gradient.scaling),
+                    (value <= 0) ? fallbackColour : colourMapper.mapLooped(value, max * this.config.data.gradient.scaling, this.config.data.gradient.offset),
                 );
             }
         }

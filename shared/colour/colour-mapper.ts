@@ -26,6 +26,7 @@ export interface ColourMapperConfig {
     supportPoints: string,
     easing: Easing,
     scaling: number,
+    offset: number,
 }
 
 export class ColourMapper {

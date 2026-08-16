@@ -38,11 +38,13 @@ export class MandelbrotCombinedID extends Plane {
                 supportPoints: '0:#00FF00, 0.5:#88FF88, 1:#00FF00',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             gradientDistance: {
                 supportPoints: '0:#FFFFFF, 0.4:#FFFFFF, 0.5:#000000, 0.6:#FFFFFF, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
+                offset: 0,
             },
             fallbackColour: '#000000',
             blending: BlendingType.INTENSITY,
@@ -57,10 +59,12 @@ export class MandelbrotCombinedID extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientIterations.easing'),
             CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
+            CREATE.uiFieldGradientOffset('gradientIterations.offset'),
             CREATE.createHeader('Distance', 'Gradient looped'),
             CREATE.uiFieldGradientSupportPoints('gradientDistance.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientDistance.easing'),
             CREATE.uiFieldGradientScaling('gradientDistance.scaling'),
+            CREATE.uiFieldGradientOffset('gradientDistance.offset'),
             CREATE.uiFieldFallbackColour('fallbackColour'),
             CREATE.UI_FIELD_HEADER_BLENDING,
             CREATE.uiFieldColourBlending('blending'),
@@ -111,8 +115,8 @@ export class MandelbrotCombinedID extends Plane {
                     (valueIterations === this._effectiveMaxIterations) ?
                         fallbackColour :
                         blender.blend(
-                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
-                            colourMapperDistances.mapLooped(distances[index], max * this.config.data.gradientDistance.scaling),
+                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling, this.config.data.gradientIterations.offset),
+                            colourMapperDistances.mapLooped(distances[index], max * this.config.data.gradientDistance.scaling, this.config.data.gradientDistance.offset),
                             this.config.data.blending,
                         ),
                 );

@@ -28,7 +28,6 @@ enum GradientDemos {
 interface GradientPlaneConfig extends PlaneConfig {
     demo: GradientDemos,
     config: ColourMapperConfig,
-    offset: number,
 };
 
 const INITIAL_GRID_RANGE: GridRange = { xMin: BigDecimal.ZERO, xMax: BigDecimal.fromNumber(10), yCenter: BigDecimal.ZERO };
@@ -44,8 +43,8 @@ export class Gradient extends Plane {
                 supportPoints: '',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
-            offset: 0,
         },
         'gradientConfig',
         [
@@ -54,7 +53,7 @@ export class Gradient extends Plane {
             CREATE.uiFieldGradientSupportPoints('config.supportPoints'),
             CREATE.uiFieldGradientEasing('config.easing'),
             CREATE.uiFieldGradientScaling('config.scaling'),
-            CREATE.createFloatField('offset', 'Offset', 'Gradient Offset (applied after scaling)', -10000, 10000),
+            CREATE.uiFieldGradientOffset('config.offset'),
         ],
     );
 
@@ -77,7 +76,7 @@ export class Gradient extends Plane {
                 this.setPixel(
                     imageData,
                     this.grid.getIndex(col, row),
-                    colourMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.offset),
+                    colourMapper.mapLooped(x, 10 / this.mapYToScale(y) * this.config.data.config.scaling, this.config.data.config.offset),
                 );
             }
         }

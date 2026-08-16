@@ -26,11 +26,13 @@ export class ColourBlending extends Plane {
                 supportPoints: '0:#FF0000, 0.25:#00FF00, 0.5:#0000FF, 0.75:#00FF00, 1:#FF0000',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             gradient2: {
                 supportPoints: '0:#FFFFFF, 0.25:#000000, 0.5:#FFFFFF, 0.5:#00FF00, 0.75:#FF0000, 1:#0000FF, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
         },
         'colourBlendingConfig',
@@ -40,11 +42,9 @@ export class ColourBlending extends Plane {
             CREATE.createHeader('Gradient 1'),
             CREATE.uiFieldGradientSupportPoints('gradient1.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient1.easing'),
-            CREATE.uiFieldGradientScaling('gradient1.scaling'),
             CREATE.createHeader('Gradient 2'),
             CREATE.uiFieldGradientSupportPoints('gradient2.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient2.easing'),
-            CREATE.uiFieldGradientScaling('gradient2.scaling'),
         ],
     );
 

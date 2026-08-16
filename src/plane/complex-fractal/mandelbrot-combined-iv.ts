@@ -60,11 +60,13 @@ export class MandelbrotCombinedIV extends Plane {
                 supportPoints: '0:#FFFFFF, 0.1:#B1BCBE, 0.4:#405F26, 0.6:#2F4F20, 0.9:#B1BCBE, 1:#FFFFFF',
                 easing: Easing.RGB_BALANCED,
                 scaling: 1,
+                offset: 0,
             },
             gradientStreamlines: {
                 supportPoints: '0:#FFFF88, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             fallbackColour: '#000000',
             blending: BlendingType.HSL,
@@ -86,11 +88,13 @@ export class MandelbrotCombinedIV extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientIterations.easing'),
             CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
+            CREATE.uiFieldGradientOffset('gradientIterations.offset'),
             CREATE.createHeader('Streamlines', 'Gradient clapmed'),
             CREATE.uiFieldUseLogColourScaling('useLogColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradientStreamlines.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientStreamlines.easing'),
             CREATE.uiFieldGradientScaling('gradientStreamlines.scaling'),
+            CREATE.uiFieldGradientOffset('gradientStreamlines.offset'),
             CREATE.uiFieldFallbackColour('fallbackColour'),
             CREATE.UI_FIELD_HEADER_BLENDING,
             CREATE.uiFieldColourBlending('blending'),
@@ -192,8 +196,8 @@ export class MandelbrotCombinedIV extends Plane {
                     (valueIterations === this._effectiveMaxIterations) ?
                         fallbackColour :
                         blender.blend(
-                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling),
-                            colourMapperStreamlines.mapClamped(field[index], this.config.data.gradientStreamlines.scaling),
+                            colourMapperIterations.mapLooped(valueIterations, 255 * this.config.data.gradientIterations.scaling, this.config.data.gradientIterations.offset),
+                            colourMapperStreamlines.mapClamped(field[index], this.config.data.gradientStreamlines.scaling, this.config.data.gradientStreamlines.offset),
                             this.config.data.blending,
                         )
                 );

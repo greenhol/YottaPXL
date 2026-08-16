@@ -32,6 +32,9 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     public uiFieldGradientScaling(path: string): UiFieldFloat {
         return this.createFloatField(path, 'Scaling', 'Gradient is scaled by this factor', 0.00001, 10000);
     }
+    public uiFieldGradientOffset(path: string): UiFieldFloat {
+        return this.createFloatField(path, 'Offset', 'Gradient is offset by this factor', 0, 1);
+    }
     public uiFieldColourBlending(path: string): UiFieldStringEnum<Record<string, unknown>> {
         return new UiFieldStringEnum<Record<string, unknown>>(
             path,

@@ -45,13 +45,14 @@ export class MandelbrotBokeh extends Plane {
                 supportPoints: '0:#f2ebdc, 0.2:#d2aa78, 0.4:#824a25, 0.6:#412313, 0.8:#faf5ed, 1:#f2ebdc',
                 easing: Easing.RGB_LINEAR,
                 scaling: 0.1,
+                offset: 0,
             },
             fallbackColour: '#000',
             zRange: 5,
             zGamma: 1,
             bokehConfig: {
                 type: BokehType.SOFT_DISC,
-                maxBlurRadius: 30,
+                maxBlurRadius: 5,
                 pixelsPerZUnit: 6,
                 focusZ: 0,
                 focusRange: 2,
@@ -74,6 +75,7 @@ export class MandelbrotBokeh extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
+            CREATE.uiFieldGradientOffset('gradient.offset'),
             CREATE.uiFieldFallbackColour('fallbackColour'),
             CREATE.UI_FIELD_HEADER_BOKEH,
             CREATE.createFloatField('zRange', 'Z Range', undefined, 0.1, 10),
@@ -154,7 +156,7 @@ export class MandelbrotBokeh extends Plane {
                     index,
                     (value >= this._effectiveMaxIterations)
                         ? fallbackColour
-                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling, this.config.data.gradient.offset),
                 );
             }
         }

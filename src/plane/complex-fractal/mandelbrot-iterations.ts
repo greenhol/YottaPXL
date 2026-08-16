@@ -40,6 +40,7 @@ export class MandelbrotIterations extends Plane {
                 supportPoints: '0:#000000, 0.5:#FFFFFF, 1:#000000',
                 easing: Easing.RGB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
             fallbackColour: '#000000',
         },
@@ -55,6 +56,7 @@ export class MandelbrotIterations extends Plane {
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
+            CREATE.uiFieldGradientOffset('gradient.offset'),
             CREATE.uiFieldFallbackColour('fallbackColour'),
         ],
     );
@@ -99,7 +101,7 @@ export class MandelbrotIterations extends Plane {
                     index,
                     (value >= this._effectiveMaxIterations)
                         ? fallbackColour
-                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling),
+                        : colourMapper.mapLooped(value, 255 * this.config.data.gradient.scaling, this.config.data.gradient.offset),
                 );
             }
         }

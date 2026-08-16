@@ -33,6 +33,7 @@ export class PerlinNoise extends Plane {
                 supportPoints: '0:#FFFFFF, 1:#2222FF',
                 easing: Easing.LAB_LINEAR,
                 scaling: 1,
+                offset: 0,
             },
         },
         'perlinNoise',

@@ -120,10 +120,10 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
         return this.createEnumField<Record<string, unknown>>(path, BokehType, 'Bokeh Type');
     }
     public uiFieldBokehMaxBlurRadius(path: string): UiFieldFloat {
-        return this.createFloatField(path, 'Max Blur Radius', undefined, 0, 100);
+        return this.createFloatField(path, 'Max Blur Radius', undefined, 0, 300);
     }
     public uiFieldBokehPixelsPerZUnit(path: string): UiFieldFloat {
-        return this.createFloatField(path, 'Pixels per Z Unit', undefined, 0.1, 100);
+        return this.createFloatField(path, 'Pixels per Z Unit', undefined, 0.1, 150);
     }
     public uiFieldBokehFocusZ(path: string): UiFieldFloat {
         return this.createFloatField(path, 'Focus Z', 'Ideally inbetween ± Z Offset');

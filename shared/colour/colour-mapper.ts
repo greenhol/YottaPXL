@@ -70,6 +70,12 @@ export class ColourMapper {
         }
     }
 
+    public static stringifySupportPoints(points: SupportPoint[]): string {
+        return points
+            .map(point => `${point.pos}:${Colour.rgbToHex(point.colour)}`)
+            .join(', ');
+    }
+
     constructor(supportPoints: SupportPoint[], easing: Easing = Easing.RGB_LINEAR) {
         if (supportPoints.length < 2) {
             throw new Error('At least two support points are required.');
@@ -117,10 +123,12 @@ export class ColourMapper {
         return this._supportPoints.map(point => point.colour);
     }
 
+    public get supportPoints(): SupportPoint[] {
+        return structuredClone(this._supportPoints);
+    }
+
     public get asString(): string {
-        return this._supportPoints.map(point => {
-            return `${point.pos}:${Colour.rgbToString(point.colour)}`;
-        }).join(', ');
+        return ColourMapper.stringifySupportPoints(this._supportPoints);
     }
 
     public mapLooped(x: number, scaling: number = 1, offset: number = 0): RGB {
@@ -140,7 +148,7 @@ export class ColourMapper {
 
     public get supportPointsString(): string {
         return this._supportPoints
-            .map(point => `${point.pos}:${this.rgbToHex(point.colour)}`)
+            .map(point => `${point.pos}:${Colour.rgbToHex(point.colour)}`)
             .join(', ');
     }
 
@@ -161,12 +169,6 @@ export class ColourMapper {
         }
 
         return this._colourCalculator(x, left, right);
-    }
-
-    private rgbToHex(colour: RGB): string {
-        return `#${[colour.r, colour.g, colour.b]
-            .map(x => x.toString(16).padStart(2, '0'))
-            .join('')}`;
     }
 
     private getLoopingX(x: number): number {

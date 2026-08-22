@@ -230,7 +230,7 @@ export class ConfigOverlay {
 
     private createColourField(field: UiFieldColour): HTMLInputElement {
         const input = document.createElement('input');
-        input.type = 'colour';
+        input.type = 'color'; // Do not change to colour :)
         input.id = field.id;
         input.addEventListener('change', (event) => {
             field.value = (event.target as HTMLInputElement).value;

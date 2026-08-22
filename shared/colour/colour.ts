@@ -150,22 +150,21 @@ export namespace Colour {
         };
     }
 
-    export function rgbToString(colour: RGB): string {
+    export function rgbToHex(colour: RGB): string {
         const { r, g, b } = colour;
-        if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-            console.error('#rgbToString - Invalid RGB values. Each component must be between 0 and 255, returning DARKRED.');
+        const isInRange = (v: number) => v >= 0 && v <= 255;
+        if (!isInRange(r) || !isInRange(g) || !isInRange(b)) {
+            console.error('#rgbToHex - Invalid RGB values. Each component must be between 0 and 255, returning DARKRED.');
             return '#8B0000';
         }
-        return `#${toHex(Math.round(r))}${toHex(Math.round(g))}${toHex(Math.round(b))}`;
+        return `#${[r, g, b]
+            .map(x => Math.round(x).toString(16).padStart(2, '0'))
+            .join('')}`;
     }
 
     /** Create a grey colour by given intensity value between 0 and 1 */
     export function createGreyByIntensity(intensity: number): RGB {
         const value = Math.round(intensity * 255);
         return { r: value, g: value, b: value };
-    }
-
-    function toHex(c: number): string {
-        return c.toString(16).padStart(2, '0').toLowerCase();
     }
 };

@@ -1,5 +1,5 @@
 import { RGB, RGBA } from '../../../shared/colour/colour';
-import { colourDistributionEven } from '../../../shared/colour/colour-distribution-even';
+import { colourDistributionEven } from '../../../shared/colour/colour-distribution';
 import { ColourMapper, Easing } from '../../../shared/colour/colour-mapper';
 import { XoRng } from '../../../shared/xo-rng';
 

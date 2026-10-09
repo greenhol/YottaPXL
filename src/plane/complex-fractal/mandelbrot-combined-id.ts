@@ -10,11 +10,13 @@ import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
+import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
 interface MandelbrotCombinedIdConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     escapeValue: number,
+    useLogColourScaling: boolean,
     gradientIterations: ColourMapperConfig,
     gradientDistance: ColourMapperConfig,
     fallbackColour: string,
@@ -34,6 +36,7 @@ export class MandelbrotCombinedID extends Plane {
             maxIterations: 0,
             interpolate: false,
             escapeValue: 100,
+            useLogColourScaling: false,
             gradientIterations: {
                 supportPoints: '0:#00FF00, 0.5:#88FF88, 1:#00FF00',
                 easing: Easing.RGB_LINEAR,
@@ -56,6 +59,7 @@ export class MandelbrotCombinedID extends Plane {
             CREATE.uiFieldFractalInterpolate('interpolate'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.createHeader('Iterations', 'Gradient looped'),
+            CREATE.uiFieldUseLogColourScaling('useLogColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradientIterations.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientIterations.easing'),
             CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
@@ -108,7 +112,10 @@ export class MandelbrotCombinedID extends Plane {
         for (let row = 0; row < this.grid.height; row++) {
             for (let col = 0; col < this.grid.width; col++) {
                 const index = this.grid.getIndex(col, row);
-                const valueIterations = iterations[index];
+                const valueIterations = (this.config.data.useLogColourScaling)
+                    ? shapeIterationCountForColour(iterations[index], this._effectiveMaxIterations)
+                    : iterations[index];
+
                 this.setPixel(
                     imageData,
                     index,

@@ -9,7 +9,7 @@ import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
-interface PerlinNoisePlaneConfig extends PlaneConfig {
+export interface PerlinNoisePlaneConfig extends PlaneConfig {
     seed: number | null,
     octaveCount: number,
     octaveAmplitudeFactor: number,

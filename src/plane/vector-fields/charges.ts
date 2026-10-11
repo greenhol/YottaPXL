@@ -16,7 +16,8 @@ import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
-interface ChargesPlaneConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface ChargesPlaneConfig extends PlaneConfig {
     potential: boolean,
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,

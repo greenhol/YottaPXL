@@ -13,7 +13,8 @@ import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
-interface MandelbrotBokehConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface MandelbrotBokehConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     precision: boolean,

@@ -12,12 +12,14 @@ import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 import { shapeIterationCountForColour } from './shape-iteration-count-for-colour';
 
-interface MandelbrotCombinedIdConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface MandelbrotCombinedIdConfig extends PlaneConfig {
     maxIterations: number,
     interpolate: boolean,
     escapeValue: number,
     useLogColourScaling: boolean,
     gradientIterations: ColourMapperConfig,
+    useMaxRangeColourScaling: boolean,
     gradientDistance: ColourMapperConfig,
     fallbackColour: string,
     blending: BlendingType,
@@ -43,6 +45,7 @@ export class MandelbrotCombinedID extends Plane {
                 scaling: 1,
                 offset: 0,
             },
+            useMaxRangeColourScaling: true,
             gradientDistance: {
                 supportPoints: '0:#FFFFFF, 0.4:#FFFFFF, 0.5:#000000, 0.6:#FFFFFF, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
@@ -65,6 +68,7 @@ export class MandelbrotCombinedID extends Plane {
             CREATE.uiFieldGradientScaling('gradientIterations.scaling'),
             CREATE.uiFieldGradientOffset('gradientIterations.offset'),
             CREATE.createHeader('Distance', 'Gradient looped'),
+            CREATE.uiFieldUseMaxRangeColourScaling('useMaxRangeColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradientDistance.supportPoints'),
             CREATE.uiFieldGradientEasing('gradientDistance.easing'),
             CREATE.uiFieldGradientScaling('gradientDistance.scaling'),
@@ -104,8 +108,11 @@ export class MandelbrotCombinedID extends Plane {
     private createImage(iterations: Float64Array, distances: Float64Array): ImageDataArray {
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colourMapperIterations = ColourMapper.fromString(this.config.data.gradientIterations.supportPoints, this.config.data.gradientIterations.easing);
-        let max = 0;
-        distances.forEach(value => { if (value > max) max = value; });
+        let max = 1;
+        if (this.config.data.useMaxRangeColourScaling) {
+            max = 0;
+            distances.forEach(value => { if (value > max) max = value; });
+        }
         const colourMapperDistances = ColourMapper.fromString(this.config.data.gradientDistance.supportPoints, this.config.data.gradientDistance.easing);
         const fallbackColour = Colour.stringToRgb(this.config.data.fallbackColour);
 

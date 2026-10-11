@@ -18,7 +18,8 @@ import { extractData } from '../../worker/extract-data';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
-interface WeatherConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface WeatherConfig extends PlaneConfig {
     noiseConfig: NoiseConfig,
     licConfig: LicConfig,
     gradientMagnitude: ColourMapperConfig,

@@ -16,7 +16,8 @@ import { CREATE } from '../ui/plane-config-field-creator';
 import { LicConfig } from './../../math/lic/types';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
-interface MandelbrotVectorConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface MandelbrotVectorConfig extends PlaneConfig {
     noiseConfig: NoiseConfig,
     maxIterations: number,
     interpolate: boolean,

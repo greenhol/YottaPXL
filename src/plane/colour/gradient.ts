@@ -25,7 +25,8 @@ enum GradientDemos {
     C64_ALL_COLOURS = 'C64 All Colours',
 }
 
-interface GradientPlaneConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface GradientPlaneConfig extends PlaneConfig {
     demo: GradientDemos,
     config: ColourMapperConfig,
 };

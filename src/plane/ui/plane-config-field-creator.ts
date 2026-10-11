@@ -30,7 +30,7 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
         return this.createEnumField<Record<string, unknown>>(path, Easing, 'Easing', 'How Gradient behaves around the support points');
     }
     public uiFieldGradientScaling(path: string): UiFieldFloat {
-        return this.createFloatField(path, 'Scaling', 'Gradient is scaled by this factor', 0.00001, 10000);
+        return this.createFloatField(path, 'Scaling', 'Gradient is scaled by this factor', 0.0000000000000001, 100000);
     }
     public uiFieldGradientOffset(path: string): UiFieldFloat {
         return this.createFloatField(path, 'Offset', 'Gradient is offset by this factor', 0, 1);
@@ -99,6 +99,9 @@ class PlaneConfigFieldCreator extends ConfigUiFieldCreator {
     }
     public uiFieldUseLogColourScaling(path: string): UiFieldBool {
         return this.createBoolField(path, 'Log Colour Scaling', 'Scale iteration count logarithmically before applying for colour');
+    }
+    public uiFieldUseMaxRangeColourScaling(path: string): UiFieldBool {
+        return this.createBoolField(path, 'Max Range Colour Scaling', 'Scale distance in respect to screen max distance before applying for colour');
     }
 
     /** LIC */

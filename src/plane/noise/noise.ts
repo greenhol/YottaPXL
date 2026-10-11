@@ -10,7 +10,8 @@ import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
-interface NoisePlaneConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface NoisePlaneConfig extends PlaneConfig {
     config: NoiseConfig,
 }
 

@@ -7,7 +7,8 @@ import { BigDecimal } from '../../types/big-decimal';
 import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 
-interface ColourBlendingPlaneConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface ColourBlendingPlaneConfig extends PlaneConfig {
     type: BlendingType,
     gradient1: ColourMapperConfig,
     gradient2: ColourMapperConfig,

@@ -10,9 +10,11 @@ import { Plane, PlaneConfig } from '../plane';
 import { CREATE } from '../ui/plane-config-field-creator';
 import { estimateMaxIterations } from './estimate-max-iterations';
 
-interface MandelbrotDistanceConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface MandelbrotDistanceConfig extends PlaneConfig {
     maxIterations: number,
     escapeValue: number,
+    useMaxRangeColourScaling: boolean,
     gradient: ColourMapperConfig,
     fallbackColour: string,
 }
@@ -29,6 +31,7 @@ export class MandelbrotDistance extends Plane {
             gridRange: GridRange.serialize(INITIAL_GRID_RANGE),
             maxIterations: 0,
             escapeValue: 100,
+            useMaxRangeColourScaling: true,
             gradient: {
                 supportPoints: '0:#FFFFFF, 0.5:#000000, 1:#FFFFFF',
                 easing: Easing.RGB_LINEAR,
@@ -43,6 +46,7 @@ export class MandelbrotDistance extends Plane {
             CREATE.uiFieldFractalMaxIterations('maxIterations'),
             CREATE.uiFieldFractalEscapeValue('escapeValue'),
             CREATE.UI_FIELD_HEADER_GRADIENT,
+            CREATE.uiFieldUseMaxRangeColourScaling('useMaxRangeColourScaling'),
             CREATE.uiFieldGradientSupportPoints('gradient.supportPoints'),
             CREATE.uiFieldGradientEasing('gradient.easing'),
             CREATE.uiFieldGradientScaling('gradient.scaling'),
@@ -75,8 +79,11 @@ export class MandelbrotDistance extends Plane {
     }
 
     private createImage(data: Float64Array): ImageDataArray {
-        let max = 0;
-        data.forEach(value => { if (value > max) max = value; });
+        let max = 1;
+        if (this.config.data.useMaxRangeColourScaling) {
+            max = 0;
+            data.forEach(value => { if (value > max) max = value; });
+        }
         const imageData = new Uint8ClampedArray(this.grid.size * 4);
         const colourMapper = ColourMapper.fromString(this.config.data.gradient.supportPoints, this.config.data.gradient.easing);
         const fallbackColour = Colour.stringToRgb(this.config.data.fallbackColour);

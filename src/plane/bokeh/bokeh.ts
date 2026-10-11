@@ -11,7 +11,8 @@ import { CREATE } from '../ui/plane-config-field-creator';
 import { DotDistributionType, DotGenerator, DotGeneratorConfig } from './dot-generator';
 import { DotRasterizer } from './dot-rasterizer';
 
-interface BokehPlaneConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface BokehPlaneConfig extends PlaneConfig {
     distribution: DotDistributionType,
     seed: number | null;
     dotCount: number;

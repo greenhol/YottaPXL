@@ -27,7 +27,8 @@ enum AtmosphereRender {
     COMBINED = 'Coloured Field',
 }
 
-interface AtmosphereConfig extends PlaneConfig {
+/** @internal Only meant to be used by YottaAutomation */
+export interface AtmosphereConfig extends PlaneConfig {
     render: AtmosphereRender,
     planet: AtmosphereType,
     bandCount: number,
